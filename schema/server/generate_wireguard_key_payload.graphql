@@ -1,0 +1,5 @@
+type GenerateWireguardKeyPayload {
+    clientMutationId: String
+    privateKey: String!
+    publicKey: String!
+}

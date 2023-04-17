@@ -1,0 +1,4 @@
+type StopServerPayload {
+    clientMutationId: String
+    server: Server
+}

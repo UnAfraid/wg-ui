@@ -1,0 +1,12 @@
+schema:
+  - schema/**/*.graphql
+
+exec:
+  filename: api/exec/generated_executable_schema.go
+model:
+  filename: api/model/generated_model.go
+models:
+  ID:
+    model: github.com/UnAfraid/wg-ui/api/model.ID
+  DateTime:
+    model: github.com/UnAfraid/wg-ui/api/model.DateTime

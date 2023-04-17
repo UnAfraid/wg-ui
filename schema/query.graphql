@@ -1,0 +1,36 @@
+type Query {
+    """
+    Use this query to obtain information about the current logged user
+    """
+    viewer: User! @authenticated
+
+    """
+    Use this query to single node
+    """
+    node (id: ID!): Node @authenticated
+
+    """
+    Use this query to find nodes
+    """
+    nodes(ids: [ID!]!): [Node]! @authenticated
+
+    """
+    Use this query to find multiple users
+    """
+    users(query: String): [User!]! @authenticated
+
+    """
+    Use this query to find servers
+    """
+    servers(query: String, enabled: Boolean): [Server!]! @authenticated
+
+    """
+    Use this query to find multiple Peers
+    """
+    peers(query: String): [Peer!]! @authenticated
+
+    """
+    Use this query to find foreign servers
+    """
+    foreignServers: [ForeignServer!]! @authenticated
+}

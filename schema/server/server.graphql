@@ -1,0 +1,22 @@
+type Server implements Node {
+    id: ID!
+    name: String!
+    description: String!
+    enabled: Boolean!
+    running: Boolean!
+    publicKey: String!
+    listenPort: Int
+    firewallMark: Int
+    address: String!
+    dns: [String!]
+    mtu: Int!
+    hooks: [ServerHook!]
+    peers: [Peer!] @goField(forceResolver: true) @authenticated
+    interfaceStats: ServerInterfaceStats @goField(forceResolver: true) @authenticated
+    createUser: User @goField(forceResolver: true) @authenticated
+    updateUser: User @goField(forceResolver: true) @authenticated
+    deleteUser: User @goField(forceResolver: true) @authenticated
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    deletedAt: DateTime
+}

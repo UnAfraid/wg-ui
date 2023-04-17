@@ -1,0 +1,4 @@
+type PeerChangedEvent {
+    node: Peer!
+    action: PeerAction!
+}

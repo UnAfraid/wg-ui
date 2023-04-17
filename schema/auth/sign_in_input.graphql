@@ -1,0 +1,5 @@
+input SignInInput {
+    clientMutationId: String
+    email: String!
+    password: String!
+}

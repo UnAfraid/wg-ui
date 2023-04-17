@@ -1,0 +1,6 @@
+type PeerHook {
+    command: String!
+    runOnCreate: Boolean!
+    runOnUpdate: Boolean!
+    runOnDelete: Boolean!
+}

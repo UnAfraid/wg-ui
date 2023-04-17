@@ -1,0 +1,4 @@
+input DeleteUserInput {
+    clientMutationId: String
+    id: ID!
+}

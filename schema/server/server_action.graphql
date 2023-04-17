@@ -1,0 +1,7 @@
+enum ServerAction {
+    CREATED
+    UPDATED
+    DELETED
+    STARTED
+    STOPPED
+}

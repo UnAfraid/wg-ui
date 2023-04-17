@@ -1,0 +1,8 @@
+type User implements Node {
+    id: ID!
+    email: String!
+    servers: [Server!] @goField(forceResolver: true) @authenticated
+    peers: [Peer!] @goField(forceResolver: true) @authenticated
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}

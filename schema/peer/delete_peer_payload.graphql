@@ -1,0 +1,4 @@
+type DeletePeerPayload {
+    clientMutationId: String
+    peer: Peer
+}

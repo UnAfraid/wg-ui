@@ -1,0 +1,4 @@
+type DeleteUserPayload {
+    clientMutationId: String
+    user: User
+}

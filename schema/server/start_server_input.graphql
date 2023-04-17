@@ -1,0 +1,4 @@
+input StartServerInput {
+    clientMutationId: String
+    id: ID!
+}

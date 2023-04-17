@@ -1,0 +1,9 @@
+type ForeignServer {
+    foreignInterface: ForeignInterface!
+    name: String!
+    type: String!
+    publicKey: String!
+    listenPort: Int!
+    firewallMark: Int!
+    peers: [ForeignPeer!]!
+}

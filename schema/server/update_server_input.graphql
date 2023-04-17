@@ -1,0 +1,14 @@
+input UpdateServerInput {
+    clientMutationId: String
+    id: ID!
+    description: String
+    enabled: Boolean
+    publicKey: String
+    privateKey: String
+    listenPort: Int
+    firewallMark: Int
+    address: String
+    dns: [String!]
+    mtu: Int
+    hooks: [ServerHookInput!]
+}

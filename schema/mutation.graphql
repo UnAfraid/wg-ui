@@ -1,0 +1,72 @@
+type Mutation {
+    """
+    Use this mutation to log in
+    """
+    signIn(input: SignInInput!): SignInPayload
+
+    """
+    Use this mutation to create a User
+    """
+    createUser(input: CreateUserInput!): CreateUserPayload! @authenticated
+
+    """
+    Use this mutation to update a User
+    """
+    updateUser(input: UpdateUserInput!): UpdateUserPayload! @authenticated
+
+    """
+    Use this mutation to delete a User
+    """
+    deleteUser(input: DeleteUserInput!): DeleteUserPayload! @authenticated
+
+
+    """
+    Use this mutation to generate a WireGuard key-pair
+    """
+    generateWireguardKey(input: GenerateWireguardKeyInput!): GenerateWireguardKeyPayload! @authenticated
+
+    """
+    Use this mutation to create a WireGuard server
+    """
+    createServer(input: CreateServerInput!): CreateServerPayload! @authenticated
+
+    """
+    Use this mutation to update a WireGuard server
+    """
+    updateServer(input: UpdateServerInput!): UpdateServerPayload! @authenticated
+
+    """
+    Use this mutation to delete a WireGuard server
+    """
+    deleteServer(input: DeleteServerInput!): DeleteServerPayload! @authenticated
+
+    """
+    Use this mutation to start the WireGuard server
+    """
+    startServer(input: StartServerInput!): StartServerPayload! @authenticated
+
+    """
+    Use this mutation to stop the WireGuard server
+    """
+    stopServer(input: StopServerInput!): StopServerPayload! @authenticated
+
+    """
+    Use this mutation to create a peer
+    """
+    createPeer(input: CreatePeerInput!): CreatePeerPayload! @authenticated
+
+    """
+    Use this mutation to update a peer
+    """
+    updatePeer(input: UpdatePeerInput!): UpdatePeerPayload! @authenticated
+
+    """
+    Use this mutation to delete a peer
+    """
+    deletePeer(input: DeletePeerInput!): DeletePeerPayload! @authenticated
+
+    """
+    Use this mutation to import a foreign server
+    """
+    importForeignServer(input: ImportForeignServerInput!): ImportForeignServerPayload! @authenticated
+}

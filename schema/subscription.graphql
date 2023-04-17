@@ -1,0 +1,6 @@
+type Subscription {
+    userChanged: UserChangedEvent! @authenticated
+    serverChanged: ServerChangedEvent! @authenticated
+    peerChanged: PeerChangedEvent! @authenticated
+    nodeChanged: NodeChangedEvent! @authenticated
+}

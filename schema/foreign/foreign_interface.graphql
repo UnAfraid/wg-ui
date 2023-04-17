@@ -1,0 +1,5 @@
+type ForeignInterface {
+    name: String!
+    addresses: [String!]!
+    mtu: Int!
+}

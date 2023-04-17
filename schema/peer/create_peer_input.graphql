@@ -1,0 +1,12 @@
+input CreatePeerInput {
+    clientMutationId: String
+    serverId: ID!
+    name: String!
+    description: String
+    publicKey: String!
+    allowedIPs: [String!]!
+    endpoint: String
+    presharedKey: String
+    persistentKeepalive: Int
+    hooks: [PeerHookInput!]
+}

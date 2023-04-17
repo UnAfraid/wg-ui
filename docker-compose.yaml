@@ -1,0 +1,16 @@
+version: "3"
+services:
+  app:
+    image: ghcr.io/unafraid/wg-ui/app:latest
+    container_name: wg-ui
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    env_file: .env
+    volumes:
+      - './data:/var/lib/wg-ui'
+    ports:
+      - "8080:8080/tcp"
+      - "51820:51820/udp"
+    sysctls:
+      net.ipv4.conf.all.src_valid_mark: 1

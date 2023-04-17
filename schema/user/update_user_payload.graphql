@@ -1,0 +1,4 @@
+type UpdateUserPayload {
+    clientMutationId: String
+    user: User!
+}

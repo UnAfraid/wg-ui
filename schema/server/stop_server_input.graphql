@@ -1,0 +1,4 @@
+input StopServerInput {
+    clientMutationId: String
+    id: ID!
+}

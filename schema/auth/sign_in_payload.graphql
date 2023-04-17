@@ -1,0 +1,18 @@
+type SignInPayload {
+    clientMutationId: String
+
+    """
+    Token you can use this token in Authorization header as bearer type
+    """
+    token: String!
+
+    """
+    Session expiration date time
+    """
+    expiresAt: DateTime!
+
+    """
+    Session expiration duration relative to current time in seconds
+    """
+    expiresIn: Int!
+}

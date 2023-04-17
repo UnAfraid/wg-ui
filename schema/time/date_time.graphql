@@ -1,0 +1,4 @@
+"""
+date-time as defined in RFC3339 https://www.ietf.org/rfc/rfc3339.txt
+"""
+scalar DateTime

@@ -1,0 +1,10 @@
+type ForeignPeer {
+    publicKey: String!
+    endpoint: String
+    allowedIps: [String!]
+    persistentKeepAliveInterval: Int!
+    lastHandshakeTime: DateTime
+    receiveBytes:      Float!
+    transmitBytes:     Float!
+    protocolVersion:   Int!
+}

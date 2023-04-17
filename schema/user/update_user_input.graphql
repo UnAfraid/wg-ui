@@ -1,0 +1,6 @@
+input UpdateUserInput {
+    clientMutationId: String
+    id: ID!
+    email: String
+    password: String
+}

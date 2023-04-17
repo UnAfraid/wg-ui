@@ -1,0 +1,6 @@
+input PeerHookInput {
+    command: String!
+    runOnCreate: Boolean!
+    runOnUpdate: Boolean!
+    runOnDelete: Boolean!
+}

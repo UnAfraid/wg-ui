@@ -1,0 +1,4 @@
+type CreatePeerPayload {
+    clientMutationId: String
+    peer: Peer
+}

@@ -1,0 +1,4 @@
+input DeleteServerInput {
+    clientMutationId: String
+    id: ID!
+}

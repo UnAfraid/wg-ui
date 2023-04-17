@@ -1,0 +1,4 @@
+type StartServerPayload {
+    clientMutationId: String
+    server: Server!
+}

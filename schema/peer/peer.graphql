@@ -1,0 +1,19 @@
+type Peer implements Node {
+    id: ID!
+    server: Server! @goField(forceResolver: true) @authenticated
+    name: String!
+    description: String!
+    publicKey: String!
+    allowedIPs: [String!]
+    endpoint: String!
+    presharedKey: String!
+    persistentKeepalive: Int
+    hooks: [PeerHook!]
+    stats: PeerStats @goField(forceResolver: true) @authenticated
+    createUser: User @goField(forceResolver: true) @authenticated
+    updateUser: User @goField(forceResolver: true) @authenticated
+    deleteUser: User @goField(forceResolver: true) @authenticated
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    deletedAt: DateTime
+}

@@ -1,0 +1,25 @@
+type ServerInterfaceStats {
+    rxPackets:         Float!
+    txPackets:         Float!
+    rxBytes:           Float!
+    txBytes:           Float!
+    rxErrors:          Float!
+    txErrors:          Float!
+    rxDropped:         Float!
+    txDropped:         Float!
+    multicast:         Float!
+    collisions:        Float!
+    rxLengthErrors:    Float!
+    rxOverErrors:      Float!
+    rxCrcErrors:       Float!
+    rxFrameErrors:     Float!
+    rxFifoErrors:      Float!
+    rxMissedErrors:    Float!
+    txAbortedErrors:   Float!
+    txCarrierErrors:   Float!
+    txFifoErrors:      Float!
+    txHeartbeatErrors: Float!
+    txWindowErrors:    Float!
+    rxCompressed:      Float!
+    txCompressed:      Float!
+}

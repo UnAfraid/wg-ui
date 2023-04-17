@@ -1,0 +1,14 @@
+input CreateServerInput {
+    clientMutationId: String
+    name: String!
+    description: String
+    enabled: Boolean
+    privateKey: String
+    publicKey: String
+    listenPort: Int
+    firewallMark: Int
+    address: String!
+    dns: [String!]
+    mtu: Int
+    hooks: [ServerHookInput!]
+}

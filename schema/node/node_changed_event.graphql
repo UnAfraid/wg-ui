@@ -1,0 +1,1 @@
+union NodeChangedEvent = UserChangedEvent | ServerChangedEvent | PeerChangedEvent

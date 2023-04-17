@@ -1,0 +1,6 @@
+type PeerStats {
+    lastHandshakeTime: DateTime
+    receiveBytes:      Float!
+    transmitBytes:     Float!
+    protocolVersion:   Int!
+}

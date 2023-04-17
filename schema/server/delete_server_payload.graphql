@@ -1,0 +1,4 @@
+type DeleteServerPayload {
+    clientMutationId: String
+    server: Server
+}
