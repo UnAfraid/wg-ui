@@ -44,7 +44,7 @@ func (s *inMemorySubscription) Notify(bytes []byte, channel string) error {
 }
 
 func (s *inMemorySubscription) Subscribe(ctx context.Context, channel string) (<-chan []byte, error) {
-	uuidValue, err := uuid.NewUUID()
+	uuidValue, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +61,28 @@ func (s *inMemorySubscription) Subscribe(ctx context.Context, channel string) (<
 
 	s.observers[key] = observerChan
 	return observerChan, nil
+}
+
+func (s *inMemorySubscription) HasSubscribers(channel string) bool {
+	if len(channel) == 0 {
+		return len(s.observers) != 0
+	}
+	channel = joinPath(channel)
+
+	for k := range s.observers {
+		match, err := filepath.Match(k.channel, channel)
+		if err != nil {
+			logrus.
+				WithError(err).
+				WithField("a", k.channel).
+				WithField("b", channel).
+				Error("failed to match glob pattern")
+		}
+		if match {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *inMemorySubscription) unsubscribe(key channelKey, observerChan chan<- []byte) {

@@ -54,3 +54,7 @@ func (s *peerService) Subscribe(ctx context.Context) (_ <-chan *model.PeerChange
 
 	return observerChan, nil
 }
+
+func (s *peerService) HasSubscribers() bool {
+	return s.subscription.HasSubscribers(path.Join(s.path, "*"))
+}

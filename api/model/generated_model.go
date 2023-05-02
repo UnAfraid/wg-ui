@@ -423,24 +423,26 @@ func (e PeerAction) MarshalGQL(w io.Writer) {
 type ServerAction string
 
 const (
-	ServerActionCreated ServerAction = "CREATED"
-	ServerActionUpdated ServerAction = "UPDATED"
-	ServerActionDeleted ServerAction = "DELETED"
-	ServerActionStarted ServerAction = "STARTED"
-	ServerActionStopped ServerAction = "STOPPED"
+	ServerActionCreated               ServerAction = "CREATED"
+	ServerActionUpdated               ServerAction = "UPDATED"
+	ServerActionDeleted               ServerAction = "DELETED"
+	ServerActionInterfaceStatsUpdated ServerAction = "INTERFACE_STATS_UPDATED"
+	ServerActionStarted               ServerAction = "STARTED"
+	ServerActionStopped               ServerAction = "STOPPED"
 )
 
 var AllServerAction = []ServerAction{
 	ServerActionCreated,
 	ServerActionUpdated,
 	ServerActionDeleted,
+	ServerActionInterfaceStatsUpdated,
 	ServerActionStarted,
 	ServerActionStopped,
 }
 
 func (e ServerAction) IsValid() bool {
 	switch e {
-	case ServerActionCreated, ServerActionUpdated, ServerActionDeleted, ServerActionStarted, ServerActionStopped:
+	case ServerActionCreated, ServerActionUpdated, ServerActionDeleted, ServerActionInterfaceStatsUpdated, ServerActionStarted, ServerActionStopped:
 		return true
 	}
 	return false

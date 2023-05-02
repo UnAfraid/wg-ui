@@ -54,3 +54,7 @@ func (s *userService) Subscribe(ctx context.Context) (_ <-chan *model.UserChange
 
 	return observerChan, nil
 }
+
+func (s *userService) HasSubscribers() bool {
+	return s.subscription.HasSubscribers(path.Join(s.path, "*"))
+}

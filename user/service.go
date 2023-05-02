@@ -28,7 +28,7 @@ func NewService(userRepository Repository, initialEmail string, initialPassword 
 	s := &service{
 		userRepository: userRepository,
 	}
-	if err := s.ensureUserCreated(context.Background(), initialEmail, initialPassword); err != nil {
+	if err := s.initializeInitialUser(context.Background(), initialEmail, initialPassword); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -109,7 +109,7 @@ func (s *service) DeleteUser(ctx context.Context, userId string) (*User, error) 
 	return s.userRepository.Delete(ctx, user.Id)
 }
 
-func (s *service) ensureUserCreated(ctx context.Context, email string, password string) error {
+func (s *service) initializeInitialUser(ctx context.Context, email string, password string) error {
 	users, err := s.userRepository.FindAll(ctx, &FindOptions{})
 	if err != nil {
 		return err

@@ -2028,6 +2028,7 @@ var sources = []*ast.Source{
     CREATED
     UPDATED
     DELETED
+    INTERFACE_STATS_UPDATED
     STARTED
     STOPPED
 }

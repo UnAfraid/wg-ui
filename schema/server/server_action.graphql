@@ -2,6 +2,7 @@ enum ServerAction {
     CREATED
     UPDATED
     DELETED
+    INTERFACE_STATS_UPDATED
     STARTED
     STOPPED
 }

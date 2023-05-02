@@ -54,3 +54,7 @@ func (s *serverService) Subscribe(ctx context.Context) (_ <-chan *model.ServerCh
 
 	return observerChan, nil
 }
+
+func (s *serverService) HasSubscribers() bool {
+	return s.subscription.HasSubscribers(path.Join(s.path, "*"))
+}

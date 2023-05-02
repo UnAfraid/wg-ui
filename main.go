@@ -15,6 +15,7 @@ import (
 	"github.com/UnAfraid/wg-ui/config"
 	"github.com/UnAfraid/wg-ui/datastore"
 	"github.com/UnAfraid/wg-ui/datastore/bbolt"
+	"github.com/UnAfraid/wg-ui/interfacestats"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"
 	"github.com/UnAfraid/wg-ui/user"
@@ -149,6 +150,9 @@ func main() {
 		return
 	}
 	defer wgService.Close()
+
+	interfaceStatsService := interfacestats.NewService(wgService, serverService, serverSubscriptionService)
+	defer interfaceStatsService.Close()
 
 	router := api.NewRouter(
 		conf,

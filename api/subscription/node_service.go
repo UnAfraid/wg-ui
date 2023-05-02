@@ -57,6 +57,10 @@ func (s *nodeService) Subscribe(ctx context.Context) (_ <-chan model.NodeChanged
 	return observerChan, nil
 }
 
+func (s *nodeService) HasSubscribers() bool {
+	return s.subscription.HasSubscribers(path.Join(s.path, "*"))
+}
+
 func unmarshalEvent(bytes []byte) (model.NodeChangedEvent, error) {
 	var ne nodeEvent
 	if err := json.Unmarshal(bytes, &ne); err != nil {

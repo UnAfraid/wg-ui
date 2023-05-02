@@ -7,6 +7,7 @@ import (
 )
 
 type Service[T model.NodeChangedEvent] interface {
-	Notify(category T) error
+	Notify(event T) error
 	Subscribe(ctx context.Context) (<-chan T, error)
+	HasSubscribers() bool
 }
