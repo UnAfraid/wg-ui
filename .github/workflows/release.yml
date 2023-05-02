@@ -59,7 +59,7 @@ jobs:
           cd api/tools/frontend
           echo "Cloning version ${LATEST_FRONTEND_TAG}"
           git clone --depth 1 -b "${LATEST_FRONTEND_TAG}" https://github.com/desislavsd/wireguard-manager
-          npm install -g pnpm@7
+          npm install -g pnpm@8
           cd wireguard-manager
           pnpm install
           npm run generate
