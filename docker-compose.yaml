@@ -1,7 +1,7 @@
 version: "3"
 services:
   app:
-    image: ghcr.io/unafraid/wg-ui/app:latest
+    image: ghcr.io/unafraid/wg-ui:latest
     container_name: wg-ui
     restart: unless-stopped
     cap_add:
