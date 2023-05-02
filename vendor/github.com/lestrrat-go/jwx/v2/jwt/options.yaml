@@ -26,7 +26,7 @@ interfaces:
       - readFileOption
       - signOption
     comment: |
-      SignParseOption describes an Option that can be passed to both `jwt.Sign()` or
+      SignEncryptParseOption describes an Option that can be passed to both `jwt.Sign()` or
       `jwt.Parse()`
   - name: ValidateOption
     methods:
@@ -76,15 +76,12 @@ options:
     interface: GlobalOption
     argument_type: bool
     comment: |
-      WithFlattenAudience specifies if the "aud" claim should be flattened
-      to a single string upon the token being serialized to JSON.
-      
-      This is sometimes important when a JWT consumer does not understand that
-      the "aud" claim can actually take the form of an array of strings.
-      
-      The default value is `false`, which means that "aud" claims are always
-      rendered as a arrays of strings. This setting has a global effect,
-      and will change the behavior for all JWT serialization.
+      WithFlattenAudience specifies the the `jwt.FlattenAudience` option on
+      every token defaults to enabled. You can still disable this on a per-object
+      basis using the `jwt.Options().Disable(jwt.FlattenAudience)` method call.
+
+      See the documentation for `jwt.TokenOptionSet`, `(jwt.Token).Options`, and
+      `jwt.FlattenAudience` for more details
   - ident: FormKey
     interface: ParseOption
     argument_type: string
@@ -165,17 +162,17 @@ options:
     interface: ValidateOption
     argument_type: Validator
     comment: |
-      WithValidator validates the token with the given Validator.
+     WithValidator validates the token with the given Validator.
       
-      For example, in order to validate tokens that are only valid during August, you would write
+     For example, in order to validate tokens that are only valid during August, you would write
       
-         validator := jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) error {
-           if time.Now().Month() != 8 {
-             return fmt.Errorf(`tokens are only valid during August!`)
-           }
-           return nil
-         })
-         err := jwt.Validate(token, jwt.WithValidator(validator))
+      validator := jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) error {
+       if time.Now().Month() != 8 {
+        return fmt.Errorf(`tokens are only valid during August!`)
+       }
+       return nil
+      })
+      err := jwt.Validate(token, jwt.WithValidator(validator))
   - ident: FS
     interface: ReadFileOption
     argument_type: fs.FS

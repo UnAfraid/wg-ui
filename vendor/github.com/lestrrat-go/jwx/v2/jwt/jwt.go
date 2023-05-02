@@ -1,10 +1,12 @@
 //go:generate ../tools/cmd/genjwt.sh
+//go:generate stringer -type=TokenOption -output=token_options_gen.go
 
 // Package jwt implements JSON Web Tokens as described in https://tools.ietf.org/html/rfc7519
 package jwt
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"sync/atomic"
@@ -14,6 +16,15 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jws"
 	"github.com/lestrrat-go/jwx/v2/jwt/internal/types"
 )
+
+var errInvalidJWT = errors.New(`invalid JWT`)
+
+// ErrInvalidJWT returns the opaque error value that is returned when
+// `jwt.Parse` fails due to not being able to deduce the format of
+// the incoming buffer
+func ErrInvalidJWT() error {
+	return errInvalidJWT
+}
 
 // Settings controls global settings that are specific to JWTs.
 func Settings(options ...GlobalOption) {
@@ -70,14 +81,13 @@ func Settings(options ...GlobalOption) {
 	}
 
 	{
-		v := atomic.LoadUint32(&json.FlattenAudience)
-		if (v == 1) != flattenAudienceBool {
-			var newVal uint32
-			if flattenAudienceBool {
-				newVal = 1
-			}
-			atomic.CompareAndSwapUint32(&json.FlattenAudience, v, newVal)
+		defaultOptionsMu.Lock()
+		if flattenAudienceBool {
+			defaultOptions.Enable(FlattenAudience)
+		} else {
+			defaultOptions.Disable(FlattenAudience)
 		}
+		defaultOptionsMu.Unlock()
 	}
 }
 
@@ -263,11 +273,13 @@ OUTER:
 			}
 
 			break OUTER
+		case jwx.InvalidFormat:
+			return nil, ErrInvalidJWT()
 		case jwx.UnknownFormat:
 			// "Unknown" may include invalid JWTs, for example, those who lack "aud"
 			// claim. We could be pedantic and reject these
 			if ctx.pedantic {
-				return nil, fmt.Errorf(`invalid JWT`)
+				return nil, fmt.Errorf(`unknown JWT format (pedantic)`)
 			}
 
 			if i == 0 {
@@ -425,6 +437,7 @@ func Equal(t1, t2 Token) bool {
 func (t *stdToken) Clone() (Token, error) {
 	dst := New()
 
+	dst.Options().Set(*(t.Options()))
 	for _, pair := range t.makePairs() {
 		//nolint:forcetypeassert
 		key := pair.Key.(string)
@@ -445,14 +458,13 @@ func (t *stdToken) Clone() (Token, error) {
 //
 // In that case you would register a custom field as follows
 //
-//   jwt.RegisterCustomField(`x-birthday`, timeT)
+//	jwt.RegisterCustomField(`x-birthday`, timeT)
 //
 // Then `token.Get("x-birthday")` will still return an `interface{}`,
 // but you can convert its type to `time.Time`
 //
-//   bdayif, _ := token.Get(`x-birthday`)
-//   bday := bdayif.(time.Time)
-//
+//	bdayif, _ := token.Get(`x-birthday`)
+//	bday := bdayif.(time.Time)
 func RegisterCustomField(name string, object interface{}) {
 	registry.Register(name, object)
 }

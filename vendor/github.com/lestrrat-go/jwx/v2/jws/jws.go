@@ -6,8 +6,8 @@
 // If you do not care about the details, the only things that you
 // would need to use are the following functions:
 //
-//     jws.Sign(payload, jws.WithKey(algorithm, key))
-//     jws.Verify(serialized, jws.WithKey(algorithm, key))
+//	jws.Sign(payload, jws.WithKey(algorithm, key))
+//	jws.Verify(serialized, jws.WithKey(algorithm, key))
 //
 // To sign, simply use `jws.Sign`. `payload` is a []byte buffer that
 // contains whatever data you want to sign. `alg` is one of the
@@ -114,8 +114,8 @@ var _ = fmtMax
 // You must pass at least one key to `jws.Sign()` by using `jws.WithKey()`
 // option.
 //
-//   jws.Sign(payload, jws.WithKey(alg, key))
-//   jws.Sign(payload, jws.WithJSON(), jws.WithKey(alg1, key1), jws.WithKey(alg2, key2))
+//	jws.Sign(payload, jws.WithKey(alg, key))
+//	jws.Sign(payload, jws.WithJSON(), jws.WithKey(alg1, key1), jws.WithKey(alg2, key2))
 //
 // Note that in the second example the `jws.WithJSON()` option is
 // specified as well. This is because the compact serialization
@@ -125,11 +125,20 @@ var _ = fmtMax
 // Read the documentation for `jws.WithKey()` to learn more about the
 // possible values that can be used for `alg` and `key`.
 //
+// You may create JWS messages with the "none" (jwa.NoSignature) algorithm
+// if you use the `jws.WithInsecureNoSignature()` option. This option
+// can be combined with one or more signature keys, as well as the
+// `jws.WithJSON()` option to generate multiple signatures (though
+// the usefulness of such constructs is highly debatable)
+//
+// Note that this library does not allow you to successfully call `jws.Verify()` on
+// signatures with the "none" algorithm. To parse these, use `jws.Parse()` instead.
+//
 // If you want to use a detached payload, use `jws.WithDetachedPayload()` as
 // one of the options. When you use this option, you must always set the
 // first parameter (`payload`) to `nil`, or the function will return an error
 //
-// You may also wantt to look at how to pass protected headers to the
+// You may also want to look at how to pass protected headers to the
 // signing process, as you will likely be required to set the `b64` field
 // when using detached payload.
 //
@@ -139,11 +148,19 @@ func Sign(payload []byte, options ...SignOption) ([]byte, error) {
 	format := fmtCompact
 	var signers []*payloadSigner
 	var detached bool
+	var noneSignature *payloadSigner
 	for _, option := range options {
 		//nolint:forcetypeassert
 		switch option.Ident() {
 		case identSerialization{}:
 			format = option.Value().(int)
+		case identInsecureNoSignature{}:
+			data := option.Value().(*withInsecureNoSignature)
+			// only the last one is used (we overwrite previous values)
+			noneSignature = &payloadSigner{
+				signer:    noneSigner{},
+				protected: data.protected,
+			}
 		case identKey{}:
 			data := option.Value().(*withKey)
 
@@ -151,6 +168,12 @@ func Sign(payload []byte, options ...SignOption) ([]byte, error) {
 			if !ok {
 				return nil, fmt.Errorf(`jws.Sign: expected algorithm to be of type jwa.SignatureAlgorithm but got (%[1]q, %[1]T)`, data.alg)
 			}
+
+			// No, we don't accept "none" here.
+			if alg == jwa.NoSignature {
+				return nil, fmt.Errorf(`jws.Sign: "none" (jwa.NoSignature) cannot be used with jws.WithKey`)
+			}
+
 			signer, err := makeSigner(alg, data.key, data.public, data.protected)
 			if err != nil {
 				return nil, fmt.Errorf(`jws.Sign: failed to create signer: %w`, err)
@@ -163,6 +186,10 @@ func Sign(payload []byte, options ...SignOption) ([]byte, error) {
 			}
 			payload = option.Value().([]byte)
 		}
+	}
+
+	if noneSignature != nil {
+		signers = append(signers, noneSignature)
 	}
 
 	lsigner := len(signers)
@@ -251,6 +278,13 @@ var allowNoneWhitelist = jwk.WhitelistFunc(func(string) bool {
 // `Verifier` in `verify` subpackage, and call `Verify` method on it.
 // If you need to access signatures and JOSE headers in a JWS message,
 // use `Parse` function to get `Message` object.
+//
+// Because the use of "none" (jwa.NoSignature) algorithm is strongly discouraged,
+// this function DOES NOT consider it a success when `{"alg":"none"}` is
+// encountered in the message (it would also be counter intuitive when the code says
+// you _verified_ something when in fact it did no such thing). If you want to
+// accept messages with "none" signature algorithm, use `jws.Parse` to get the
+// raw JWS message.
 func Verify(buf []byte, options ...VerifyOption) ([]byte, error) {
 	var dst *Message
 	var detachedPayload []byte
@@ -647,14 +681,13 @@ func parse(protected, payload, signature []byte) (*Message, error) {
 //
 // In that case you would register a custom field as follows
 //
-//   jwe.RegisterCustomField(`x-birthday`, timeT)
+//	jwe.RegisterCustomField(`x-birthday`, timeT)
 //
 // Then `hdr.Get("x-birthday")` will still return an `interface{}`,
 // but you can convert its type to `time.Time`
 //
-//   bdayif, _ := hdr.Get(`x-birthday`)
-//   bday := bdayif.(time.Time)
-//
+//	bdayif, _ := hdr.Get(`x-birthday`)
+//	bday := bdayif.(time.Time)
 func RegisterCustomField(name string, object interface{}) {
 	registry.Register(name, object)
 }

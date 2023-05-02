@@ -15,6 +15,11 @@ import (
 type Transformer = httprc.Transformer
 type HTTPClient = httprc.HTTPClient
 type ErrSink = httprc.ErrSink
+
+// Whitelist describes a set of rules that allows users to access
+// a particular URL. By default all URLs are blocked for security
+// reasons. You will HAVE to provide some sort of whitelist. See
+// the documentation for github.com/lestrrat-go/httprc for more details.
 type Whitelist = httprc.Whitelist
 
 // Cache is a container that keeps track of Set object by their source URLs.
@@ -24,13 +29,57 @@ type Whitelist = httprc.Whitelist
 // Before retrieving the Set objects, the user must pre-register the
 // URLs they intend to use by calling `Register()`
 //
-//  c := jwk.NewCache(ctx)
-//  c.Register(url, options...)
+//	c := jwk.NewCache(ctx)
+//	c.Register(url, options...)
 //
 // Once registered, you can call `Get()` to retrieve the Set object.
 //
 // All JWKS objects that are retrieved via this mechanism should be
-// treated read-only, as they are shared among the consumers and this object.
+// treated read-only, as they are shared among all consumers, as well
+// as the `jwk.Cache` object.
+//
+// There are cases where `jwk.Cache` and `jwk.CachedSet` should and
+// should not be used.
+//
+// First and foremost, do NOT use a cache for those JWKS objects that
+// need constant checking. For example, unreliable or user-provided JWKS (i.e. those
+// JWKS that are not from a well-known provider) should not be fetched
+// through a `jwk.Cache` or `jwk.CachedSet`.
+//
+// For example, if you have a flaky JWKS server for development
+// that can go down often, you should consider alternatives such as
+// providing `http.Client` with a caching `http.RoundTripper` configured
+// (see `jwk.WithHTTPClient`), setting up a reverse proxy, etc.
+// These techniques allow you to setup a more robust way to both cache
+// and report precise causes of the problems than using `jwk.Cache` or
+// `jwk.CachedSet`. If you handle the caching at the HTTP level like this,
+// you will be able to use a simple `jwk.Fetch` call and not worry about the cache.
+//
+// User-provided JWKS objects may also be problematic, as it may go down
+// unexpectedly (and frequently!), and it will be hard to detect when
+// the URLs or its contents are swapped.
+//
+// A good use-case for `jwk.Cache` and `jwk.CachedSet` are for "stable"
+// JWKS objects.
+//
+// When we say "stable", we are thinking of JWKS that should mostly be
+// ALWAYS available. A good example are those JWKS objects provided by
+// major cloud providers such as Google Cloud, AWS, or Azure.
+// Stable JWKS may still experience intermittent network connectivity problems,
+// but you can expect that they will eventually recover in relatively
+// short period of time. They rarely change URLs, and the contents are
+// expected to be valid or otherwise it would cause havoc to those providers
+//
+// We also know that these stable JWKS objects are rotated periodically,
+// which is a perfect use for `jwk.Cache` and `jwk.CachedSet`. The caches
+// can be configured to perodically refresh the JWKS thereby keeping them
+// fresh without extra intervention from the developer.
+//
+// Notice that for these recommended use-cases the requirement to check
+// the validity or the availability of the JWKS objects are non-existent,
+// as it is expected that they will be available and will be valid. The
+// caching mechanism can hide intermittent connectivity problems as well
+// as keep the objects mostly fresh.
 type Cache struct {
 	cache *httprc.Cache
 }
@@ -117,6 +166,16 @@ func NewCache(ctx context.Context, options ...CacheOption) *Cache {
 //
 // Please refer to the documentation for `(httprc.Cache).Register` for more
 // details.
+//
+// Register does not check for the validity of the url being registered.
+// If you need to make sure that a url is valid before entering your main
+// loop, call `Refresh` once to make sure the JWKS is available.
+//
+//	_ = cache.Register(url)
+//	if _, err := cache.Refresh(ctx, url); err != nil {
+//	  // url is not a valid JWKS
+//	  panic(err)
+//	}
 func (c *Cache) Register(u string, options ...RegisterOption) error {
 	var hrropts []httprc.RegisterOption
 	var pf PostFetcher
@@ -227,6 +286,8 @@ func (c *Cache) Snapshot() *httprc.Snapshot {
 // Note that since this is a utility shim over `jwk.Cache`, you _will_ lose
 // the ability to control the finer details (such as controlling how long to
 // wait for in case of a fetch failure using `context.Context`)
+//
+// Make sure that you read the documentation for `jwk.Cache` as well.
 type CachedSet struct {
 	cache *Cache
 	url   string
@@ -310,7 +371,6 @@ func (cs *CachedSet) Index(key Key) int {
 }
 
 func (cs *CachedSet) Keys(ctx context.Context) KeyIterator {
-	//nolint:contextcheck
 	set, err := cs.cached()
 	if err != nil {
 		return arrayiter.New(nil)
@@ -320,7 +380,6 @@ func (cs *CachedSet) Keys(ctx context.Context) KeyIterator {
 }
 
 func (cs *CachedSet) Iterate(ctx context.Context) HeaderIterator {
-	//nolint:contextcheck
 	set, err := cs.cached()
 	if err != nil {
 		return mapiter.New(nil)

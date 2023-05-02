@@ -11,6 +11,7 @@ import (
 	"github.com/lestrrat-go/option"
 )
 
+type identInsecureNoSignature struct{}
 type identKey struct{}
 type identKeySet struct{}
 type identTypedClaim struct{}
@@ -21,6 +22,8 @@ func toSignOptions(options ...Option) ([]jws.SignOption, error) {
 	for _, option := range options {
 		//nolint:forcetypeassert
 		switch option.Ident() {
+		case identInsecureNoSignature{}:
+			soptions = append(soptions, jws.WithInsecureNoSignature())
 		case identKey{}:
 			wk := option.Value().(*withKey) // this always succeeds
 			var wksoptions []jws.WithKeySuboption
@@ -115,7 +118,7 @@ type withKey struct {
 // It is the caller's responsibility to match the suboptions to the operation that they
 // are performing. For example, you are not allowed to do this:
 //
-//    jwt.Sign(token, jwt.WithKey(alg, key, jweOptions...))
+//	jwt.Sign(token, jwt.WithKey(alg, key, jweOptions...))
 //
 // In the above example, the creation of the option via `jwt.WithKey()` will work, but
 // when `jwt.Sign()` is called, the fact that you passed JWE suboptions will be
@@ -250,7 +253,7 @@ func WithRequiredClaim(name string) ValidateOption {
 //
 // For example, in order to specify that `exp` - `iat` should be less than 10*time.Second, you would write
 //
-//    jwt.Validate(token, jwt.WithMaxDelta(10*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey))
+//	jwt.Validate(token, jwt.WithMaxDelta(10*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey))
 //
 // If AcceptableSkew of 2 second is specified, the above will return valid for any value of
 // `exp` - `iat`  between 8 (10-2) and 12 (10+2).
@@ -263,10 +266,9 @@ func WithMaxDelta(dur time.Duration, c1, c2 string) ValidateOption {
 //
 // For example, in order to specify that `exp` - `iat` should be greater than 10*time.Second, you would write
 //
-//    jwt.Validate(token, jwt.WithMinDelta(10*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey))
+//	jwt.Validate(token, jwt.WithMinDelta(10*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey))
 //
 // The validation would fail if the difference is less than 10 seconds.
-//
 func WithMinDelta(dur time.Duration, c1, c2 string) ValidateOption {
 	return WithValidator(MinDeltaIs(c1, c2, dur))
 }
@@ -288,10 +290,14 @@ func WithMinDelta(dur time.Duration, c1, c2 string) ValidateOption {
 // Therefore, when you use this option you WILL have to specify at least
 // the `jwk.WithFetchWhitelist()` suboption: as:
 //
-//   jwt.Parse(data, jwt.WithVerifyAuto(nil, jwk.WithFetchWhitelist(...)))
+//	jwt.Parse(data, jwt.WithVerifyAuto(nil, jwk.WithFetchWhitelist(...)))
 //
 // See the list of available options that you can pass to `jwk.Fetch()`
 // in the `jwk` package
 func WithVerifyAuto(f jwk.Fetcher, options ...jwk.FetchOption) ParseOption {
 	return &parseOption{option.New(identVerifyAuto{}, jws.WithVerifyAuto(f, options...))}
+}
+
+func WithInsecureNoSignature() SignOption {
+	return &signEncryptParseOption{option.New(identInsecureNoSignature{}, nil)}
 }
