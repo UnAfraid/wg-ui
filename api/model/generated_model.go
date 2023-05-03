@@ -7,6 +7,8 @@ import (
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/99designs/gqlgen/graphql"
 )
 
 type Node interface {
@@ -19,16 +21,16 @@ type NodeChangedEvent interface {
 }
 
 type CreatePeerInput struct {
-	ClientMutationID    *string          `json:"clientMutationId,omitempty"`
-	ServerID            ID               `json:"serverId"`
-	Name                string           `json:"name"`
-	Description         *string          `json:"description,omitempty"`
-	PublicKey           string           `json:"publicKey"`
-	AllowedIPs          []string         `json:"allowedIPs"`
-	Endpoint            *string          `json:"endpoint,omitempty"`
-	PresharedKey        *string          `json:"presharedKey,omitempty"`
-	PersistentKeepalive *int             `json:"persistentKeepalive,omitempty"`
-	Hooks               []*PeerHookInput `json:"hooks,omitempty"`
+	ClientMutationID    graphql.Omittable[*string]          `json:"clientMutationId,omitempty"`
+	ServerID            ID                                  `json:"serverId"`
+	Name                string                              `json:"name"`
+	Description         graphql.Omittable[*string]          `json:"description,omitempty"`
+	PublicKey           string                              `json:"publicKey"`
+	AllowedIPs          []string                            `json:"allowedIPs"`
+	Endpoint            graphql.Omittable[*string]          `json:"endpoint,omitempty"`
+	PresharedKey        graphql.Omittable[*string]          `json:"presharedKey,omitempty"`
+	PersistentKeepalive graphql.Omittable[*int]             `json:"persistentKeepalive,omitempty"`
+	Hooks               graphql.Omittable[[]*PeerHookInput] `json:"hooks,omitempty"`
 }
 
 type CreatePeerPayload struct {
@@ -37,18 +39,18 @@ type CreatePeerPayload struct {
 }
 
 type CreateServerInput struct {
-	ClientMutationID *string            `json:"clientMutationId,omitempty"`
-	Name             string             `json:"name"`
-	Description      *string            `json:"description,omitempty"`
-	Enabled          *bool              `json:"enabled,omitempty"`
-	PrivateKey       *string            `json:"privateKey,omitempty"`
-	PublicKey        *string            `json:"publicKey,omitempty"`
-	ListenPort       *int               `json:"listenPort,omitempty"`
-	FirewallMark     *int               `json:"firewallMark,omitempty"`
-	Address          string             `json:"address"`
-	DNS              []string           `json:"dns,omitempty"`
-	Mtu              *int               `json:"mtu,omitempty"`
-	Hooks            []*ServerHookInput `json:"hooks,omitempty"`
+	ClientMutationID graphql.Omittable[*string]            `json:"clientMutationId,omitempty"`
+	Name             string                                `json:"name"`
+	Description      graphql.Omittable[*string]            `json:"description,omitempty"`
+	Enabled          graphql.Omittable[*bool]              `json:"enabled,omitempty"`
+	PrivateKey       graphql.Omittable[*string]            `json:"privateKey,omitempty"`
+	PublicKey        graphql.Omittable[*string]            `json:"publicKey,omitempty"`
+	ListenPort       graphql.Omittable[*int]               `json:"listenPort,omitempty"`
+	FirewallMark     graphql.Omittable[*int]               `json:"firewallMark,omitempty"`
+	Address          string                                `json:"address"`
+	DNS              graphql.Omittable[[]string]           `json:"dns,omitempty"`
+	Mtu              graphql.Omittable[*int]               `json:"mtu,omitempty"`
+	Hooks            graphql.Omittable[[]*ServerHookInput] `json:"hooks,omitempty"`
 }
 
 type CreateServerPayload struct {
@@ -57,9 +59,9 @@ type CreateServerPayload struct {
 }
 
 type CreateUserInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	Email            string  `json:"email"`
-	Password         string  `json:"password"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	Email            string                     `json:"email"`
+	Password         string                     `json:"password"`
 }
 
 type CreateUserPayload struct {
@@ -68,8 +70,8 @@ type CreateUserPayload struct {
 }
 
 type DeletePeerInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	ID               ID      `json:"id"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	ID               ID                         `json:"id"`
 }
 
 type DeletePeerPayload struct {
@@ -78,8 +80,8 @@ type DeletePeerPayload struct {
 }
 
 type DeleteServerInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	ID               ID      `json:"id"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	ID               ID                         `json:"id"`
 }
 
 type DeleteServerPayload struct {
@@ -88,8 +90,8 @@ type DeleteServerPayload struct {
 }
 
 type DeleteUserInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	ID               ID      `json:"id"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	ID               ID                         `json:"id"`
 }
 
 type DeleteUserPayload struct {
@@ -125,7 +127,7 @@ type ForeignServer struct {
 }
 
 type GenerateWireguardKeyInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
 }
 
 type GenerateWireguardKeyPayload struct {
@@ -135,8 +137,8 @@ type GenerateWireguardKeyPayload struct {
 }
 
 type ImportForeignServerInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	Name             string  `json:"name"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	Name             string                     `json:"name"`
 }
 
 type ImportForeignServerPayload struct {
@@ -273,9 +275,9 @@ type ServerInterfaceStats struct {
 }
 
 type SignInInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	Email            string  `json:"email"`
-	Password         string  `json:"password"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	Email            string                     `json:"email"`
+	Password         string                     `json:"password"`
 }
 
 type SignInPayload struct {
@@ -289,8 +291,8 @@ type SignInPayload struct {
 }
 
 type StartServerInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	ID               ID      `json:"id"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	ID               ID                         `json:"id"`
 }
 
 type StartServerPayload struct {
@@ -299,8 +301,8 @@ type StartServerPayload struct {
 }
 
 type StopServerInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	ID               ID      `json:"id"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	ID               ID                         `json:"id"`
 }
 
 type StopServerPayload struct {
@@ -309,16 +311,16 @@ type StopServerPayload struct {
 }
 
 type UpdatePeerInput struct {
-	ClientMutationID    *string          `json:"clientMutationId,omitempty"`
-	ID                  ID               `json:"id"`
-	Name                *string          `json:"name,omitempty"`
-	Description         *string          `json:"description,omitempty"`
-	PublicKey           *string          `json:"publicKey,omitempty"`
-	Endpoint            *string          `json:"endpoint,omitempty"`
-	AllowedIPs          []string         `json:"allowedIPs,omitempty"`
-	PresharedKey        *string          `json:"presharedKey,omitempty"`
-	PersistentKeepalive *int             `json:"persistentKeepalive,omitempty"`
-	Hooks               []*PeerHookInput `json:"hooks,omitempty"`
+	ClientMutationID    graphql.Omittable[*string]          `json:"clientMutationId,omitempty"`
+	ID                  ID                                  `json:"id"`
+	Name                graphql.Omittable[*string]          `json:"name,omitempty"`
+	Description         graphql.Omittable[*string]          `json:"description,omitempty"`
+	PublicKey           graphql.Omittable[*string]          `json:"publicKey,omitempty"`
+	Endpoint            graphql.Omittable[*string]          `json:"endpoint,omitempty"`
+	AllowedIPs          graphql.Omittable[[]string]         `json:"allowedIPs,omitempty"`
+	PresharedKey        graphql.Omittable[*string]          `json:"presharedKey,omitempty"`
+	PersistentKeepalive graphql.Omittable[*int]             `json:"persistentKeepalive,omitempty"`
+	Hooks               graphql.Omittable[[]*PeerHookInput] `json:"hooks,omitempty"`
 }
 
 type UpdatePeerPayload struct {
@@ -327,18 +329,18 @@ type UpdatePeerPayload struct {
 }
 
 type UpdateServerInput struct {
-	ClientMutationID *string            `json:"clientMutationId,omitempty"`
-	ID               ID                 `json:"id"`
-	Description      *string            `json:"description,omitempty"`
-	Enabled          *bool              `json:"enabled,omitempty"`
-	PublicKey        *string            `json:"publicKey,omitempty"`
-	PrivateKey       *string            `json:"privateKey,omitempty"`
-	ListenPort       *int               `json:"listenPort,omitempty"`
-	FirewallMark     *int               `json:"firewallMark,omitempty"`
-	Address          *string            `json:"address,omitempty"`
-	DNS              []string           `json:"dns,omitempty"`
-	Mtu              *int               `json:"mtu,omitempty"`
-	Hooks            []*ServerHookInput `json:"hooks,omitempty"`
+	ClientMutationID graphql.Omittable[*string]            `json:"clientMutationId,omitempty"`
+	ID               ID                                    `json:"id"`
+	Description      graphql.Omittable[*string]            `json:"description,omitempty"`
+	Enabled          graphql.Omittable[*bool]              `json:"enabled,omitempty"`
+	PublicKey        graphql.Omittable[*string]            `json:"publicKey,omitempty"`
+	PrivateKey       graphql.Omittable[*string]            `json:"privateKey,omitempty"`
+	ListenPort       graphql.Omittable[*int]               `json:"listenPort,omitempty"`
+	FirewallMark     graphql.Omittable[*int]               `json:"firewallMark,omitempty"`
+	Address          graphql.Omittable[*string]            `json:"address,omitempty"`
+	DNS              graphql.Omittable[[]string]           `json:"dns,omitempty"`
+	Mtu              graphql.Omittable[*int]               `json:"mtu,omitempty"`
+	Hooks            graphql.Omittable[[]*ServerHookInput] `json:"hooks,omitempty"`
 }
 
 type UpdateServerPayload struct {
@@ -347,10 +349,10 @@ type UpdateServerPayload struct {
 }
 
 type UpdateUserInput struct {
-	ClientMutationID *string `json:"clientMutationId,omitempty"`
-	ID               ID      `json:"id"`
-	Email            *string `json:"email,omitempty"`
-	Password         *string `json:"password,omitempty"`
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	ID               ID                         `json:"id"`
+	Email            graphql.Omittable[*string] `json:"email,omitempty"`
+	Password         graphql.Omittable[*string] `json:"password,omitempty"`
 }
 
 type UpdateUserPayload struct {

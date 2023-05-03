@@ -23,7 +23,7 @@ func (r *mutationResolver) UpdatePeer(ctx context.Context, input model.UpdatePee
 		return nil, err
 	}
 
-	updateOptions, updateFieldMask := model.UpdatePeerInputToUpdatePeerOptionsAndUpdatePeerFieldMask(ctx, input)
+	updateOptions, updateFieldMask := model.UpdatePeerInputToUpdatePeerOptionsAndUpdatePeerFieldMask(input)
 	peer, err := r.peerService.UpdatePeer(ctx, peerId, updateOptions, updateFieldMask, userId)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (r *mutationResolver) UpdatePeer(ctx context.Context, input model.UpdatePee
 	}
 
 	return &model.UpdatePeerPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		Peer:             p,
 	}, err
 }

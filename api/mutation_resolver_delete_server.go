@@ -42,7 +42,7 @@ func (r *mutationResolver) DeleteServer(ctx context.Context, input model.DeleteS
 	}
 
 	return &model.DeleteServerPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		Server:           s,
 	}, err
 }

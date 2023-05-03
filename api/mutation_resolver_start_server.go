@@ -36,7 +36,7 @@ func (r *mutationResolver) StartServer(ctx context.Context, input model.StartSer
 	}
 
 	return &model.StartServerPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		Server:           s,
 	}, nil
 }

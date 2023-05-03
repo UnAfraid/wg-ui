@@ -1,4 +1,4 @@
-# github.com/99designs/gqlgen v0.17.30
+# github.com/99designs/gqlgen v0.17.31-0.20230502164743-395c362b50f2
 ## explicit; go 1.18
 github.com/99designs/gqlgen
 github.com/99designs/gqlgen/api

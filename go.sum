@@ -1,5 +1,5 @@
-github.com/99designs/gqlgen v0.17.30 h1:aRCHdy0mWZ41gdlHctJmR05bi3on3Alj4YNRMBZG5UA=
-github.com/99designs/gqlgen v0.17.30/go.mod h1:i4rEatMrzzu6RXaHydq1nmEPZkb3bKQsnxNRHS4DQB4=
+github.com/99designs/gqlgen v0.17.31-0.20230502164743-395c362b50f2 h1:RDfXrdBIzgZEuuy4O2bSaxEGlE+J0PREZUmu0137vmU=
+github.com/99designs/gqlgen v0.17.31-0.20230502164743-395c362b50f2/go.mod h1:i4rEatMrzzu6RXaHydq1nmEPZkb3bKQsnxNRHS4DQB4=
 github.com/UnAfraid/dataloaden/v2 v2.0.0 h1:hOz4Zgs1RNnuxYCFsv11Oahgh/qbgd8f49zbBELr+co=
 github.com/UnAfraid/dataloaden/v2 v2.0.0/go.mod h1:PQZTv95hIyKU87AwUGaF65n9Wk2nNszm5zSPIiD7WHs=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=

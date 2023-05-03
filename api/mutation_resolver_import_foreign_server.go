@@ -23,7 +23,7 @@ func (r *mutationResolver) ImportForeignServer(ctx context.Context, input model.
 	}
 
 	return &model.ImportForeignServerPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		Server:           model.ToServer(server),
 	}, nil
 }

@@ -36,7 +36,7 @@ func (r *mutationResolver) StopServer(ctx context.Context, input model.StopServe
 	}
 
 	return &model.StopServerPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		Server:           s,
 	}, nil
 }

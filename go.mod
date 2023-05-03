@@ -3,7 +3,7 @@ module github.com/UnAfraid/wg-ui
 go 1.20
 
 require (
-	github.com/99designs/gqlgen v0.17.30
+	github.com/99designs/gqlgen v0.17.31-0.20230502164743-395c362b50f2
 	github.com/UnAfraid/dataloaden/v2 v2.0.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/glendc/go-external-ip v0.1.0

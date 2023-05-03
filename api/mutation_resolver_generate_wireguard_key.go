@@ -13,7 +13,7 @@ func (r *mutationResolver) GenerateWireguardKey(ctx context.Context, input model
 		return nil, err
 	}
 	return &model.GenerateWireguardKeyPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		PrivateKey:       key.String(),
 		PublicKey:        key.PublicKey().String(),
 	}, nil
