@@ -1,8 +1,6 @@
 package model
 
 import (
-	"context"
-
 	"github.com/UnAfraid/wg-ui/internal/adapt"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/wg"
@@ -11,26 +9,26 @@ import (
 func CreatePeerInputToCreateOptions(input CreatePeerInput) *peer.CreateOptions {
 	return &peer.CreateOptions{
 		Name:                input.Name,
-		Description:         adapt.Dereference(input.Description),
+		Description:         adapt.Dereference(input.Description.Value()),
 		PublicKey:           input.PublicKey,
-		Endpoint:            adapt.Dereference(input.Endpoint),
+		Endpoint:            adapt.Dereference(input.Endpoint.Value()),
 		AllowedIPs:          input.AllowedIPs,
-		PresharedKey:        adapt.Dereference(input.PresharedKey),
-		PersistentKeepalive: adapt.Dereference(input.PersistentKeepalive),
-		Hooks:               adapt.Array(input.Hooks, PeerHookInputToPeerHook),
+		PresharedKey:        adapt.Dereference(input.PresharedKey.Value()),
+		PersistentKeepalive: adapt.Dereference(input.PersistentKeepalive.Value()),
+		Hooks:               adapt.Array(input.Hooks.Value(), PeerHookInputToPeerHook),
 	}
 }
 
-func UpdatePeerInputToUpdatePeerOptionsAndUpdatePeerFieldMask(ctx context.Context, input UpdatePeerInput) (options *peer.UpdateOptions, fieldMask *peer.UpdateFieldMask) {
+func UpdatePeerInputToUpdatePeerOptionsAndUpdatePeerFieldMask(input UpdatePeerInput) (options *peer.UpdateOptions, fieldMask *peer.UpdateFieldMask) {
 	fieldMask = &peer.UpdateFieldMask{
-		Name:                resolverHasArgumentField(ctx, "input", "name"),
-		Description:         resolverHasArgumentField(ctx, "input", "description"),
-		PublicKey:           resolverHasArgumentField(ctx, "input", "publicKey"),
-		Endpoint:            resolverHasArgumentField(ctx, "input", "endpoint"),
-		AllowedIPs:          resolverHasArgumentField(ctx, "input", "allowedIPs"),
-		PresharedKey:        resolverHasArgumentField(ctx, "input", "presharedKey"),
-		PersistentKeepalive: resolverHasArgumentField(ctx, "input", "persistentKeepalive"),
-		Hooks:               resolverHasArgumentField(ctx, "input", "hooks"),
+		Name:                input.Name.IsSet(),
+		Description:         input.Description.IsSet(),
+		PublicKey:           input.PublicKey.IsSet(),
+		Endpoint:            input.Endpoint.IsSet(),
+		AllowedIPs:          input.AllowedIPs.IsSet(),
+		PresharedKey:        input.PresharedKey.IsSet(),
+		PersistentKeepalive: input.PersistentKeepalive.IsSet(),
+		Hooks:               input.Hooks.IsSet(),
 	}
 
 	var (
@@ -46,35 +44,35 @@ func UpdatePeerInputToUpdatePeerOptionsAndUpdatePeerFieldMask(ctx context.Contex
 	)
 
 	if fieldMask.Name {
-		name = adapt.Dereference(input.Name)
+		name = adapt.Dereference(input.Name.Value())
 	}
 
 	if fieldMask.Description {
-		description = adapt.Dereference(input.Description)
+		description = adapt.Dereference(input.Description.Value())
 	}
 
 	if fieldMask.PublicKey {
-		publicKey = adapt.Dereference(input.PublicKey)
+		publicKey = adapt.Dereference(input.PublicKey.Value())
 	}
 
 	if fieldMask.Endpoint {
-		endpoint = adapt.Dereference(input.Endpoint)
+		endpoint = adapt.Dereference(input.Endpoint.Value())
 	}
 
 	if fieldMask.AllowedIPs {
-		allowedIPs = input.AllowedIPs
+		allowedIPs = input.AllowedIPs.Value()
 	}
 
 	if fieldMask.PresharedKey {
-		presharedKey = adapt.Dereference(input.PresharedKey)
+		presharedKey = adapt.Dereference(input.PresharedKey.Value())
 	}
 
 	if fieldMask.PersistentKeepalive {
-		persistentKeepalive = adapt.Dereference(input.PersistentKeepalive)
+		persistentKeepalive = adapt.Dereference(input.PersistentKeepalive.Value())
 	}
 
 	if fieldMask.Hooks {
-		hooks = adapt.Array(input.Hooks, PeerHookInputToPeerHook)
+		hooks = adapt.Array(input.Hooks.Value(), PeerHookInputToPeerHook)
 	}
 
 	options = &peer.UpdateOptions{

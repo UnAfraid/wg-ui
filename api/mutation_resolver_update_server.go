@@ -19,7 +19,7 @@ func (r *mutationResolver) UpdateServer(ctx context.Context, input model.UpdateS
 		return nil, err
 	}
 
-	updateOptions, updateFieldMask, err := model.UpdateServerInputToUpdateOptionsAndUpdateFieldMask(ctx, input)
+	updateOptions, updateFieldMask, err := model.UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (r *mutationResolver) UpdateServer(ctx context.Context, input model.UpdateS
 	}
 
 	return &model.UpdateServerPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		Server:           s,
 	}, retErr
 }

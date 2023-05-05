@@ -27,7 +27,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input model.DeleteUse
 	}
 
 	return &model.DeleteUserPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		User:             u,
 	}, nil
 }

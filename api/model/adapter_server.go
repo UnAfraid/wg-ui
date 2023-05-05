@@ -1,8 +1,6 @@
 package model
 
 import (
-	"context"
-
 	"github.com/UnAfraid/wg-ui/internal/adapt"
 	"github.com/UnAfraid/wg-ui/server"
 	"github.com/UnAfraid/wg-ui/wg"
@@ -11,16 +9,16 @@ import (
 func CreateServerInputToCreateServerOptions(input CreateServerInput) (_ *server.CreateOptions, err error) {
 	return &server.CreateOptions{
 		Name:         input.Name,
-		Description:  adapt.Dereference(input.Description),
-		Enabled:      adapt.Dereference(input.Enabled),
-		PublicKey:    adapt.Dereference(input.PublicKey),
-		PrivateKey:   adapt.Dereference(input.PrivateKey),
-		ListenPort:   input.ListenPort,
-		FirewallMark: input.FirewallMark,
+		Description:  adapt.Dereference(input.Description.Value()),
+		Enabled:      adapt.Dereference(input.Enabled.Value()),
+		PublicKey:    adapt.Dereference(input.PublicKey.Value()),
+		PrivateKey:   adapt.Dereference(input.PrivateKey.Value()),
+		ListenPort:   input.ListenPort.Value(),
+		FirewallMark: input.FirewallMark.Value(),
 		Address:      input.Address,
-		DNS:          input.DNS,
-		MTU:          adapt.Dereference(input.Mtu),
-		Hooks:        adapt.Array(input.Hooks, ServerHookInputToServerHook),
+		DNS:          input.DNS.Value(),
+		MTU:          adapt.Dereference(input.Mtu.Value()),
+		Hooks:        adapt.Array(input.Hooks.Value(), ServerHookInputToServerHook),
 	}, nil
 }
 
@@ -79,18 +77,18 @@ func ServerHookInputToServerHook(hook *ServerHookInput) *server.Hook {
 	}
 }
 
-func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(ctx context.Context, input UpdateServerInput) (options *server.UpdateOptions, fieldMask *server.UpdateFieldMask, err error) {
+func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput) (options *server.UpdateOptions, fieldMask *server.UpdateFieldMask, err error) {
 	fieldMask = &server.UpdateFieldMask{
-		Description:  resolverHasArgumentField(ctx, "input", "description"),
-		Enabled:      resolverHasArgumentField(ctx, "input", "enabled"),
-		PublicKey:    resolverHasArgumentField(ctx, "input", "publicKey"),
-		PrivateKey:   resolverHasArgumentField(ctx, "input", "privateKey"),
-		ListenPort:   resolverHasArgumentField(ctx, "input", "listenPort"),
-		FirewallMark: resolverHasArgumentField(ctx, "input", "firewallMark"),
-		Address:      resolverHasArgumentField(ctx, "input", "address"),
-		DNS:          resolverHasArgumentField(ctx, "input", "dns"),
-		MTU:          resolverHasArgumentField(ctx, "input", "mtu"),
-		Hooks:        resolverHasArgumentField(ctx, "input", "hooks"),
+		Description:  input.Description.IsSet(),
+		Enabled:      input.Enabled.IsSet(),
+		PublicKey:    input.PublicKey.IsSet(),
+		PrivateKey:   input.PrivateKey.IsSet(),
+		ListenPort:   input.ListenPort.IsSet(),
+		FirewallMark: input.FirewallMark.IsSet(),
+		Address:      input.Address.IsSet(),
+		DNS:          input.DNS.IsSet(),
+		MTU:          input.Mtu.IsSet(),
+		Hooks:        input.Hooks.IsSet(),
 	}
 
 	var (
@@ -107,43 +105,43 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(ctx context.Context, inp
 	)
 
 	if fieldMask.Description {
-		description = adapt.Dereference(input.Description)
+		description = adapt.Dereference(input.Description.Value())
 	}
 
 	if fieldMask.Enabled {
-		enabled = adapt.Dereference(input.Enabled)
+		enabled = adapt.Dereference(input.Enabled.Value())
 	}
 
 	if fieldMask.PublicKey {
-		publicKey = adapt.Dereference(input.PublicKey)
+		publicKey = adapt.Dereference(input.PublicKey.Value())
 	}
 
 	if fieldMask.PrivateKey {
-		privateKey = adapt.Dereference(input.PrivateKey)
+		privateKey = adapt.Dereference(input.PrivateKey.Value())
 	}
 
 	if fieldMask.ListenPort {
-		listenPort = input.ListenPort
+		listenPort = input.ListenPort.Value()
 	}
 
 	if fieldMask.FirewallMark {
-		firewallMark = input.FirewallMark
+		firewallMark = input.FirewallMark.Value()
 	}
 
 	if fieldMask.Address {
-		address = adapt.Dereference(input.Address)
+		address = adapt.Dereference(input.Address.Value())
 	}
 
 	if fieldMask.DNS {
-		dns = input.DNS
+		dns = input.DNS.Value()
 	}
 
 	if fieldMask.MTU {
-		mtu = adapt.Dereference(input.Mtu)
+		mtu = adapt.Dereference(input.Mtu.Value())
 	}
 
 	if fieldMask.Hooks {
-		hooks = adapt.Array(input.Hooks, ServerHookInputToServerHook)
+		hooks = adapt.Array(input.Hooks.Value(), ServerHookInputToServerHook)
 	}
 
 	options = &server.UpdateOptions{

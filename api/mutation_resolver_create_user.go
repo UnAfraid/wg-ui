@@ -22,7 +22,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 	}
 
 	return &model.CreateUserPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		User:             u,
 	}, nil
 }

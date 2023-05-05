@@ -46,7 +46,7 @@ func (r *mutationResolver) DeletePeer(ctx context.Context, input model.DeletePee
 	}
 
 	return &model.DeletePeerPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		Peer:             p,
 	}, err
 }

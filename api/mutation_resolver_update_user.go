@@ -7,7 +7,7 @@ import (
 )
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UpdateUserInput) (*model.UpdateUserPayload, error) {
-	updateOptions, updateFieldMask, err := model.UpdateUserInputToUserUpdateUserOptions(ctx, input)
+	updateOptions, updateFieldMask, err := model.UpdateUserInputToUserUpdateUserOptions(input)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UpdateUse
 	}
 
 	return &model.UpdateUserPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		User:             u,
 	}, nil
 }

@@ -1,4 +1,4 @@
-# github.com/99designs/gqlgen v0.17.30
+# github.com/99designs/gqlgen v0.17.31
 ## explicit; go 1.18
 github.com/99designs/gqlgen
 github.com/99designs/gqlgen/api
@@ -218,10 +218,10 @@ golang.org/x/mod/semver
 # golang.org/x/net v0.9.0
 ## explicit; go 1.17
 golang.org/x/net/bpf
-# golang.org/x/sync v0.1.0
+# golang.org/x/sync v0.2.0
 ## explicit
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.7.0
+# golang.org/x/sys v0.8.0
 ## explicit; go 1.17
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader

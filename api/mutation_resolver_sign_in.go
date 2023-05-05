@@ -25,7 +25,7 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 	}
 
 	return &model.SignInPayload{
-		ClientMutationID: input.ClientMutationID,
+		ClientMutationID: input.ClientMutationID.Value(),
 		Token:            tokenString,
 		ExpiresAt:        expiresAt,
 		ExpiresIn:        int(r.jwtDuration.Seconds()),

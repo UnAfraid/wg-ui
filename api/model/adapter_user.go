@@ -1,8 +1,6 @@
 package model
 
 import (
-	"context"
-
 	"github.com/UnAfraid/wg-ui/internal/adapt"
 	"github.com/UnAfraid/wg-ui/user"
 )
@@ -26,14 +24,14 @@ func CreateUserInputToUserCreateUserOptions(createUserInput CreateUserInput) *us
 	}
 }
 
-func UpdateUserInputToUserUpdateUserOptions(ctx context.Context, updateUserInput UpdateUserInput) (*user.UpdateOptions, *user.UpdateFieldMask, error) {
-	if err := updateUserInput.ID.Validate(IdKindUser); err != nil {
+func UpdateUserInputToUserUpdateUserOptions(input UpdateUserInput) (*user.UpdateOptions, *user.UpdateFieldMask, error) {
+	if err := input.ID.Validate(IdKindUser); err != nil {
 		return nil, nil, err
 	}
 
 	fieldMask := &user.UpdateFieldMask{
-		Email:    resolverHasArgumentField(ctx, "input", "email"),
-		Password: resolverHasArgumentField(ctx, "input", "password"),
+		Email:    input.Email.IsSet(),
+		Password: input.Password.IsSet(),
 	}
 
 	var (
@@ -42,11 +40,11 @@ func UpdateUserInputToUserUpdateUserOptions(ctx context.Context, updateUserInput
 	)
 
 	if fieldMask.Email {
-		email = adapt.Dereference(updateUserInput.Email)
+		email = adapt.Dereference(input.Email.Value())
 	}
 
 	if fieldMask.Password {
-		password = adapt.Dereference(updateUserInput.Password)
+		password = adapt.Dereference(input.Password.Value())
 	}
 
 	options := &user.UpdateOptions{
