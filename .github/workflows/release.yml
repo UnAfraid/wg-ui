@@ -14,6 +14,7 @@ jobs:
       packages: write
     env:
       REGISTRY: ghcr.io
+      FRONTEND_REPOSITORY: desislavsd/wireguard-manager
       IMAGE_NAME: ${{ github.repository }}
       PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
@@ -28,6 +29,27 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.20.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Discover latest frontend release
+        run: |
+          LATEST_FRONTEND_RELEASE=$(curl -sS "https://api.github.com/repos/${FRONTEND_REPOSITORY}/releases/latest" | jq -r ".tag_name")
+          echo 'latest_frontend_release=${LATEST_FRONTEND_RELEASE}' >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ env.FRONTEND_REPOSITORY }}
+          ref: ${{ steps.variables.outputs.latest_frontend_release }}
+          path: api/tools/frontend/wireguard-manager
 
       - name: Setup Docker Buildx
         id: buildx
@@ -55,17 +77,12 @@ jobs:
 
       - name: Build Frontend
         run: |
-          LATEST_FRONTEND_TAG=$(curl -sS "https://api.github.com/repos/desislavsd/wireguard-manager/releases/latest" | jq -r ".tag_name")
-          cd api/tools/frontend
-          echo "Cloning version ${LATEST_FRONTEND_TAG}"
-          git clone --depth 1 -b "${LATEST_FRONTEND_TAG}" https://github.com/desislavsd/wireguard-manager
-          npm install -g pnpm@8
-          cd wireguard-manager
+          cd api/tools/frontend/wireguard-manager
           pnpm install
           npm run generate
+          rm -rf ../app
+          mv wireguard-manager/.output/public ../app
           cd ..
-          rm -rf app
-          mv wireguard-manager/.output/public app
           rm -rf wireguard-manager
 
       - name: GoReleaser
