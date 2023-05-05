@@ -81,7 +81,7 @@ jobs:
           pnpm install
           npm run generate
           rm -rf ../app
-          mv wireguard-manager/.output/public ../app
+          mv .output/public ../app
           cd ..
           rm -rf wireguard-manager
 
