@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/lestrrat-go/jwx/v2 v2.0.10
+	github.com/lestrrat-go/jwx/v2 v2.0.11
 	github.com/sirupsen/logrus v1.9.3
 	github.com/twelvedata/searchindex v1.0.1
 	github.com/vektah/gqlparser/v2 v2.5.3
