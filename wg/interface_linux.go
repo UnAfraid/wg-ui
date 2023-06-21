@@ -141,7 +141,7 @@ func findForeignInterfaces(knownInterfaces []string) (foreignInterfaces []Foreig
 
 		var addresses []string
 		for _, addr := range addrList {
-			addresses = append(addresses, addr.String())
+			addresses = append(addresses, addr.IPNet.String())
 		}
 
 		foreignInterfaces = append(foreignInterfaces, ForeignInterface{
