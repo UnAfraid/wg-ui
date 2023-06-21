@@ -50,5 +50,5 @@ func (r *mutationResolver) UpdatePeer(ctx context.Context, input model.UpdatePee
 	return &model.UpdatePeerPayload{
 		ClientMutationID: input.ClientMutationID.Value(),
 		Peer:             p,
-	}, err
+	}, nil
 }

@@ -49,5 +49,5 @@ func (r *mutationResolver) CreatePeer(ctx context.Context, input model.CreatePee
 	return &model.CreatePeerPayload{
 		ClientMutationID: input.ClientMutationID.Value(),
 		Peer:             p,
-	}, err
+	}, nil
 }
