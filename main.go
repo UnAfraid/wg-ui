@@ -159,7 +159,6 @@ func main() {
 
 	router := api.NewRouter(
 		conf,
-		conf.CorsAllowedOrigins,
 		authService,
 		nodeSubscriptionService,
 		userService,

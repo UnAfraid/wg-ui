@@ -24,18 +24,17 @@ import (
 	"github.com/UnAfraid/wg-ui/user"
 	"github.com/UnAfraid/wg-ui/wg"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
 	"github.com/gorilla/websocket"
+	"github.com/rs/cors"
 )
 
 const (
 	dataLoaderWait     = 250 * time.Microsecond
-	dataLoaderMaxBatch = 100
+	dataLoaderMaxBatch = 1000
 )
 
 func NewRouter(
 	conf *config.Config,
-	corsAllowedOrigins []string,
 	authService auth.Service,
 	nodeSubscriptionService subscription.NodeService,
 	userService user.Service,
@@ -47,10 +46,11 @@ func NewRouter(
 	wgService wg.Service,
 ) http.Handler {
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   corsAllowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
+		AllowedOrigins:      conf.CorsAllowedOrigins,
+		AllowedMethods:      []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:      []string{"*"},
+		AllowCredentials:    conf.CorsAllowCredentials,
+		AllowPrivateNetwork: conf.CorsAllowPrivateNetwork,
 	})
 
 	executableSchemaConfig := newConfig(
