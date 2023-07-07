@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"github.com/UnAfraid/wg-ui/api/dataloader"
+	"github.com/UnAfraid/wg-ui/api/handler"
 	"github.com/UnAfraid/wg-ui/api/model"
 )
 
@@ -17,12 +17,12 @@ func (r *peerResolver) Stats(ctx context.Context, p *model.Peer) (*model.PeerSta
 		return nil, err
 	}
 
-	serverLoader, err := dataloader.ServerLoaderFromContext(ctx)
+	serverLoader, err := handler.ServerLoaderFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	server, err := serverLoader.Load(serverId)
+	server, err := serverLoader.Load(ctx, serverId)()
 	if err != nil {
 		return nil, err
 	}

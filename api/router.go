@@ -10,7 +10,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
-	"github.com/UnAfraid/wg-ui/api/dataloader"
 	"github.com/UnAfraid/wg-ui/api/exec"
 	"github.com/UnAfraid/wg-ui/api/handler"
 	"github.com/UnAfraid/wg-ui/api/model"
@@ -124,7 +123,7 @@ func NewRouter(
 
 	router.Group(func(r chi.Router) {
 		r.Use(authHandler.AuthenticationMiddleware())
-		r.Use(dataloader.NewMiddleware(
+		r.Use(handler.NewDataLoaderMiddleware(
 			dataLoaderWait,
 			dataLoaderMaxBatch,
 			userService,

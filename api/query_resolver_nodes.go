@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"sync"
 
-	dataloader2 "github.com/UnAfraid/dataloaden/v2/dataloader"
-	"github.com/UnAfraid/wg-ui/api/dataloader"
+	"github.com/UnAfraid/wg-ui/api/handler"
 	"github.com/UnAfraid/wg-ui/api/model"
 	"github.com/UnAfraid/wg-ui/internal/adapt"
+	"github.com/graph-gophers/dataloader/v7"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -96,11 +96,11 @@ func resolveIdKindNodes(ctx context.Context, idKind model.IdKind, ids []*model.I
 
 	switch idKind {
 	case model.IdKindUser:
-		return resolveNodes(ctx, stringIds, dataloader.UserLoaderFromContext)
+		return resolveNodes(ctx, stringIds, handler.UserLoaderFromContext)
 	case model.IdKindServer:
-		return resolveNodes(ctx, stringIds, dataloader.ServerLoaderFromContext)
+		return resolveNodes(ctx, stringIds, handler.ServerLoaderFromContext)
 	case model.IdKindPeer:
-		return resolveNodes(ctx, stringIds, dataloader.PeerLoaderFromContext)
+		return resolveNodes(ctx, stringIds, handler.PeerLoaderFromContext)
 	default:
 		return nil, fmt.Errorf("node type %s is %w", idKind, ErrNotImplemented)
 	}
@@ -109,14 +109,14 @@ func resolveIdKindNodes(ctx context.Context, idKind model.IdKind, ids []*model.I
 func resolveNodes[K comparable, V model.Node](
 	ctx context.Context,
 	ids []K,
-	dataLoaderInitFn func(ctx context.Context) (dataloader2.DataLoader[K, V], error),
+	dataLoaderInitFn func(ctx context.Context) (*dataloader.Loader[K, V], error),
 ) ([]model.Node, error) {
 	dataLoader, err := dataLoaderInitFn(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	peers, errs := dataLoader.LoadAll(ids)
+	peers, errs := dataLoader.LoadMany(ctx, ids)()
 	if err = errors.Join(errs...); err != nil {
 		return nil, err
 	}

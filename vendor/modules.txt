@@ -25,11 +25,6 @@ github.com/99designs/gqlgen/plugin/federation/fieldset
 github.com/99designs/gqlgen/plugin/modelgen
 github.com/99designs/gqlgen/plugin/resolvergen
 github.com/99designs/gqlgen/plugin/servergen
-# github.com/UnAfraid/dataloaden/v2 v2.0.0
-## explicit; go 1.18
-github.com/UnAfraid/dataloaden/v2
-github.com/UnAfraid/dataloaden/v2/dataloader
-github.com/UnAfraid/dataloaden/v2/pkg/generator
 # github.com/agnivade/levenshtein v1.1.1
 ## explicit; go 1.13
 github.com/agnivade/levenshtein
@@ -64,6 +59,9 @@ github.com/google/uuid
 # github.com/gorilla/websocket v1.5.0
 ## explicit; go 1.12
 github.com/gorilla/websocket
+# github.com/graph-gophers/dataloader/v7 v7.1.0
+## explicit; go 1.18
+github.com/graph-gophers/dataloader/v7
 # github.com/hashicorp/errwrap v1.1.0
 ## explicit
 github.com/hashicorp/errwrap
@@ -77,9 +75,6 @@ github.com/hashicorp/golang-lru/v2/simplelru
 # github.com/iancoleman/orderedmap v0.2.0
 ## explicit
 github.com/iancoleman/orderedmap
-# github.com/iancoleman/strcase v0.2.0
-## explicit; go 1.16
-github.com/iancoleman/strcase
 # github.com/josharian/native v1.1.0
 ## explicit; go 1.13
 github.com/josharian/native
@@ -103,9 +98,6 @@ github.com/mdlayher/socket
 github.com/mitchellh/mapstructure
 # github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
 ## explicit; go 1.12
-# github.com/pkg/errors v0.9.1
-## explicit
-github.com/pkg/errors
 # github.com/russross/blackfriday/v2 v2.1.0
 ## explicit
 github.com/russross/blackfriday/v2
