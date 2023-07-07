@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"net/url"
 	"strings"
@@ -9,29 +8,12 @@ import (
 
 	"github.com/UnAfraid/wg-ui/api/model"
 	"github.com/UnAfraid/wg-ui/internal/adapt"
-	"github.com/UnAfraid/wg-ui/server"
 )
 
 func idsToStringIds(idKind model.IdKind, ids []*model.ID) ([]string, error) {
 	return adapt.ArrayErr(ids, func(id *model.ID) (string, error) {
 		return id.String(idKind)
 	})
-}
-
-func (r *resolverRoot) withServer(ctx context.Context, serverId string, callback func(svc *server.Server)) error {
-	svc, err := r.serverService.FindServer(ctx, &server.FindOneOptions{
-		IdOption: &server.IdOption{
-			Id: serverId,
-		},
-		NameOption: nil,
-	})
-	if err != nil {
-		return err
-	}
-	if svc != nil {
-		callback(svc)
-	}
-	return nil
 }
 
 func checkOrigin(r *http.Request, allowedSubscriptionOrigins []string) bool {

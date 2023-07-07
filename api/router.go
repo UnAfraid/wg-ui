@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql/handler"
+	gqlhandler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/apollotracing"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -12,11 +12,13 @@ import (
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
 	"github.com/UnAfraid/wg-ui/api/dataloader"
 	"github.com/UnAfraid/wg-ui/api/exec"
+	"github.com/UnAfraid/wg-ui/api/handler"
 	"github.com/UnAfraid/wg-ui/api/model"
 	"github.com/UnAfraid/wg-ui/api/subscription"
 	"github.com/UnAfraid/wg-ui/api/tools/frontend"
 	"github.com/UnAfraid/wg-ui/api/tools/playground"
 	"github.com/UnAfraid/wg-ui/api/tools/voyager"
+	"github.com/UnAfraid/wg-ui/auth"
 	"github.com/UnAfraid/wg-ui/config"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"
@@ -24,7 +26,6 @@ import (
 	"github.com/UnAfraid/wg-ui/wg"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/jwtauth/v5"
 	"github.com/gorilla/websocket"
 )
 
@@ -36,7 +37,7 @@ const (
 func NewRouter(
 	conf *config.Config,
 	corsAllowedOrigins []string,
-	jwtAuth *jwtauth.JWTAuth,
+	authService auth.Service,
 	nodeSubscriptionService subscription.NodeService,
 	userService user.Service,
 	userSubscriptionService subscription.Service[*model.UserChangedEvent],
@@ -54,8 +55,7 @@ func NewRouter(
 	})
 
 	executableSchemaConfig := newConfig(
-		conf.JwtDuration,
-		jwtAuth,
+		authService,
 		nodeSubscriptionService,
 		userService,
 		userSubscriptionService,
@@ -66,9 +66,10 @@ func NewRouter(
 		wgService,
 	)
 
-	gqlHandler := handler.New(exec.NewExecutableSchema(executableSchemaConfig))
+	authHandler := handler.NewAuthenticationMiddleware(authService, userService)
+	gqlHandler := gqlhandler.New(exec.NewExecutableSchema(executableSchemaConfig))
 	gqlHandler.AddTransport(transport.Websocket{
-		InitFunc:              websocketAuthenticationInit(jwtAuth),
+		InitFunc:              authHandler.WebsocketMiddleware(),
 		KeepAlivePingInterval: 10 * time.Second,
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -122,7 +123,7 @@ func NewRouter(
 	})
 
 	router.Group(func(r chi.Router) {
-		r.Use(authenticationMiddleware(jwtAuth))
+		r.Use(authHandler.AuthenticationMiddleware())
 		r.Use(dataloader.NewMiddleware(
 			dataLoaderWait,
 			dataLoaderMaxBatch,

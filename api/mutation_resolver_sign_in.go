@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"time"
 
 	"github.com/UnAfraid/wg-ui/api/model"
 )
@@ -14,12 +13,7 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 	}
 	user := model.ToUser(u)
 
-	expiresAt := time.Now().Add(r.jwtDuration)
-	_, tokenString, err := r.jwtAuth.Encode(map[string]interface{}{
-		"userId": user.ID.Base64(),
-		"iat":    time.Now().Unix(),
-		"exp":    expiresAt.Unix(),
-	})
+	tokenString, expiresIn, expiresAt, err := r.authService.Sign(user.ID.Base64())
 	if err != nil {
 		return nil, err
 	}
@@ -28,6 +22,6 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 		ClientMutationID: input.ClientMutationID.Value(),
 		Token:            tokenString,
 		ExpiresAt:        expiresAt,
-		ExpiresIn:        int(r.jwtDuration.Seconds()),
+		ExpiresIn:        int(expiresIn.Seconds()),
 	}, nil
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/UnAfraid/wg-ui/api"
 	"github.com/UnAfraid/wg-ui/api/subscription"
+	"github.com/UnAfraid/wg-ui/auth"
 	"github.com/UnAfraid/wg-ui/config"
 	"github.com/UnAfraid/wg-ui/datastore"
 	"github.com/UnAfraid/wg-ui/datastore/bbolt"
@@ -21,7 +22,7 @@ import (
 	"github.com/UnAfraid/wg-ui/user"
 	"github.com/UnAfraid/wg-ui/wg"
 	"github.com/glendc/go-external-ip"
-	"github.com/go-chi/jwtauth/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/automaxprocs/maxprocs"
 )
@@ -154,10 +155,12 @@ func main() {
 	interfaceStatsService := interfacestats.NewService(wgService, serverService, serverSubscriptionService)
 	defer interfaceStatsService.Close()
 
+	authService := auth.NewService(jwt.SigningMethodHS256, jwtSecretBytes, jwtSecretBytes, conf.JwtDuration)
+
 	router := api.NewRouter(
 		conf,
 		conf.CorsAllowedOrigins,
-		jwtauth.New("HS256", jwtSecretBytes, nil),
+		authService,
 		nodeSubscriptionService,
 		userService,
 		userSubscriptionService,

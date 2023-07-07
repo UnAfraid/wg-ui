@@ -1,21 +1,20 @@
 package api
 
 import (
-	"time"
+	"context"
 
 	"github.com/UnAfraid/wg-ui/api/exec"
 	"github.com/UnAfraid/wg-ui/api/model"
 	"github.com/UnAfraid/wg-ui/api/subscription"
+	"github.com/UnAfraid/wg-ui/auth"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"
 	"github.com/UnAfraid/wg-ui/user"
 	"github.com/UnAfraid/wg-ui/wg"
-	"github.com/go-chi/jwtauth/v5"
 )
 
 type resolverRoot struct {
-	jwtDuration               time.Duration
-	jwtAuth                   *jwtauth.JWTAuth
+	authService               auth.Service
 	nodeSubscriptionService   subscription.NodeService
 	userService               user.Service
 	userSubscriptionService   subscription.Service[*model.UserChangedEvent]
@@ -48,4 +47,20 @@ func (r *resolverRoot) Mutation() exec.MutationResolver {
 
 func (r *resolverRoot) Subscription() exec.SubscriptionResolver {
 	return &subscriptionResolver{r}
+}
+
+func (r *resolverRoot) withServer(ctx context.Context, serverId string, callback func(svc *server.Server)) error {
+	svc, err := r.serverService.FindServer(ctx, &server.FindOneOptions{
+		IdOption: &server.IdOption{
+			Id: serverId,
+		},
+		NameOption: nil,
+	})
+	if err != nil {
+		return err
+	}
+	if svc != nil {
+		callback(svc)
+	}
+	return nil
 }
