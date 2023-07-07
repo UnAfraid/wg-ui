@@ -35,13 +35,18 @@ changelog:
       - Merge pull request
       - Merge branch
 archives:
-  - name_template: >-
+  - rlcp: true
+    name_template: >-
       {{ .ProjectName }}_
       {{- if eq .Os "darwin" }}macOS_
       {{- else }}{{- title .Os }}_{{ end }}
       {{- .Arch }}
     builds:
       - release
+    files:
+      - .env.dist
+      - LICENSE
+      - README.md
     format_overrides:
       - goos: windows
         format: zip

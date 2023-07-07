@@ -7,8 +7,9 @@ COPY . .
 
 ENV CGO_ENABLED=0
 
-RUN go test -mod=vendor -v ./...
-RUN go build -mod=vendor -o app
+RUN go mod download
+RUN go test -v ./...
+RUN go build -o app
 
 FROM scratch
 

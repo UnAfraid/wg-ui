@@ -28,12 +28,12 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20.3
+          go-version: 1.20.5
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18.16.1
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -84,6 +84,9 @@ jobs:
           mv .output/public ../app
           cd ..
           rm -rf wireguard-manager
+
+      - name: Download dependencies
+        run: go mod download
 
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v4
