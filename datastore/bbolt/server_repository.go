@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/UnAfraid/searchindex"
 	"github.com/UnAfraid/wg-ui/internal/adapt"
+	"github.com/UnAfraid/wg-ui/internal/slice"
 	"github.com/UnAfraid/wg-ui/server"
-	"github.com/twelvedata/searchindex"
 	"go.etcd.io/bbolt"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -28,262 +28,215 @@ func NewServerRepository(db *bbolt.DB) server.Repository {
 	}
 }
 
-func (r *wgServerRepository) FindOne(_ context.Context, options *server.FindOneOptions) (u *server.Server, err error) {
-	err = r.db.View(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(serverBucket))
-		if bucket == nil {
-			return nil
-		}
-
+func (r *wgServerRepository) FindOne(_ context.Context, options *server.FindOneOptions) (*server.Server, error) {
+	return dbView(r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
 		if idOption := options.IdOption; idOption != nil {
 			jsonState := bucket.Get([]byte(idOption.Id))
 			if jsonState == nil {
-				return nil
+				return nil, nil
 			}
 
-			if err := json.Unmarshal(jsonState, &u); err != nil {
-				return fmt.Errorf("failed to unmarshal server: %w", err)
+			var s *server.Server
+			if err := json.Unmarshal(jsonState, &s); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal server: %w", err)
 			}
 
-			return nil
+			return s, nil
 		} else if nameOption := options.NameOption; nameOption != nil {
-			var srv *server.Server
+			var s *server.Server
 			c := bucket.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
-				if err := json.Unmarshal(v, &srv); err != nil {
-					return fmt.Errorf("failed to unmarshal server: %w", err)
+				if err := json.Unmarshal(v, &s); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal server: %w", err)
 				}
-				if strings.EqualFold(srv.Name, nameOption.Name) {
-					u = srv
-					return nil
+				if strings.EqualFold(s.Name, nameOption.Name) {
+					return s, nil
 				}
 			}
 		}
 
-		return nil
+		return nil, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
 }
 
-func (r *wgServerRepository) FindAll(_ context.Context, options *server.FindOptions) (servers []*server.Server, err error) {
-	err = r.db.View(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(serverBucket))
-		if bucket == nil {
-			return nil
-		}
-
+func (r *wgServerRepository) FindAll(_ context.Context, options *server.FindOptions) ([]*server.Server, error) {
+	return dbView(r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) ([]*server.Server, error) {
+		var servers []*server.Server
 		var serversCount int
-		var searchList searchindex.SearchList
-		err = bucket.ForEach(func(k, v []byte) error {
+		var searchList searchindex.SearchList[*server.Server]
+		c := bucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
 			serversCount++
 
-			var svc *server.Server
-			if err := json.Unmarshal(v, &svc); err != nil {
-				return fmt.Errorf("failed to unmarshal server: %w", err)
+			var s *server.Server
+			if err := json.Unmarshal(v, &s); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal server: %w", err)
 			}
 
 			var optionsLen int
 			if len(options.Ids) != 0 {
 				optionsLen++
-				if slices.Contains(options.Ids, svc.Id) {
-					servers = append(servers, svc)
-					return nil
+				if slice.Contains(options.Ids, s.Id) {
+					servers = append(servers, s)
+					continue
 				}
 			}
 
 			if options.Enabled != nil {
 				optionsLen++
-				if svc.Enabled == *options.Enabled {
-					servers = append(servers, svc)
-					return nil
+				if s.Enabled == *options.Enabled {
+					servers = append(servers, s)
+					continue
 				}
 			}
 
 			if options.CreateUserId != nil {
 				optionsLen++
-				if svc.CreateUserId == *options.CreateUserId {
-					servers = append(servers, svc)
-					return nil
+				if s.CreateUserId == *options.CreateUserId {
+					servers = append(servers, s)
+					continue
 				}
 			}
 
 			if options.UpdateUserId != nil {
 				optionsLen++
-				if svc.UpdateUserId == *options.UpdateUserId {
-					servers = append(servers, svc)
-					return nil
+				if s.UpdateUserId == *options.UpdateUserId {
+					servers = append(servers, s)
+					continue
 				}
 			}
 
 			if len(options.Query) != 0 {
 				optionsLen++
-				searchList = append(searchList, &searchindex.SearchItem{
-					Key:  svc.Name,
-					Data: svc,
+				searchList = append(searchList, &searchindex.SearchItem[*server.Server]{
+					Key:  s.Name,
+					Data: s,
 				})
-				searchList = append(searchList, &searchindex.SearchItem{
-					Key:  svc.Description,
-					Data: svc,
+				searchList = append(searchList, &searchindex.SearchItem[*server.Server]{
+					Key:  s.Description,
+					Data: s,
 				})
 			}
 
 			if optionsLen == 0 {
-				servers = append(servers, svc)
+				servers = append(servers, s)
 			}
-			return nil
-		})
-		if err != nil {
-			return err
 		}
 
 		if len(options.Query) != 0 {
 			searchIndex := searchindex.NewSearchIndex(searchList, serversCount, nil, nil, true, nil)
-			matches := searchIndex.Search(searchindex.SearchParams{
+			matches := searchIndex.Search(searchindex.SearchParams[*server.Server]{
 				Text:       options.Query,
 				OutputSize: serversCount,
 				Matching:   searchindex.Beginning,
 			})
-			for _, match := range matches {
-				servers = append(servers, match.(*server.Server))
-			}
+			servers = append(servers, matches...)
 		}
 
-		return nil
+		return servers, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return servers, nil
 }
 
-func (r *wgServerRepository) Create(_ context.Context, createServer *server.Server) (*server.Server, error) {
-	err := r.db.Update(func(tx *bbolt.Tx) error {
-		id := []byte(createServer.Id)
-		bucket, err := tx.CreateBucketIfNotExists([]byte(serverBucket))
-		if err != nil {
-			return fmt.Errorf("failed to create bucket: %w", err)
-		}
-
+func (r *wgServerRepository) Create(_ context.Context, s *server.Server) (*server.Server, error) {
+	return dbUpdate(r.db, serverBucket, true, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
+		id := []byte(s.Id)
 		if bucket.Get(id) != nil {
-			return server.ErrServerIdAlreadyExists
+			return nil, server.ErrServerIdAlreadyExists
 		}
 
-		jsonState, err := json.Marshal(createServer)
+		jsonState, err := json.Marshal(s)
 		if err != nil {
-			return fmt.Errorf("failed to marshal server: %w", err)
+			return nil, fmt.Errorf("failed to marshal server: %w", err)
 		}
 
-		return bucket.Put(id, jsonState)
+		return s, bucket.Put(id, jsonState)
 	})
-	if err != nil {
-		return nil, err
-	}
-	return createServer, nil
 }
 
-func (r *wgServerRepository) Update(_ context.Context, updateServer *server.Server, fieldMask *server.UpdateFieldMask) (updatedServer *server.Server, err error) {
-	err = r.db.Update(func(tx *bbolt.Tx) error {
-		id := []byte(updateServer.Id)
-		bucket, err := tx.CreateBucketIfNotExists([]byte(serverBucket))
-		if err != nil {
-			return fmt.Errorf("failed to create bucket: %w", err)
-		}
-
+func (r *wgServerRepository) Update(_ context.Context, s *server.Server, fieldMask *server.UpdateFieldMask) (*server.Server, error) {
+	return dbUpdate(r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
+		id := []byte(s.Id)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {
-			return server.ErrServerNotFound
+			return nil, server.ErrServerNotFound
 		}
 
+		var updatedServer *server.Server
 		if err := json.Unmarshal(jsonState, &updatedServer); err != nil {
-			return fmt.Errorf("failed to unmarshal server: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal server: %w", err)
 		}
 
 		if fieldMask.Description {
-			updatedServer.Description = updateServer.Description
+			updatedServer.Description = s.Description
 		}
 
 		if fieldMask.Enabled {
-			updatedServer.Enabled = updateServer.Enabled
+			updatedServer.Enabled = s.Enabled
 		}
 
 		if fieldMask.Running {
-			updatedServer.Running = updateServer.Running
+			updatedServer.Running = s.Running
 		}
 
 		if fieldMask.PublicKey {
-			updatedServer.PublicKey = updateServer.PublicKey
+			updatedServer.PublicKey = s.PublicKey
 		}
 
 		if fieldMask.ListenPort {
-			updatedServer.ListenPort = updateServer.ListenPort
+			updatedServer.ListenPort = s.ListenPort
 		}
 
 		if fieldMask.FirewallMark {
-			updatedServer.FirewallMark = updateServer.FirewallMark
+			updatedServer.FirewallMark = s.FirewallMark
 		}
 
 		if fieldMask.Address {
-			updatedServer.Address = updateServer.Address
+			updatedServer.Address = s.Address
 		}
 
 		if fieldMask.DNS {
-			updatedServer.DNS = updateServer.DNS
+			updatedServer.DNS = s.DNS
 		}
 
 		if fieldMask.MTU {
-			updatedServer.MTU = updateServer.MTU
+			updatedServer.MTU = s.MTU
 		}
 
 		if fieldMask.Hooks {
-			updatedServer.Hooks = updateServer.Hooks
+			updatedServer.Hooks = s.Hooks
 		}
 
 		if fieldMask.UpdateUserId {
-			updatedServer.UpdateUserId = updateServer.UpdateUserId
+			updatedServer.UpdateUserId = s.UpdateUserId
 		}
 
 		updatedServer.UpdatedAt = time.Now()
 
-		jsonState, err = json.Marshal(updatedServer)
+		jsonState, err := json.Marshal(updatedServer)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal server: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal server: %w", err)
 		}
 
-		return bucket.Put(id, jsonState)
+		return updatedServer, bucket.Put(id, jsonState)
 	})
-	if err != nil {
-		return nil, err
-	}
-	return updatedServer, nil
 }
 
-func (r *wgServerRepository) Delete(_ context.Context, serverId string, deleteUserId string) (deletedServer *server.Server, err error) {
-	err = r.db.Update(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(serverBucket))
-		if bucket == nil {
-			return nil
-		}
-
+func (r *wgServerRepository) Delete(_ context.Context, serverId string, deleteUserId string) (*server.Server, error) {
+	return dbUpdate(r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
 		id := []byte(serverId)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {
-			return server.ErrServerNotFound
+			return nil, server.ErrServerNotFound
 		}
 
+		var deletedServer *server.Server
 		if err := json.Unmarshal(jsonState, &deletedServer); err != nil {
-			return fmt.Errorf("failed to unmarshal server: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal server: %w", err)
 		}
 
 		deletedServer.DeleteUserId = deleteUserId
 		deletedServer.DeletedAt = adapt.ToPointer(time.Now())
 
-		return bucket.Delete(id)
+		return deletedServer, bucket.Delete(id)
 	})
-	if err != nil {
-		return nil, err
-	}
-	return deletedServer, nil
 }

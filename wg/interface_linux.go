@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/UnAfraid/wg-ui/internal/slice"
 	"github.com/vishvananda/netlink"
-	"golang.org/x/exp/slices"
 )
 
 func configureInterface(name string, address string, mtu int) error {
@@ -130,7 +130,7 @@ func findForeignInterfaces(knownInterfaces []string) (foreignInterfaces []Foreig
 
 		attrs := link.Attrs()
 		name := attrs.Name
-		if slices.Contains(knownInterfaces, name) {
+		if slice.Contains(knownInterfaces, name) {
 			continue
 		}
 

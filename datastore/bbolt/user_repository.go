@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/UnAfraid/searchindex"
+	"github.com/UnAfraid/wg-ui/internal/slice"
 	"github.com/UnAfraid/wg-ui/user"
-	"github.com/twelvedata/searchindex"
 	"go.etcd.io/bbolt"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -27,201 +27,154 @@ func NewUserRepository(db *bbolt.DB) user.Repository {
 	}
 }
 
-func (r *userRepository) FindOne(_ context.Context, options *user.FindOneOptions) (u *user.User, err error) {
-	err = r.db.View(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(userBucket))
-		if bucket == nil {
-			return nil
-		}
-
+func (r *userRepository) FindOne(_ context.Context, options *user.FindOneOptions) (*user.User, error) {
+	return dbView(r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
 		if idOption := options.IdOption; idOption != nil {
 			jsonState := bucket.Get([]byte(idOption.Id))
 			if jsonState == nil {
-				return nil
+				return nil, nil
 			}
 
+			var u *user.User
 			if err := json.Unmarshal(jsonState, &u); err != nil {
-				return fmt.Errorf("failed to unmarshal user: %w", err)
+				return nil, fmt.Errorf("failed to unmarshal user: %w", err)
 			}
 
 			if u.DeletedAt != nil && !idOption.WithDeleted {
 				u = nil
 			}
 
-			return nil
+			return u, nil
 		} else if emailOption := options.EmailOption; emailOption != nil {
-			var usr *user.User
+			var u *user.User
 			c := bucket.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
-				if err := json.Unmarshal(v, &usr); err != nil {
-					return fmt.Errorf("failed to unmarshal user: %w", err)
+				if err := json.Unmarshal(v, &u); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal user: %w", err)
 				}
-				if strings.EqualFold(usr.Email, emailOption.Email) {
-					u = usr
-					return nil
+				if strings.EqualFold(u.Email, emailOption.Email) {
+					return u, nil
 				}
 			}
 		}
 
-		return nil
+		return nil, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return u, nil
 }
 
-func (r *userRepository) FindAll(_ context.Context, options *user.FindOptions) (users []*user.User, err error) {
-	err = r.db.View(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(userBucket))
-		if bucket == nil {
-			return nil
-		}
-
+func (r *userRepository) FindAll(_ context.Context, options *user.FindOptions) ([]*user.User, error) {
+	return dbView(r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) ([]*user.User, error) {
+		var users []*user.User
 		var usersCount int
-		var searchList searchindex.SearchList
-		err = bucket.ForEach(func(k, v []byte) error {
+		var searchList searchindex.SearchList[*user.User]
+		c := bucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
 			usersCount++
-			var usr *user.User
-			if err := json.Unmarshal(v, &usr); err != nil {
-				return fmt.Errorf("failed to unmarshal user: %w", err)
+			var u *user.User
+			if err := json.Unmarshal(v, &u); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal user: %w", err)
 			}
 
 			var optionsLen int
 			if len(options.Ids) != 0 {
 				optionsLen++
-				if slices.Contains(options.Ids, usr.Id) {
-					users = append(users, usr)
-					return nil
+				if slice.Contains(options.Ids, u.Id) {
+					users = append(users, u)
+					continue
 				}
 			}
 
 			if len(options.Query) != 0 {
 				optionsLen++
-				searchList = append(searchList, &searchindex.SearchItem{
-					Key:  usr.Email,
-					Data: usr,
+				searchList = append(searchList, &searchindex.SearchItem[*user.User]{
+					Key:  u.Email,
+					Data: u,
 				})
 			}
 
 			if optionsLen == 0 {
-				users = append(users, usr)
+				users = append(users, u)
 			}
-			return nil
-		})
-		if err != nil {
-			return err
 		}
 
 		if len(options.Query) != 0 {
 			searchIndex := searchindex.NewSearchIndex(searchList, usersCount, nil, nil, true, nil)
-			matches := searchIndex.Search(searchindex.SearchParams{
+			matches := searchIndex.Search(searchindex.SearchParams[*user.User]{
 				Text:       options.Query,
 				OutputSize: usersCount,
 				Matching:   searchindex.Beginning,
 			})
-			for _, match := range matches {
-				users = append(users, match.(*user.User))
-			}
+			users = append(users, matches...)
 		}
 
-		return nil
+		return users, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return users, nil
 }
 
-func (r *userRepository) Create(_ context.Context, usr *user.User) (*user.User, error) {
-	err := r.db.Update(func(tx *bbolt.Tx) error {
-		id := []byte(usr.Id)
-		bucket, err := tx.CreateBucketIfNotExists([]byte(userBucket))
-		if err != nil {
-			return fmt.Errorf("failed to create bucket: %w", err)
-		}
-
+func (r *userRepository) Create(_ context.Context, u *user.User) (*user.User, error) {
+	return dbUpdate(r.db, userBucket, true, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
+		id := []byte(u.Id)
 		if bucket.Get(id) != nil {
-			return user.ErrUserIdAlreadyExists
+			return nil, user.ErrUserIdAlreadyExists
 		}
 
-		jsonState, err := json.Marshal(usr)
+		jsonState, err := json.Marshal(u)
 		if err != nil {
-			return fmt.Errorf("failed to marshal user: %w", err)
+			return nil, fmt.Errorf("failed to marshal user: %w", err)
 		}
 
-		return bucket.Put(id, jsonState)
+		return u, bucket.Put(id, jsonState)
 	})
-	if err != nil {
-		return nil, err
-	}
-	return usr, nil
 }
 
-func (r *userRepository) Update(_ context.Context, updateUser *user.User, fieldMask *user.UpdateFieldMask) (updatedUser *user.User, err error) {
-	err = r.db.Update(func(tx *bbolt.Tx) error {
-		id := []byte(updateUser.Id)
-		bucket, err := tx.CreateBucketIfNotExists([]byte(userBucket))
-		if err != nil {
-			return fmt.Errorf("failed to create bucket: %w", err)
-		}
-
+func (r *userRepository) Update(_ context.Context, u *user.User, fieldMask *user.UpdateFieldMask) (*user.User, error) {
+	return dbUpdate(r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
+		id := []byte(u.Id)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {
-			return user.ErrUserNotFound
+			return nil, user.ErrUserNotFound
 		}
 
+		var updatedUser *user.User
 		if err := json.Unmarshal(jsonState, &updatedUser); err != nil {
-			return fmt.Errorf("failed to unmarshal user: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal user: %w", err)
 		}
 
 		if fieldMask.Email {
-			updatedUser.Email = updateUser.Email
+			updatedUser.Email = u.Email
 		}
 
 		if fieldMask.Password {
-			updatedUser.Password = updateUser.Password
+			updatedUser.Password = u.Password
 		}
 
 		updatedUser.UpdatedAt = time.Now()
 
-		jsonState, err = json.Marshal(updatedUser)
+		jsonState, err := json.Marshal(updatedUser)
 		if err != nil {
-			return fmt.Errorf("failed to marshal user: %w", err)
+			return nil, fmt.Errorf("failed to marshal user: %w", err)
 		}
 
-		return bucket.Put(id, jsonState)
+		return updatedUser, bucket.Put(id, jsonState)
 	})
-	if err != nil {
-		return nil, err
-	}
-	return updatedUser, nil
 }
 
-func (r *userRepository) Delete(_ context.Context, userId string) (deletedUser *user.User, err error) {
-	err = r.db.Update(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(userBucket))
-		if bucket == nil {
-			return nil
-		}
-
+func (r *userRepository) Delete(_ context.Context, userId string) (*user.User, error) {
+	return dbUpdate(r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
 		id := []byte(userId)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {
-			return user.ErrUserNotFound
+			return nil, user.ErrUserNotFound
 		}
 
+		var deletedUser *user.User
 		if err := json.Unmarshal(jsonState, &deletedUser); err != nil {
-			return fmt.Errorf("failed to unmarshal user: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal user: %w", err)
 		}
 
 		now := time.Now()
 		deletedUser.DeletedAt = &now
 
-		return bucket.Delete(id)
+		return deletedUser, bucket.Delete(id)
 	})
-	if err != nil {
-		return nil, err
-	}
-	return deletedUser, nil
 }

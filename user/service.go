@@ -3,12 +3,16 @@ package user
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	emailPattern = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
 
 type Service interface {
@@ -160,7 +164,7 @@ func processCreateUser(options *CreateOptions) (*User, error) {
 	if len(options.Email) == 0 {
 		return nil, ErrEmailRequired
 	}
-	if !govalidator.IsEmail(options.Email) {
+	if !emailPattern.MatchString(options.Email) {
 		return nil, ErrEmailInvalid
 	}
 
@@ -195,7 +199,7 @@ func processUpdateUser(user *User, options *UpdateOptions, fieldMask *UpdateFiel
 	}
 
 	if fieldMask.Email && !strings.EqualFold(user.Email, options.Email) {
-		if !govalidator.IsEmail(options.Email) {
+		if !emailPattern.MatchString(options.Email) {
 			return ErrEmailInvalid
 		}
 	}

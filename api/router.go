@@ -47,7 +47,7 @@ func NewRouter(
 ) http.Handler {
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins:      conf.CorsAllowedOrigins,
-		AllowedMethods:      []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:      []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowedHeaders:      []string{"*"},
 		AllowCredentials:    conf.CorsAllowCredentials,
 		AllowPrivateNetwork: conf.CorsAllowPrivateNetwork,
