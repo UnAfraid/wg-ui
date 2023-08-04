@@ -3,7 +3,7 @@ module github.com/UnAfraid/wg-ui
 go 1.20
 
 require (
-	github.com/99designs/gqlgen v0.17.35
+	github.com/99designs/gqlgen v0.17.36
 	github.com/UnAfraid/searchindex v0.0.0-20230707222905-bbf56d7105a6
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/go-chi/chi/v5 v5.0.10
@@ -18,8 +18,8 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.8
 	github.com/vishvananda/netlink v1.1.0
 	go.etcd.io/bbolt v1.3.7
-	go.uber.org/automaxprocs v1.5.2
-	golang.org/x/crypto v0.11.0
+	go.uber.org/automaxprocs v1.5.3
+	golang.org/x/crypto v0.12.0
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20230429144221-925a1e7659e6
 )
 
@@ -42,11 +42,11 @@ require (
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.12.0 // indirect
+	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
-	golang.org/x/tools v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/tools v0.11.1 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20230704135630-469159ecf7d1 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
