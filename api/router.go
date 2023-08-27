@@ -76,6 +76,7 @@ func NewRouter(
 			},
 		},
 	})
+	gqlHandler.AddTransport(transport.SSE{})
 	gqlHandler.AddTransport(transport.Options{})
 	gqlHandler.AddTransport(transport.GET{})
 	gqlHandler.AddTransport(transport.POST{})
