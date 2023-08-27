@@ -8,7 +8,7 @@ require (
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/golang-jwt/jwt/v5 v5.0.0
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/graph-gophers/dataloader/v7 v7.1.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -28,7 +28,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.5 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.6 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
