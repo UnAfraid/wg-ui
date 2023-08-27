@@ -24,22 +24,54 @@ builds:
     goarch:
       - amd64
       - arm64
+nfpms:
+  - id: default
+    homepage: https://github.com/UnAfraid/wg-ui
+    maintainer: Rumen Nikiforov <unafraid89@gmail.com>
+    description: wg-ui - Self-contained WireGuard management service with a web UI and GraphQL API written in pure Go.
+    license: "MIT"
+    builds:
+      - release
+    formats:
+      - deb
+      - archlinux
+    bindir: /usr/bin
+    contents:
+      - src: .env.dist
+        dst: /etc/default/wg-ui
+      - src: build/scripts/systemd/wg-ui.service
+        dst: /etc/systemd/system/wg-ui.service
+    scripts:
+      postinstall: build/scripts/debian/postinstall.sh
+      preremove: build/scripts/debian/preremove.sh
+      postremove: build/scripts/debian/postremove.sh
+    overrides:
+      archlinux:
+        scripts:
+          postinstall: build/scripts/archlinux/postinstall.sh
+          preremove: build/scripts/archlinux/preremove.sh
+          postremove: build/scripts/debian/postremove.sh
+    archlinux:
+      pkgbase: wg-ui
+      packager: Rumen Nikiforov <unafraid89@gmail.com>
 checksum:
   name_template: '{{ .ProjectName }}_checksums.txt'
+  algorithm: sha512
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - '^ci:'
+      - '^docs?:'
+      - '^readme:'
+      - '^tests?:'
       - Merge pull request
       - Merge branch
 archives:
   - rlcp: true
     name_template: >-
       {{ .ProjectName }}_
-      {{- if eq .Os "darwin" }}macOS_
-      {{- else }}{{- title .Os }}_{{ end }}
+      {{- title .Os }}_
       {{- .Arch }}
     builds:
       - release
@@ -47,6 +79,3 @@ archives:
       - .env.dist
       - LICENSE
       - README.md
-    format_overrides:
-      - goos: windows
-        format: zip

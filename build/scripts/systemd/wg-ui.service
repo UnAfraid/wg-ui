@@ -1,0 +1,13 @@
+[Unit]
+Description=Wireguard Management
+
+[Service]
+User=wg-ui
+Type=simple
+EnvironmentFile=/etc/default/wg-ui
+ExecStart=/usr/bin/wg-ui
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
+
+[Install]
+WantedBy=multi-user.target
