@@ -129,7 +129,6 @@ func (r *queryResolver) Servers(ctx context.Context, query *string, enabled *boo
 
 func (r *queryResolver) Peers(ctx context.Context, query *string) ([]*model.Peer, error) {
 	servers, err := r.peerService.FindPeers(ctx, &peer.FindOptions{
-		Ids:   nil,
 		Query: adapt.Dereference(query),
 	})
 	if err != nil {
