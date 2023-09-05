@@ -10,6 +10,8 @@ import (
 	"github.com/UnAfraid/wg-ui/user"
 )
 
+const totalSubscriptionNodeSources = 3
+
 type subscriptionResolver struct {
 	userService   user.Service
 	serverService server.Service
@@ -75,14 +77,12 @@ func (r *subscriptionResolver) NodeChanged(ctx context.Context) (<-chan model.No
 	go func() {
 		defer close(nodeChangedEvents)
 
-		const totalSources = 3
-
-		var sourcesClosed int
+		sourcesAvailable := totalSubscriptionNodeSources
 		for {
 			select {
 			case userEvent := <-userEvents:
 				if userEvent == nil {
-					sourcesClosed++
+					sourcesAvailable--
 				} else {
 					nodeChangedEvents <- model.UserChangedEvent{
 						Node:   model.ToUser(userEvent.User),
@@ -91,7 +91,7 @@ func (r *subscriptionResolver) NodeChanged(ctx context.Context) (<-chan model.No
 				}
 			case serverEvent := <-serverEvents:
 				if serverEvent == nil {
-					sourcesClosed++
+					sourcesAvailable--
 				} else {
 					nodeChangedEvents <- model.ServerChangedEvent{
 						Node:   model.ToServer(serverEvent.Server),
@@ -100,7 +100,7 @@ func (r *subscriptionResolver) NodeChanged(ctx context.Context) (<-chan model.No
 				}
 			case peerEvent := <-peerEvents:
 				if peerEvent == nil {
-					sourcesClosed++
+					sourcesAvailable--
 				} else {
 					nodeChangedEvents <- model.PeerChangedEvent{
 						Node:   model.ToPeer(peerEvent.Peer),
@@ -109,7 +109,7 @@ func (r *subscriptionResolver) NodeChanged(ctx context.Context) (<-chan model.No
 				}
 			}
 
-			if sourcesClosed == totalSources {
+			if sourcesAvailable <= 0 {
 				return
 			}
 		}
