@@ -12,7 +12,7 @@ type Server implements Node {
     mtu: Int!
     hooks: [ServerHook!]
     peers: [Peer!] @goField(forceResolver: true) @authenticated
-    interfaceStats: ServerInterfaceStats @goField(forceResolver: true) @authenticated
+    interfaceStats: ServerInterfaceStats @authenticated
     createUser: User @goField(forceResolver: true) @authenticated
     updateUser: User @goField(forceResolver: true) @authenticated
     deleteUser: User @goField(forceResolver: true) @authenticated

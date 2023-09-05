@@ -337,7 +337,7 @@ type QueryResolver interface {
 }
 type ServerResolver interface {
 	Peers(ctx context.Context, obj *model.Server) ([]*model.Peer, error)
-	InterfaceStats(ctx context.Context, obj *model.Server) (*model.ServerInterfaceStats, error)
+
 	CreateUser(ctx context.Context, obj *model.Server) (*model.User, error)
 	UpdateUser(ctx context.Context, obj *model.Server) (*model.User, error)
 	DeleteUser(ctx context.Context, obj *model.Server) (*model.User, error)
@@ -2060,7 +2060,7 @@ var sources = []*ast.Source{
     mtu: Int!
     hooks: [ServerHook!]
     peers: [Peer!] @goField(forceResolver: true) @authenticated
-    interfaceStats: ServerInterfaceStats @goField(forceResolver: true) @authenticated
+    interfaceStats: ServerInterfaceStats @authenticated
     createUser: User @goField(forceResolver: true) @authenticated
     updateUser: User @goField(forceResolver: true) @authenticated
     deleteUser: User @goField(forceResolver: true) @authenticated
@@ -8221,7 +8221,7 @@ func (ec *executionContext) _Server_interfaceStats(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Server().InterfaceStats(rctx, obj)
+			return obj.InterfaceStats, nil
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
@@ -8258,8 +8258,8 @@ func (ec *executionContext) fieldContext_Server_interfaceStats(ctx context.Conte
 	fc = &graphql.FieldContext{
 		Object:     "Server",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "rxPackets":
@@ -15830,38 +15830,7 @@ func (ec *executionContext) _Server(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "interfaceStats":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Server_interfaceStats(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			out.Values[i] = ec._Server_interfaceStats(ctx, field, obj)
 		case "createUser":
 			field := field
 

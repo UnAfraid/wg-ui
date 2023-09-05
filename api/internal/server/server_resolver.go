@@ -45,14 +45,6 @@ func (r *serverResolver) Peers(ctx context.Context, svc *model.Server) ([]*model
 	return adapt.Array(peers, model.ToPeer), nil
 }
 
-func (r *serverResolver) InterfaceStats(_ context.Context, svc *model.Server) (*model.ServerInterfaceStats, error) {
-	interfaceStats, err := r.wgService.InterfaceStats(svc.Name)
-	if err != nil {
-		return nil, err
-	}
-	return model.ToServerInterfaceStats(interfaceStats), nil
-}
-
 func (r *serverResolver) CreateUser(ctx context.Context, srv *model.Server) (*model.User, error) {
 	if srv.CreateUser == nil {
 		return nil, nil

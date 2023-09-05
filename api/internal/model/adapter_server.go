@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/UnAfraid/wg-ui/internal/adapt"
 	"github.com/UnAfraid/wg-ui/server"
-	"github.com/UnAfraid/wg-ui/wg"
 )
 
 func CreateServerInputToCreateServerOptions(input CreateServerInput) (_ *server.CreateOptions, err error) {
@@ -28,24 +27,25 @@ func ToServer(server *server.Server) *Server {
 	}
 
 	return &Server{
-		ID:           StringID(IdKindServer, server.Id),
-		Name:         server.Name,
-		Description:  server.Description,
-		Enabled:      server.Enabled,
-		Running:      server.Running,
-		PublicKey:    server.PublicKey,
-		ListenPort:   server.ListenPort,
-		FirewallMark: server.FirewallMark,
-		Address:      server.Address,
-		DNS:          server.DNS,
-		Mtu:          server.MTU,
-		Hooks:        adapt.Array(server.Hooks, ToServerHook),
-		CreateUser:   userIdToUser(server.CreateUserId),
-		UpdateUser:   userIdToUser(server.UpdateUserId),
-		DeleteUser:   userIdToUser(server.DeleteUserId),
-		CreatedAt:    server.CreatedAt,
-		UpdatedAt:    server.UpdatedAt,
-		DeletedAt:    server.DeletedAt,
+		ID:             StringID(IdKindServer, server.Id),
+		Name:           server.Name,
+		Description:    server.Description,
+		Enabled:        server.Enabled,
+		Running:        server.Running,
+		PublicKey:      server.PublicKey,
+		ListenPort:     server.ListenPort,
+		FirewallMark:   server.FirewallMark,
+		Address:        server.Address,
+		DNS:            server.DNS,
+		Mtu:            server.MTU,
+		Hooks:          adapt.Array(server.Hooks, ToServerHook),
+		InterfaceStats: ToServerInterfaceStats(server.Stats),
+		CreateUser:     userIdToUser(server.CreateUserId),
+		UpdateUser:     userIdToUser(server.UpdateUserId),
+		DeleteUser:     userIdToUser(server.DeleteUserId),
+		CreatedAt:      server.CreatedAt,
+		UpdatedAt:      server.UpdatedAt,
+		DeletedAt:      server.DeletedAt,
 	}
 }
 
@@ -160,10 +160,7 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 	return options, fieldMask, nil
 }
 
-func ToServerInterfaceStats(stats *wg.InterfaceStats) *ServerInterfaceStats {
-	if stats == nil {
-		return nil
-	}
+func ToServerInterfaceStats(stats server.Stats) *ServerInterfaceStats {
 	return &ServerInterfaceStats{
 		RxPackets:         float64(stats.RxPackets),
 		TxPackets:         float64(stats.TxPackets),
