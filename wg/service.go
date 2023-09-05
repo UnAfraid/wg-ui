@@ -82,7 +82,7 @@ func (s *service) init() error {
 		}
 
 		if _, err := s.StartServer(context.Background(), svc.Id); err != nil {
-			logrus.WithError(err).Error("failed to start server")
+			logrus.WithError(err).Warn("failed to start server")
 			return nil
 		}
 	}

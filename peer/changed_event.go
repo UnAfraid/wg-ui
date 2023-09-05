@@ -7,6 +7,6 @@ const (
 )
 
 type ChangedEvent struct {
-	Action string
-	Peer   *Peer
+	Action string `json:"action"`
+	Peer   *Peer  `json:"peer"`
 }

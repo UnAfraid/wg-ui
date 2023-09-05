@@ -95,12 +95,8 @@ func (s *service) CreateUser(ctx context.Context, options *CreateOptions) (*User
 		return nil, err
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: ChangedActionCreated,
-		User:   createdUser,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify user created event")
+	if err = s.notify(ChangedActionCreated, createdUser); err != nil {
+		logrus.WithError(err).Warn("failed to notify user created event")
 	}
 
 	return createdUser, nil
@@ -121,12 +117,8 @@ func (s *service) UpdateUser(ctx context.Context, userId string, options *Update
 		return nil, err
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: ChangedActionUpdated,
-		User:   updatedUser,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify user updated event")
+	if err = s.notify(ChangedActionUpdated, updatedUser); err != nil {
+		logrus.WithError(err).Warn("failed to notify user updated event")
 	}
 
 	return updatedUser, nil
@@ -143,12 +135,8 @@ func (s *service) DeleteUser(ctx context.Context, userId string) (*User, error) 
 		return nil, err
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: ChangedActionDeleted,
-		User:   deletedUser,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify user deleted event")
+	if err = s.notify(ChangedActionDeleted, deletedUser); err != nil {
+		logrus.WithError(err).Warn("failed to notify user deleted event")
 	}
 
 	return deletedUser, nil
@@ -273,13 +261,13 @@ func processUpdateUser(user *User, options *UpdateOptions, fieldMask *UpdateFiel
 	return nil
 }
 
-func (s *service) notify(changedEvent *ChangedEvent) error {
-	bytes, err := json.Marshal(changedEvent)
+func (s *service) notify(action string, user *User) error {
+	bytes, err := json.Marshal(ChangedEvent{Action: action, User: user})
 	if err != nil {
 		return err
 	}
 
-	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, changedEvent.User.Id)); err != nil {
+	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, user.Id)); err != nil {
 		return fmt.Errorf("failed to notify user changed event: %w", err)
 	}
 	return nil
@@ -298,7 +286,7 @@ func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err er
 		for bytes := range bytesChannel {
 			var changedEvent *ChangedEvent
 			if err := json.Unmarshal(bytes, &changedEvent); err != nil {
-				logrus.WithError(err).Error("failed to decode user changed event")
+				logrus.WithError(err).Warn("failed to decode user changed event")
 				return
 			}
 			observerChan <- changedEvent

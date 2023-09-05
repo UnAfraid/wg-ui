@@ -97,12 +97,8 @@ func (s *service) CreatePeer(ctx context.Context, serverId string, options *Crea
 			Error("failed to run hooks on peer create")
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: ChangedActionCreated,
-		Peer:   createdPeer,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify peer created event")
+	if err = s.notify(ChangedActionCreated, createdPeer); err != nil {
+		logrus.WithError(err).Warn("failed to notify peer created event")
 	}
 
 	return createdPeer, nil
@@ -139,12 +135,8 @@ func (s *service) UpdatePeer(ctx context.Context, peerId string, options *Update
 			Error("failed to run hooks on peer update")
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: ChangedActionUpdated,
-		Peer:   updatedPeer,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify peer updated event")
+	if err = s.notify(ChangedActionUpdated, updatedPeer); err != nil {
+		logrus.WithError(err).Warn("failed to notify peer updated event")
 	}
 
 	return updatedPeer, nil
@@ -168,12 +160,8 @@ func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) 
 			Error("failed to run hooks on peer delete")
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: ChangedActionDeleted,
-		Peer:   deletedPeer,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify peer deleted event")
+	if err = s.notify(ChangedActionDeleted, deletedPeer); err != nil {
+		logrus.WithError(err).Warn("failed to notify peer deleted event")
 	}
 
 	return deletedPeer, nil
@@ -295,13 +283,13 @@ func processUpdatePeer(existingPeers []*Peer, peer *Peer, options *UpdateOptions
 	return nil
 }
 
-func (s *service) notify(changedEvent *ChangedEvent) error {
-	bytes, err := json.Marshal(changedEvent)
+func (s *service) notify(action string, peer *Peer) error {
+	bytes, err := json.Marshal(ChangedEvent{Action: action, Peer: peer})
 	if err != nil {
 		return err
 	}
 
-	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, changedEvent.Peer.Id)); err != nil {
+	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, peer.Id)); err != nil {
 		return fmt.Errorf("failed to notify peer changed event: %w", err)
 	}
 	return nil
@@ -320,7 +308,7 @@ func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err er
 		for bytes := range bytesChannel {
 			var changedEvent *ChangedEvent
 			if err := json.Unmarshal(bytes, &changedEvent); err != nil {
-				logrus.WithError(err).Error("failed to decode peer changed event")
+				logrus.WithError(err).Warn("failed to decode peer changed event")
 				return
 			}
 			observerChan <- changedEvent

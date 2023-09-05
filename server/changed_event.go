@@ -10,6 +10,6 @@ const (
 )
 
 type ChangedEvent struct {
-	Action string
-	Server *Server
+	Action string  `json:"action"`
+	Server *Server `json:"server"`
 }

@@ -74,15 +74,11 @@ func (s *service) CreateServer(ctx context.Context, options *CreateOptions, user
 		logrus.
 			WithError(err).
 			WithField("server", createdServer.Name).
-			Error("failed to run hooks on server create")
+			Warn("failed to run hooks on server create")
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: ChangedActionCreated,
-		Server: createdServer,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify server created event")
+	if err = s.notify(ChangedActionCreated, createdServer); err != nil {
+		logrus.WithError(err).Warn("failed to notify server created event")
 	}
 
 	return createdServer, nil
@@ -119,7 +115,7 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *Up
 		logrus.
 			WithError(err).
 			WithField("server", updatedServer.Name).
-			Error("failed to run hooks on server update")
+			Warn("failed to run hooks on server update")
 	}
 
 	action := ChangedActionUpdated
@@ -133,12 +129,8 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *Up
 		action = ChangedActionInterfaceStatsUpdated
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: action,
-		Server: updatedServer,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify server updated event")
+	if err = s.notify(action, updatedServer); err != nil {
+		logrus.WithError(err).Warn("failed to notify server updated event")
 	}
 
 	return updatedServer, nil
@@ -159,15 +151,11 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 		logrus.
 			WithError(err).
 			WithField("server", deletedServer.Name).
-			Error("failed to run hooks on server delete")
+			Warn("failed to run hooks on server delete")
 	}
 
-	err = s.notify(&ChangedEvent{
-		Action: ChangedActionDeleted,
-		Server: deletedServer,
-	})
-	if err != nil {
-		logrus.WithError(err).Error("failed to notify server deleted event")
+	if err = s.notify(ChangedActionDeleted, deletedServer); err != nil {
+		logrus.WithError(err).Warn("failed to notify server deleted event")
 	}
 
 	return deletedServer, nil
@@ -287,13 +275,13 @@ func processUpdateServer(server *Server, options *UpdateOptions, fieldMask *Upda
 	return nil
 }
 
-func (s *service) notify(changedEvent *ChangedEvent) error {
-	bytes, err := json.Marshal(changedEvent)
+func (s *service) notify(action string, server *Server) error {
+	bytes, err := json.Marshal(ChangedEvent{Action: action, Server: server})
 	if err != nil {
 		return err
 	}
 
-	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, changedEvent.Server.Id)); err != nil {
+	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, server.Id)); err != nil {
 		return fmt.Errorf("failed to notify server changed event: %w", err)
 	}
 	return nil
@@ -312,7 +300,7 @@ func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err er
 		for bytes := range bytesChannel {
 			var changedEvent *ChangedEvent
 			if err := json.Unmarshal(bytes, &changedEvent); err != nil {
-				logrus.WithError(err).Error("failed to decode server changed event")
+				logrus.WithError(err).Warn("failed to decode server changed event")
 				return
 			}
 			observerChan <- changedEvent
