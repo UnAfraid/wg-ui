@@ -19,7 +19,6 @@ type Config struct {
 	SubscriptionAllowedOrigins []string      `split_words:"true" default:"*"`
 	JwtSecret                  string        `required:"true" split_words:"true"`
 	JwtDuration                time.Duration `split_words:"true" default:"8h"`
-	PublicIpAddress            string        `split_words:"true"`
 }
 
 func Load(prefix string) (*Config, error) {

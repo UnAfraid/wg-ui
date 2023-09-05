@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/netip"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
@@ -33,20 +31,17 @@ type service struct {
 	peerRepository Repository
 	serverService  server.Service
 	subscription   subscription.Subscription
-	publicIp       string
 }
 
 func NewService(
 	peerRepository Repository,
 	serverService server.Service,
 	subscription subscription.Subscription,
-	publicIp string,
 ) Service {
 	return &service{
 		peerRepository: peerRepository,
 		serverService:  serverService,
 		subscription:   subscription,
-		publicIp:       publicIp,
 	}
 }
 
@@ -81,7 +76,7 @@ func (s *service) CreatePeer(ctx context.Context, serverId string, options *Crea
 		}
 	}
 
-	peer, err := processCreatePeer(srv, options, s.publicIp, userId)
+	peer, err := processCreatePeer(srv, options, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -228,13 +223,9 @@ func newId() (string, error) {
 	return id.String(), nil
 }
 
-func processCreatePeer(server *server.Server, options *CreateOptions, publicIp string, userId string) (*Peer, error) {
+func processCreatePeer(server *server.Server, options *CreateOptions, userId string) (*Peer, error) {
 	if options == nil {
 		return nil, ErrCreatePeerOptionsRequired
-	}
-
-	if len(strings.TrimSpace(options.Endpoint)) == 0 && server.ListenPort != nil {
-		options.Endpoint = net.JoinHostPort(publicIp, strconv.Itoa(*server.ListenPort))
 	}
 
 	if options.Endpoint != "" {

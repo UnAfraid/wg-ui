@@ -20,7 +20,6 @@ import (
 	"github.com/UnAfraid/wg-ui/subscription"
 	"github.com/UnAfraid/wg-ui/user"
 	"github.com/UnAfraid/wg-ui/wg"
-	"github.com/glendc/go-external-ip"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/automaxprocs/maxprocs"
@@ -91,36 +90,6 @@ func main() {
 		return
 	}
 
-	publicIp := conf.PublicIpAddress
-	if len(publicIp) == 0 {
-		logrus.Info("no public ip is configured, attempting to detect..")
-
-		consensus := externalip.DefaultConsensus(nil, nil)
-		if err := consensus.UseIPProtocol(4); err != nil {
-			logrus.
-				WithError(err).
-				Fatal("failed to configure consensus to ipv4 only")
-			return
-		}
-
-		externalIp, err := consensus.ExternalIP()
-		if err != nil {
-			logrus.
-				WithError(err).
-				Fatal("failed to get external ip")
-			return
-		}
-		publicIp = externalIp.String()
-
-		logrus.
-			WithField("publicIp", publicIp).
-			Info("public ip address detected")
-	} else {
-		logrus.
-			WithField("publicIp", publicIp).
-			Info("using configured public ip address")
-	}
-
 	subscriptionImpl := subscription.NewInMemorySubscription()
 
 	userRepository := bbolt.NewUserRepository(db)
@@ -136,7 +105,7 @@ func main() {
 	serverService := server.NewService(serverRepository, subscriptionImpl)
 
 	peerRepository := bbolt.NewPeerRepository(db)
-	peerService := peer.NewService(peerRepository, serverService, subscriptionImpl, publicIp)
+	peerService := peer.NewService(peerRepository, serverService, subscriptionImpl)
 
 	wgService, err := wg.NewService(serverService, peerService)
 	if err != nil {

@@ -5,7 +5,6 @@ go 1.21
 require (
 	github.com/99designs/gqlgen v0.17.36
 	github.com/UnAfraid/searchindex v0.0.0-20230707222905-bbf56d7105a6
-	github.com/glendc/go-external-ip v0.1.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/uuid v1.3.1
@@ -44,7 +43,7 @@ require (
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/tools v0.12.0 // indirect
+	golang.org/x/tools v0.13.0 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20230704135630-469159ecf7d1 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
