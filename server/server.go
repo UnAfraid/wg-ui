@@ -150,6 +150,10 @@ func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) {
 		s.MTU = options.MTU
 	}
 
+	if fieldMask.Stats {
+		s.Stats = options.Stats
+	}
+
 	if fieldMask.Hooks {
 		s.Hooks = options.Hooks
 	}

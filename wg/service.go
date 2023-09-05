@@ -241,8 +241,7 @@ func (s *service) updateServerStats() {
 			TxCompressed:      stats.TxCompressed,
 		}
 
-		previousInterfaceStats := svc.Stats
-		if newInterfaceStats != previousInterfaceStats {
+		if newInterfaceStats != svc.Stats {
 			updateOptions := &server.UpdateOptions{
 				Stats: newInterfaceStats,
 			}
