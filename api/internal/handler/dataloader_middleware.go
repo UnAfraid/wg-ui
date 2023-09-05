@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -41,25 +41,22 @@ func NewDataLoaderMiddleware(
 }
 
 func UserLoaderFromContext(ctx context.Context) (*dataloader.Loader[string, *model.User], error) {
-	dataLoader, ok := ctx.Value(userLoaderCtxKey).(*dataloader.Loader[string, *model.User])
-	if !ok {
-		return nil, errors.New("user loader not found")
-	}
-	return dataLoader, nil
+	return dataLoaderFromContext[string, *model.User](ctx, userLoaderCtxKey)
 }
 
 func ServerLoaderFromContext(ctx context.Context) (*dataloader.Loader[string, *model.Server], error) {
-	dataLoader, ok := ctx.Value(serverLoaderCtxKey).(*dataloader.Loader[string, *model.Server])
-	if !ok {
-		return nil, errors.New("server loader not found")
-	}
-	return dataLoader, nil
+	return dataLoaderFromContext[string, *model.Server](ctx, serverLoaderCtxKey)
 }
 
 func PeerLoaderFromContext(ctx context.Context) (*dataloader.Loader[string, *model.Peer], error) {
-	dataLoader, ok := ctx.Value(peerLoaderCtxKey).(*dataloader.Loader[string, *model.Peer])
+	return dataLoaderFromContext[string, *model.Peer](ctx, peerLoaderCtxKey)
+}
+
+func dataLoaderFromContext[K comparable, T any](ctx context.Context, contextKey *contextKey) (*dataloader.Loader[K, T], error) {
+	dataLoader, ok := ctx.Value(contextKey).(*dataloader.Loader[K, T])
 	if !ok {
-		return nil, errors.New("peer loader not found")
+		var nodeType T
+		return nil, fmt.Errorf("%T data loader not found", nodeType)
 	}
 	return dataLoader, nil
 }
