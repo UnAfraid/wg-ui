@@ -10,10 +10,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
-	"github.com/UnAfraid/wg-ui/api/exec"
 	"github.com/UnAfraid/wg-ui/api/handler"
-	"github.com/UnAfraid/wg-ui/api/model"
-	"github.com/UnAfraid/wg-ui/api/subscription"
+	"github.com/UnAfraid/wg-ui/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/api/tools/frontend"
 	"github.com/UnAfraid/wg-ui/api/tools/playground"
 	"github.com/UnAfraid/wg-ui/api/tools/voyager"
@@ -36,13 +34,9 @@ const (
 func NewRouter(
 	conf *config.Config,
 	authService auth.Service,
-	nodeSubscriptionService subscription.NodeService,
 	userService user.Service,
-	userSubscriptionService subscription.Service[*model.UserChangedEvent],
 	serverService server.Service,
-	serverSubscriptionService subscription.Service[*model.ServerChangedEvent],
 	peerService peer.Service,
-	peerSubscriptionService subscription.Service[*model.PeerChangedEvent],
 	wgService wg.Service,
 ) http.Handler {
 	corsMiddleware := cors.New(cors.Options{
@@ -55,18 +49,14 @@ func NewRouter(
 
 	executableSchemaConfig := newConfig(
 		authService,
-		nodeSubscriptionService,
 		userService,
-		userSubscriptionService,
 		serverService,
-		serverSubscriptionService,
 		peerService,
-		peerSubscriptionService,
 		wgService,
 	)
 
 	authHandler := handler.NewAuthenticationMiddleware(authService, userService)
-	gqlHandler := gqlhandler.New(exec.NewExecutableSchema(executableSchemaConfig))
+	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemaConfig))
 	gqlHandler.AddTransport(transport.Websocket{
 		InitFunc:              authHandler.WebsocketMiddleware(),
 		KeepAlivePingInterval: 10 * time.Second,

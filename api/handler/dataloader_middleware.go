@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/UnAfraid/wg-ui/api/model"
+	"github.com/UnAfraid/wg-ui/api/internal/model"
 	"github.com/UnAfraid/wg-ui/internal/adapt"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"

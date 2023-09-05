@@ -11,5 +11,6 @@ type UpdateOptions struct {
 	Address      string
 	DNS          []string
 	MTU          int
+	Stats        Stats
 	Hooks        []*Hook
 }

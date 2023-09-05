@@ -2,13 +2,20 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
+	"github.com/UnAfraid/wg-ui/subscription"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
+)
+
+var (
+	subscriptionPath = path.Join("node", "Server")
 )
 
 type Service interface {
@@ -17,15 +24,19 @@ type Service interface {
 	CreateServer(ctx context.Context, options *CreateOptions, userId string) (*Server, error)
 	UpdateServer(ctx context.Context, serverId string, options *UpdateOptions, fieldMask *UpdateFieldMask, userId string) (*Server, error)
 	DeleteServer(ctx context.Context, serverId string, userId string) (*Server, error)
+	Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error)
+	HasSubscribers() bool
 }
 
 type service struct {
 	serverRepository Repository
+	subscription     subscription.Subscription
 }
 
-func NewService(serverRepository Repository) Service {
+func NewService(serverRepository Repository, subscription subscription.Subscription) Service {
 	return &service{
 		serverRepository: serverRepository,
+		subscription:     subscription,
 	}
 }
 
@@ -66,6 +77,14 @@ func (s *service) CreateServer(ctx context.Context, options *CreateOptions, user
 			Error("failed to run hooks on server create")
 	}
 
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionCreated,
+		Server: createdServer,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify server created event")
+	}
+
 	return createdServer, nil
 }
 
@@ -95,6 +114,14 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *Up
 			Error("failed to run hooks on server update")
 	}
 
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionUpdated,
+		Server: updatedServer,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify server updated event")
+	}
+
 	return updatedServer, nil
 }
 
@@ -114,6 +141,14 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 			WithError(err).
 			WithField("server", deletedServer.Name).
 			Error("failed to run hooks on server delete")
+	}
+
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionDeleted,
+		Server: deletedServer,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify server deleted event")
 	}
 
 	return deletedServer, nil
@@ -230,4 +265,43 @@ func processUpdateServer(server *Server, options *UpdateOptions, fieldMask *Upda
 	server.update(options, fieldMask)
 	server.UpdatedAt = time.Now()
 	return nil
+}
+
+func (s *service) notify(changedEvent *ChangedEvent) error {
+	bytes, err := json.Marshal(changedEvent)
+	if err != nil {
+		return err
+	}
+
+	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, changedEvent.Server.Id)); err != nil {
+		return fmt.Errorf("failed to notify server changed event: %w", err)
+	}
+	return nil
+}
+
+func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error) {
+	bytesChannel, err := s.subscription.Subscribe(ctx, path.Join(subscriptionPath, "*"))
+	if err != nil {
+		return nil, err
+	}
+
+	observerChan := make(chan *ChangedEvent)
+	go func() {
+		defer close(observerChan)
+
+		for bytes := range bytesChannel {
+			var changedEvent *ChangedEvent
+			if err := json.Unmarshal(bytes, &changedEvent); err != nil {
+				logrus.WithError(err).Error("failed to decode server changed event")
+				return
+			}
+			observerChan <- changedEvent
+		}
+	}()
+
+	return observerChan, nil
+}
+
+func (s *service) HasSubscribers() bool {
+	return s.subscription.HasSubscribers(path.Join(subscriptionPath, "*"))
 }

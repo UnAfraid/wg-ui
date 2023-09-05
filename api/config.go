@@ -1,9 +1,13 @@
 package api
 
 import (
-	"github.com/UnAfraid/wg-ui/api/exec"
-	"github.com/UnAfraid/wg-ui/api/model"
-	"github.com/UnAfraid/wg-ui/api/subscription"
+	"github.com/UnAfraid/wg-ui/api/internal/mutation"
+	peerResolver "github.com/UnAfraid/wg-ui/api/internal/peer"
+	"github.com/UnAfraid/wg-ui/api/internal/query"
+	"github.com/UnAfraid/wg-ui/api/internal/resolver"
+	serverResolver "github.com/UnAfraid/wg-ui/api/internal/server"
+	sybscriptionResolver "github.com/UnAfraid/wg-ui/api/internal/subscription"
+	userResolver "github.com/UnAfraid/wg-ui/api/internal/user"
 	"github.com/UnAfraid/wg-ui/auth"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"
@@ -14,28 +18,46 @@ import (
 //go:generate go run github.com/99designs/gqlgen --config ../../gqlgen.yml generate
 func newConfig(
 	authService auth.Service,
-	nodeSubscriptionService subscription.NodeService,
 	userService user.Service,
-	userSubscriptionService subscription.Service[*model.UserChangedEvent],
 	serverService server.Service,
-	serverSubscriptionService subscription.Service[*model.ServerChangedEvent],
 	peerService peer.Service,
-	peerSubscriptionService subscription.Service[*model.PeerChangedEvent],
 	wgService wg.Service,
-) exec.Config {
-	return exec.Config{
+) resolver.Config {
+	return resolver.Config{
 		Resolvers: &resolverRoot{
-			authService:               authService,
-			nodeSubscriptionService:   nodeSubscriptionService,
-			userService:               userService,
-			userSubscriptionService:   userSubscriptionService,
-			serverService:             serverService,
-			serverSubscriptionService: serverSubscriptionService,
-			peerService:               peerService,
-			peerSubscriptionService:   peerSubscriptionService,
-			wgService:                 wgService,
+			queryResolver: query.NewQueryResolver(
+				wgService,
+				peerService,
+				serverService,
+				userService,
+			),
+			mutationResolver: mutation.NewMutationResolver(
+				authService,
+				userService,
+				serverService,
+				peerService,
+				wgService,
+			),
+			subscriptionResolver: sybscriptionResolver.NewSubscriptionResolver(
+				userService,
+				serverService,
+				peerService,
+			),
+			userResolver: userResolver.NewUserResolver(
+				serverService,
+				peerService,
+			),
+			serverResolver: serverResolver.NewServerResolver(
+				serverService,
+				peerService,
+				wgService,
+			),
+			peerResolver: peerResolver.NewPeerResolver(
+				peerService,
+				wgService,
+			),
 		},
-		Directives: exec.DirectiveRoot{
+		Directives: resolver.DirectiveRoot{
 			Authenticated: authenticated,
 		},
 	}

@@ -11,6 +11,7 @@ type UpdateFieldMask struct {
 	Address      bool
 	DNS          bool
 	MTU          bool
-	UpdateUserId bool
+	Stats        bool
 	Hooks        bool
+	UpdateUserId bool
 }

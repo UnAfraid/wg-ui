@@ -1,4 +1,4 @@
 type UserChangedEvent {
     node: User!
-    action: UserAction!
+    action: String!
 }

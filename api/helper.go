@@ -5,16 +5,7 @@ import (
 	"net/url"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/UnAfraid/wg-ui/api/model"
-	"github.com/UnAfraid/wg-ui/internal/adapt"
 )
-
-func idsToStringIds(idKind model.IdKind, ids []*model.ID) ([]string, error) {
-	return adapt.ArrayErr(ids, func(id *model.ID) (string, error) {
-		return id.String(idKind)
-	})
-}
 
 func checkOrigin(r *http.Request, allowedSubscriptionOrigins []string) bool {
 	origin := r.Header["Origin"]

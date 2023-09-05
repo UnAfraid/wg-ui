@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	updateInterval = time.Minute
+	updateServersInterval     = time.Minute
+	updateServerStatsInterval = time.Second
 )
 
 type Service interface {
@@ -94,13 +95,15 @@ func (s *service) run() {
 		select {
 		case <-s.stopChan:
 			return
-		case <-time.After(updateInterval):
-			s.update()
+		case <-time.After(updateServersInterval):
+			s.updateServers()
+		case <-time.After(updateServerStatsInterval):
+			s.updateServerStats()
 		}
 	}
 }
 
-func (s *service) update() {
+func (s *service) updateServers() {
 	servers, err := s.serverService.FindServers(context.Background(), &server.FindOptions{})
 	if err != nil {
 		logrus.
@@ -179,6 +182,82 @@ func (s *service) update() {
 					WithField("peerPublicKey", p.PublicKey.String()).
 					Error("failed to to update peer")
 				return
+			}
+		}
+	}
+}
+
+func (s *service) updateServerStats() {
+	if !s.serverService.HasSubscribers() {
+		return
+	}
+
+	servers, err := s.serverService.FindServers(context.Background(), &server.FindOptions{})
+	if err != nil {
+		logrus.
+			WithError(err).
+			Error("failed to find servers")
+		return
+	}
+
+	for _, svc := range servers {
+		if !svc.Enabled || !svc.Running {
+			continue
+		}
+
+		stats, err := s.InterfaceStats(svc.Name)
+		if err != nil {
+			logrus.
+				WithError(err).
+				WithField("name", svc.Name).
+				Error("failed to get interface stats")
+			continue
+		}
+		if stats == nil {
+			continue
+		}
+
+		newInterfaceStats := server.Stats{
+			RxPackets:         stats.RxPackets,
+			TxPackets:         stats.TxPackets,
+			RxBytes:           stats.RxBytes,
+			TxBytes:           stats.TxBytes,
+			RxErrors:          stats.RxErrors,
+			TxErrors:          stats.TxErrors,
+			RxDropped:         stats.RxDropped,
+			TxDropped:         stats.TxDropped,
+			Multicast:         stats.Multicast,
+			Collisions:        stats.Collisions,
+			RxLengthErrors:    stats.RxLengthErrors,
+			RxOverErrors:      stats.RxOverErrors,
+			RxCrcErrors:       stats.RxCrcErrors,
+			RxFrameErrors:     stats.RxFrameErrors,
+			RxFifoErrors:      stats.RxFifoErrors,
+			RxMissedErrors:    stats.RxMissedErrors,
+			TxAbortedErrors:   stats.TxAbortedErrors,
+			TxCarrierErrors:   stats.TxCarrierErrors,
+			TxFifoErrors:      stats.TxFifoErrors,
+			TxHeartbeatErrors: stats.TxHeartbeatErrors,
+			TxWindowErrors:    stats.TxWindowErrors,
+			RxCompressed:      stats.RxCompressed,
+			TxCompressed:      stats.TxCompressed,
+		}
+
+		previousInterfaceStats := svc.Stats
+		if newInterfaceStats != previousInterfaceStats {
+			updateOptions := &server.UpdateOptions{
+				Stats: newInterfaceStats,
+			}
+			updateFieldMask := &server.UpdateFieldMask{
+				Stats: true,
+			}
+			_, err = s.serverService.UpdateServer(context.Background(), svc.Id, updateOptions, updateFieldMask, "")
+			if err != nil {
+				logrus.
+					WithError(err).
+					WithField("name", svc.Name).
+					Error("failed update server stats")
+				continue
 			}
 		}
 	}

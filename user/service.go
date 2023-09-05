@@ -2,17 +2,21 @@ package user
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"path"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/UnAfraid/wg-ui/subscription"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	emailPattern = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	emailPattern     = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	subscriptionPath = path.Join("node", "User")
 )
 
 type Service interface {
@@ -22,15 +26,24 @@ type Service interface {
 	CreateUser(ctx context.Context, options *CreateOptions) (*User, error)
 	UpdateUser(ctx context.Context, userId string, options *UpdateOptions, fieldMask *UpdateFieldMask) (*User, error)
 	DeleteUser(ctx context.Context, userId string) (*User, error)
+	Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error)
+	HasSubscribers() bool
 }
 
 type service struct {
 	userRepository Repository
+	subscription   subscription.Subscription
 }
 
-func NewService(userRepository Repository, initialEmail string, initialPassword string) (Service, error) {
+func NewService(
+	userRepository Repository,
+	subscription subscription.Subscription,
+	initialEmail string,
+	initialPassword string,
+) (Service, error) {
 	s := &service{
 		userRepository: userRepository,
+		subscription:   subscription,
 	}
 	if err := s.initializeInitialUser(context.Background(), initialEmail, initialPassword); err != nil {
 		return nil, err
@@ -74,22 +87,21 @@ func (s *service) CreateUser(ctx context.Context, options *CreateOptions) (*User
 	if err != nil {
 		return nil, err
 	}
-	return s.userRepository.Create(ctx, user)
-}
 
-func (s *service) findUserById(ctx context.Context, userId string) (*User, error) {
-	user, err := s.userRepository.FindOne(ctx, &FindOneOptions{
-		IdOption: &IdOption{
-			Id: userId,
-		},
-	})
+	createdUser, err := s.userRepository.Create(ctx, user)
 	if err != nil {
 		return nil, err
 	}
-	if user == nil {
-		return nil, ErrUserNotFound
+
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionCreated,
+		User:   createdUser,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify user created event")
 	}
-	return user, nil
+
+	return createdUser, nil
 }
 
 func (s *service) UpdateUser(ctx context.Context, userId string, options *UpdateOptions, fieldMask *UpdateFieldMask) (*User, error) {
@@ -102,7 +114,20 @@ func (s *service) UpdateUser(ctx context.Context, userId string, options *Update
 		return nil, err
 	}
 
-	return s.userRepository.Update(ctx, user, fieldMask)
+	updatedUser, err := s.userRepository.Update(ctx, user, fieldMask)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionUpdated,
+		User:   updatedUser,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify user updated event")
+	}
+
+	return updatedUser, nil
 }
 
 func (s *service) DeleteUser(ctx context.Context, userId string) (*User, error) {
@@ -110,7 +135,21 @@ func (s *service) DeleteUser(ctx context.Context, userId string) (*User, error) 
 	if err != nil {
 		return nil, err
 	}
-	return s.userRepository.Delete(ctx, user.Id)
+
+	deletedUser, err := s.userRepository.Delete(ctx, user.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionDeleted,
+		User:   deletedUser,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify user deleted event")
+	}
+
+	return deletedUser, nil
 }
 
 func (s *service) initializeInitialUser(ctx context.Context, email string, password string) error {
@@ -147,6 +186,21 @@ func (s *service) initializeInitialUser(ctx context.Context, email string, passw
 		}
 	}
 	return nil
+}
+
+func (s *service) findUserById(ctx context.Context, userId string) (*User, error) {
+	user, err := s.userRepository.FindOne(ctx, &FindOneOptions{
+		IdOption: &IdOption{
+			Id: userId,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+	return user, nil
 }
 
 func newId() (string, error) {
@@ -215,4 +269,43 @@ func processUpdateUser(user *User, options *UpdateOptions, fieldMask *UpdateFiel
 	user.Update(options, fieldMask)
 	user.UpdatedAt = time.Now()
 	return nil
+}
+
+func (s *service) notify(changedEvent *ChangedEvent) error {
+	bytes, err := json.Marshal(changedEvent)
+	if err != nil {
+		return err
+	}
+
+	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, changedEvent.User.Id)); err != nil {
+		return fmt.Errorf("failed to notify user changed event: %w", err)
+	}
+	return nil
+}
+
+func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error) {
+	bytesChannel, err := s.subscription.Subscribe(ctx, path.Join(subscriptionPath, "*"))
+	if err != nil {
+		return nil, err
+	}
+
+	observerChan := make(chan *ChangedEvent)
+	go func() {
+		defer close(observerChan)
+
+		for bytes := range bytesChannel {
+			var changedEvent *ChangedEvent
+			if err := json.Unmarshal(bytes, &changedEvent); err != nil {
+				logrus.WithError(err).Error("failed to decode user changed event")
+				return
+			}
+			observerChan <- changedEvent
+		}
+	}()
+
+	return observerChan, nil
+}
+
+func (s *service) HasSubscribers() bool {
+	return s.subscription.HasSubscribers(path.Join(subscriptionPath, "*"))
 }

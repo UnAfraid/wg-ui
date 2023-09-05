@@ -29,6 +29,7 @@ type Server struct {
 	Address      string
 	DNS          []string
 	MTU          int
+	Stats        Stats
 	Hooks        []*Hook
 	CreateUserId string
 	UpdateUserId string

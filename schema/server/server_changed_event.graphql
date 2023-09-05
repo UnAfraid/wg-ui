@@ -1,4 +1,4 @@
 type ServerChangedEvent {
     node: Server!
-    action: ServerAction!
+    action: String!
 }

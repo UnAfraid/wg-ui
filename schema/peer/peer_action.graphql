@@ -1,5 +1,0 @@
-enum PeerAction {
-    CREATED
-    UPDATED
-    DELETED
-}

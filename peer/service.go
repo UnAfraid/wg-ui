@@ -2,17 +2,22 @@ package peer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/netip"
+	"path"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/UnAfraid/wg-ui/server"
+	"github.com/UnAfraid/wg-ui/subscription"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
+
+var subscriptionPath = path.Join("node", "Peer")
 
 type Service interface {
 	FindPeer(ctx context.Context, options *FindOneOptions) (*Peer, error)
@@ -20,18 +25,27 @@ type Service interface {
 	CreatePeer(ctx context.Context, serverId string, options *CreateOptions, userId string) (*Peer, error)
 	UpdatePeer(ctx context.Context, peerId string, options *UpdateOptions, fieldMask *UpdateFieldMask, userId string) (*Peer, error)
 	DeletePeer(ctx context.Context, peerId string, userId string) (*Peer, error)
+	Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error)
+	HasSubscribers() bool
 }
 
 type service struct {
 	peerRepository Repository
 	serverService  server.Service
+	subscription   subscription.Subscription
 	publicIp       string
 }
 
-func NewService(peerRepository Repository, serverService server.Service, publicIp string) Service {
+func NewService(
+	peerRepository Repository,
+	serverService server.Service,
+	subscription subscription.Subscription,
+	publicIp string,
+) Service {
 	return &service{
 		peerRepository: peerRepository,
 		serverService:  serverService,
+		subscription:   subscription,
 		publicIp:       publicIp,
 	}
 }
@@ -76,19 +90,27 @@ func (s *service) CreatePeer(ctx context.Context, serverId string, options *Crea
 		return nil, err
 	}
 
-	createdServer, err := s.peerRepository.Create(ctx, peer)
+	createdPeer, err := s.peerRepository.Create(ctx, peer)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := createdServer.RunHooks(HookActionCreate); err != nil {
+	if err := createdPeer.RunHooks(HookActionCreate); err != nil {
 		logrus.
 			WithError(err).
 			WithField("peer", peer.Name).
 			Error("failed to run hooks on peer create")
 	}
 
-	return createdServer, nil
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionCreated,
+		Peer:   createdPeer,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify peer created event")
+	}
+
+	return createdPeer, nil
 }
 
 func (s *service) UpdatePeer(ctx context.Context, peerId string, options *UpdateOptions, fieldMask *UpdateFieldMask, userId string) (*Peer, error) {
@@ -110,19 +132,27 @@ func (s *service) UpdatePeer(ctx context.Context, peerId string, options *Update
 		return nil, err
 	}
 
-	updatedServer, err := s.peerRepository.Update(ctx, peer, fieldMask)
+	updatedPeer, err := s.peerRepository.Update(ctx, peer, fieldMask)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := updatedServer.RunHooks(HookActionUpdate); err != nil {
+	if err := updatedPeer.RunHooks(HookActionUpdate); err != nil {
 		logrus.
 			WithError(err).
 			WithField("peer", peer.Name).
 			Error("failed to run hooks on peer update")
 	}
 
-	return updatedServer, nil
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionUpdated,
+		Peer:   updatedPeer,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify peer updated event")
+	}
+
+	return updatedPeer, nil
 }
 
 func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) (*Peer, error) {
@@ -141,6 +171,14 @@ func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) 
 			WithError(err).
 			WithField("peer", peer.Name).
 			Error("failed to run hooks on peer delete")
+	}
+
+	err = s.notify(&ChangedEvent{
+		Action: ChangedActionDeleted,
+		Peer:   deletedPeer,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to notify peer deleted event")
 	}
 
 	return deletedPeer, nil
@@ -264,4 +302,43 @@ func processUpdatePeer(existingPeers []*Peer, peer *Peer, options *UpdateOptions
 	peer.update(options, fieldMask)
 	peer.UpdatedAt = time.Now()
 	return nil
+}
+
+func (s *service) notify(changedEvent *ChangedEvent) error {
+	bytes, err := json.Marshal(changedEvent)
+	if err != nil {
+		return err
+	}
+
+	if err := s.subscription.Notify(bytes, path.Join(subscriptionPath, changedEvent.Peer.Id)); err != nil {
+		return fmt.Errorf("failed to notify peer changed event: %w", err)
+	}
+	return nil
+}
+
+func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error) {
+	bytesChannel, err := s.subscription.Subscribe(ctx, path.Join(subscriptionPath, "*"))
+	if err != nil {
+		return nil, err
+	}
+
+	observerChan := make(chan *ChangedEvent)
+	go func() {
+		defer close(observerChan)
+
+		for bytes := range bytesChannel {
+			var changedEvent *ChangedEvent
+			if err := json.Unmarshal(bytes, &changedEvent); err != nil {
+				logrus.WithError(err).Error("failed to decode peer changed event")
+				return
+			}
+			observerChan <- changedEvent
+		}
+	}()
+
+	return observerChan, nil
+}
+
+func (s *service) HasSubscribers() bool {
+	return s.subscription.HasSubscribers(path.Join(subscriptionPath, "*"))
 }

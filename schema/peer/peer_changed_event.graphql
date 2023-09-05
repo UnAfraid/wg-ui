@@ -1,4 +1,4 @@
 type PeerChangedEvent {
     node: Peer!
-    action: PeerAction!
+    action: String!
 }

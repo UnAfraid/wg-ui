@@ -202,6 +202,10 @@ func (r *wgServerRepository) Update(_ context.Context, s *server.Server, fieldMa
 			updatedServer.MTU = s.MTU
 		}
 
+		if fieldMask.Stats {
+			updatedServer.Stats = s.Stats
+		}
+
 		if fieldMask.Hooks {
 			updatedServer.Hooks = s.Hooks
 		}

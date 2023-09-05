@@ -1,5 +1,0 @@
-enum UserAction {
-    CREATED
-    UPDATED
-    DELETED
-}

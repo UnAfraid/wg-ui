@@ -11,14 +11,13 @@ import (
 	"time"
 
 	"github.com/UnAfraid/wg-ui/api"
-	"github.com/UnAfraid/wg-ui/api/subscription"
 	"github.com/UnAfraid/wg-ui/auth"
 	"github.com/UnAfraid/wg-ui/config"
 	"github.com/UnAfraid/wg-ui/datastore"
 	"github.com/UnAfraid/wg-ui/datastore/bbolt"
-	"github.com/UnAfraid/wg-ui/interfacestats"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"
+	"github.com/UnAfraid/wg-ui/subscription"
 	"github.com/UnAfraid/wg-ui/user"
 	"github.com/UnAfraid/wg-ui/wg"
 	"github.com/glendc/go-external-ip"
@@ -123,25 +122,21 @@ func main() {
 	}
 
 	subscriptionImpl := subscription.NewInMemorySubscription()
-	nodeSubscriptionService := subscription.NewNodeService(subscriptionImpl)
 
 	userRepository := bbolt.NewUserRepository(db)
-	userService, err := user.NewService(userRepository, conf.Initial.Email, conf.Initial.Password)
+	userService, err := user.NewService(userRepository, subscriptionImpl, conf.Initial.Email, conf.Initial.Password)
 	if err != nil {
 		logrus.
 			WithError(err).
 			Fatal("failed to initialize user service")
 		return
 	}
-	userSubscriptionService := subscription.NewUserService(subscriptionImpl)
 
 	serverRepository := bbolt.NewServerRepository(db)
-	serverService := server.NewService(serverRepository)
-	serverSubscriptionService := subscription.NewServerService(subscriptionImpl)
+	serverService := server.NewService(serverRepository, subscriptionImpl)
 
 	peerRepository := bbolt.NewPeerRepository(db)
-	peerService := peer.NewService(peerRepository, serverService, publicIp)
-	peerSubscriptionService := subscription.NewPeerService(subscriptionImpl)
+	peerService := peer.NewService(peerRepository, serverService, subscriptionImpl, publicIp)
 
 	wgService, err := wg.NewService(serverService, peerService)
 	if err != nil {
@@ -152,21 +147,14 @@ func main() {
 	}
 	defer wgService.Close()
 
-	interfaceStatsService := interfacestats.NewService(wgService, serverService, serverSubscriptionService)
-	defer interfaceStatsService.Close()
-
 	authService := auth.NewService(jwt.SigningMethodHS256, jwtSecretBytes, jwtSecretBytes, conf.JwtDuration)
 
 	router := api.NewRouter(
 		conf,
 		authService,
-		nodeSubscriptionService,
 		userService,
-		userSubscriptionService,
 		serverService,
-		serverSubscriptionService,
 		peerService,
-		peerSubscriptionService,
 		wgService,
 	)
 
@@ -177,7 +165,7 @@ func main() {
 
 	go func() {
 		logrus.WithField("address", conf.HttpServer.Address()).Info("Starting serving http server")
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logrus.
 				WithError(err).
 				Fatal("failed to listen and serve http server")
