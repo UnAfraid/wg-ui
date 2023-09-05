@@ -210,6 +210,10 @@ func (r *wgServerRepository) Update(_ context.Context, s *server.Server, fieldMa
 			updatedServer.Hooks = s.Hooks
 		}
 
+		if fieldMask.CreateUserId {
+			updatedServer.CreateUserId = s.CreateUserId
+		}
+
 		if fieldMask.UpdateUserId {
 			updatedServer.UpdateUserId = s.UpdateUserId
 		}

@@ -199,6 +199,10 @@ func (r *peerRepository) Update(_ context.Context, p *peer.Peer, fieldMask *peer
 			updatedPeer.Hooks = p.Hooks
 		}
 
+		if fieldMask.CreateUserId {
+			updatedPeer.CreateUserId = p.CreateUserId
+		}
+
 		if fieldMask.UpdateUserId {
 			updatedPeer.UpdateUserId = p.UpdateUserId
 		}

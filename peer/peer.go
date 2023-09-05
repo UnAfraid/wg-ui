@@ -141,6 +141,14 @@ func (p *Peer) update(options *UpdateOptions, fieldMask *UpdateFieldMask) {
 	if fieldMask.Hooks {
 		p.Hooks = options.Hooks
 	}
+
+	if fieldMask.CreateUserId {
+		p.CreateUserId = options.CreateUserId
+	}
+
+	if fieldMask.UpdateUserId {
+		p.UpdateUserId = options.UpdateUserId
+	}
 }
 
 func (p *Peer) runHooks(action HookAction) error {

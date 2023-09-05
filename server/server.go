@@ -157,6 +157,14 @@ func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) {
 	if fieldMask.Hooks {
 		s.Hooks = options.Hooks
 	}
+
+	if fieldMask.CreateUserId {
+		s.CreateUserId = options.CreateUserId
+	}
+
+	if fieldMask.UpdateUserId {
+		s.UpdateUserId = options.UpdateUserId
+	}
 }
 
 func (s *Server) runHooks(action HookAction) error {
