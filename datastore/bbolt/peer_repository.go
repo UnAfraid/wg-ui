@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/UnAfraid/searchindex"
 	"github.com/UnAfraid/wg-ui/internal/adapt"
-	"github.com/UnAfraid/wg-ui/internal/slice"
 	"github.com/UnAfraid/wg-ui/peer"
 	"go.etcd.io/bbolt"
 )
@@ -77,7 +77,7 @@ func (r *peerRepository) FindAll(_ context.Context, options *peer.FindOptions) (
 			var optionsLen int
 			if len(options.Ids) != 0 {
 				optionsLen++
-				if slice.Contains(options.Ids, p.Id) {
+				if slices.Contains(options.Ids, p.Id) {
 					peers = append(peers, p)
 					continue
 				}

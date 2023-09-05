@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
-	"github.com/UnAfraid/wg-ui/internal/slice"
 	"github.com/UnAfraid/wg-ui/server"
 	"github.com/vishvananda/netlink"
 )
@@ -131,7 +131,7 @@ func findForeignInterfaces(knownInterfaces []string) (foreignInterfaces []Foreig
 
 		attrs := link.Attrs()
 		name := attrs.Name
-		if slice.Contains(knownInterfaces, name) {
+		if slices.Contains(knownInterfaces, name) {
 			continue
 		}
 

@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/UnAfraid/searchindex"
 	"github.com/UnAfraid/wg-ui/internal/adapt"
-	"github.com/UnAfraid/wg-ui/internal/slice"
 	"github.com/UnAfraid/wg-ui/server"
 	"go.etcd.io/bbolt"
 )
@@ -76,7 +76,7 @@ func (r *serverRepository) FindAll(_ context.Context, options *server.FindOption
 			var optionsLen int
 			if len(options.Ids) != 0 {
 				optionsLen++
-				if slice.Contains(options.Ids, s.Id) {
+				if slices.Contains(options.Ids, s.Id) {
 					servers = append(servers, s)
 					continue
 				}

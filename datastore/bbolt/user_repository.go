@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/UnAfraid/searchindex"
-	"github.com/UnAfraid/wg-ui/internal/slice"
 	"github.com/UnAfraid/wg-ui/user"
 	"go.etcd.io/bbolt"
 )
@@ -78,7 +78,7 @@ func (r *userRepository) FindAll(_ context.Context, options *user.FindOptions) (
 			var optionsLen int
 			if len(options.Ids) != 0 {
 				optionsLen++
-				if slice.Contains(options.Ids, u.Id) {
+				if slices.Contains(options.Ids, u.Id) {
 					users = append(users, u)
 					continue
 				}
