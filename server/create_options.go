@@ -4,6 +4,7 @@ type CreateOptions struct {
 	Name         string
 	Description  string
 	Enabled      bool
+	Running      bool
 	PublicKey    string
 	PrivateKey   string
 	ListenPort   *int

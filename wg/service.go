@@ -363,6 +363,7 @@ func (s *service) ImportForeignServer(ctx context.Context, name string, userId s
 		Name:         foreignInterface.Name,
 		Description:  "",
 		Enabled:      true,
+		Running:      true,
 		PublicKey:    device.PublicKey.String(),
 		PrivateKey:   device.PrivateKey.String(),
 		ListenPort:   adapt.ToPointerNilZero(device.ListenPort),

@@ -241,6 +241,7 @@ func processCreateServer(options *CreateOptions, userId string) (*Server, error)
 		Name:         options.Name,
 		Description:  options.Description,
 		Enabled:      options.Enabled,
+		Running:      options.Running,
 		PublicKey:    options.PublicKey,
 		PrivateKey:   options.PrivateKey,
 		ListenPort:   options.ListenPort,
