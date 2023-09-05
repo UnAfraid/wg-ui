@@ -96,7 +96,7 @@ func (s *service) CreatePeer(ctx context.Context, serverId string, options *Crea
 		logrus.
 			WithError(err).
 			WithField("peer", peer.Name).
-			Error("failed to run hooks on peer create")
+			Warn("failed to run hooks on peer create")
 	}
 
 	if err = s.notify(ChangedActionCreated, createdPeer); err != nil {
@@ -134,7 +134,7 @@ func (s *service) UpdatePeer(ctx context.Context, peerId string, options *Update
 		logrus.
 			WithError(err).
 			WithField("peer", peer.Name).
-			Error("failed to run hooks on peer update")
+			Warn("failed to run hooks on peer update")
 	}
 
 	if err = s.notify(ChangedActionUpdated, updatedPeer); err != nil {
@@ -159,7 +159,7 @@ func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) 
 		logrus.
 			WithError(err).
 			WithField("peer", peer.Name).
-			Error("failed to run hooks on peer delete")
+			Warn("failed to run hooks on peer delete")
 	}
 
 	if err = s.notify(ChangedActionDeleted, deletedPeer); err != nil {

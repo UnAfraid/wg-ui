@@ -34,7 +34,7 @@ func (s *inMemorySubscription) Notify(bytes []byte, channel string) error {
 				WithError(err).
 				WithField("a", k.channel).
 				WithField("b", channel).
-				Error("failed to match glob pattern")
+				Warn("failed to match glob pattern")
 		}
 		if match {
 			v <- bytes
@@ -76,7 +76,7 @@ func (s *inMemorySubscription) HasSubscribers(channel string) bool {
 				WithError(err).
 				WithField("a", k.channel).
 				WithField("b", channel).
-				Error("failed to match glob pattern")
+				Warn("failed to match glob pattern")
 		}
 		if match {
 			return true

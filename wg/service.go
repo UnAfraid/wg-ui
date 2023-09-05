@@ -129,7 +129,7 @@ func (s *service) updateServers() {
 							WithError(err).
 							WithField("serverId", svc.Id).
 							WithField("serverName", svc.Name).
-							Error("failed to update wireguard server")
+							Warn("failed to update wireguard server")
 					}
 				}
 				return
@@ -170,7 +170,7 @@ func (s *service) updateServers() {
 					WithField("serverId", svc.Id).
 					WithField("serverName", svc.Name).
 					WithField("peerPublicKey", p.PublicKey.String()).
-					Error("failed to to find peer")
+					Warn("failed to to find peer")
 				continue
 			}
 			if existingPeer == nil {
@@ -217,7 +217,7 @@ func (s *service) updateServerStats() {
 			logrus.
 				WithError(err).
 				WithField("name", svc.Name).
-				Error("failed to get interface stats")
+				Warn("failed to get interface stats")
 			continue
 		}
 		if stats == nil {
@@ -258,7 +258,7 @@ func (s *service) updateServerStats() {
 				logrus.
 					WithError(err).
 					WithField("name", svc.Name).
-					Error("failed update server stats")
+					Warn("failed update server stats")
 				continue
 			}
 		}

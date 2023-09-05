@@ -223,7 +223,7 @@ func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) 
 			WithError(err).
 			WithField("peerId", p.Id).
 			WithField("peerName", p.Name).
-			Error("failed to remove peer")
+			Warn("failed to remove peer")
 	}
 
 	deletedPeer, err := s.peerService.DeletePeer(ctx, peerId, userId)
