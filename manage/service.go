@@ -152,15 +152,7 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 			Warn("failed to find peers")
 	}
 	for _, p := range peers {
-		if _, err := s.peerService.DeletePeer(ctx, p.Id, userId); err != nil {
-			logrus.
-				WithError(err).
-				WithField("serverId", svc.Id).
-				WithField("serverName", svc.Name).
-				WithField("peerId", p.Id).
-				WithField("peerName", p.Name).
-				Warn("failed to delete peer")
-		}
+		s.cleanupOrphanedServerFromPeer(ctx, p)
 	}
 
 	return deletedServer, nil
