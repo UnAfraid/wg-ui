@@ -114,8 +114,19 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *Up
 			Error("failed to run hooks on server update")
 	}
 
+	action := ChangedActionUpdated
+	if fieldMask.Running {
+		if updatedServer.Running {
+			action = ChangedActionStarted
+		} else {
+			action = ChangedActionStopped
+		}
+	} else if fieldMask.Stats {
+		action = ChangedActionInterfaceStatsUpdated
+	}
+
 	err = s.notify(&ChangedEvent{
-		Action: ChangedActionUpdated,
+		Action: action,
 		Server: updatedServer,
 	})
 	if err != nil {

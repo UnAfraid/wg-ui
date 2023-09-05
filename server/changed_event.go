@@ -1,9 +1,12 @@
 package server
 
 const (
-	ChangedActionCreated = "CREATED"
-	ChangedActionUpdated = "UPDATED"
-	ChangedActionDeleted = "DELETED"
+	ChangedActionCreated               = "CREATED"
+	ChangedActionUpdated               = "UPDATED"
+	ChangedActionDeleted               = "DELETED"
+	ChangedActionInterfaceStatsUpdated = "INTERFACE_STATS_UPDATED"
+	ChangedActionStarted               = "STARTED"
+	ChangedActionStopped               = "STOPPED"
 )
 
 type ChangedEvent struct {
