@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	dataLoaderWait     = 250 * time.Microsecond
-	dataLoaderMaxBatch = 1000
+	websocketsKeepAlivePingInterval = 10 * time.Second
+	dataLoaderWait                  = 250 * time.Microsecond
+	dataLoaderMaxBatch              = 1000
 )
 
 func NewRouter(
@@ -59,7 +60,7 @@ func NewRouter(
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemaConfig))
 	gqlHandler.AddTransport(transport.Websocket{
 		InitFunc:              authHandler.WebsocketMiddleware(),
-		KeepAlivePingInterval: 10 * time.Second,
+		KeepAlivePingInterval: websocketsKeepAlivePingInterval,
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return checkOrigin(r, conf.SubscriptionAllowedOrigins)
@@ -71,6 +72,7 @@ func NewRouter(
 	gqlHandler.AddTransport(transport.GET{})
 	gqlHandler.AddTransport(transport.POST{})
 	gqlHandler.AddTransport(transport.MultipartForm{})
+	gqlHandler.AddTransport(transport.UrlEncodedForm{})
 
 	gqlHandler.Use(extension.Introspection{})
 	gqlHandler.Use(extension.FixedComplexityLimit(500))
