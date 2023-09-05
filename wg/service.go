@@ -28,8 +28,6 @@ type Service interface {
 	StartServer(ctx context.Context, serverId string) (*server.Server, error)
 	StopServer(ctx context.Context, serverUd string) (*server.Server, error)
 	ConfigureWireGuard(name string, privateKey string, listenPort *int, firewallMark *int, peers []*peer.Peer) error
-	ConfigureInterface(name string, address string, mtu int) error
-	DeleteInterface(name string) error
 	InterfaceStats(name string) (*InterfaceStats, error)
 	PeerStats(name string, peerPublicKey string) (*PeerStats, error)
 	AddPeer(name string, privateKey string, listenPort *int, firewallMark *int, peer *peer.Peer) error
@@ -425,7 +423,7 @@ func (s *service) StartServer(ctx context.Context, serverId string) (*server.Ser
 		WithField("name", svc.Name).
 		Info("starting wireguard")
 
-	if err := s.ConfigureInterface(svc.Name, svc.Address, svc.MTU); err != nil {
+	if err := configureInterface(svc.Name, svc.Address, svc.MTU); err != nil {
 		return nil, fmt.Errorf("failed to configure interface: %w", err)
 	}
 
@@ -469,7 +467,7 @@ func (s *service) StopServer(ctx context.Context, serverId string) (*server.Serv
 		WithField("name", svc.Name).
 		Info("stopping wireguard")
 
-	if err := s.DeleteInterface(svc.Name); err != nil {
+	if err := deleteInterface(svc.Name); err != nil {
 		return nil, fmt.Errorf("failed to configure interface: %w", err)
 	}
 
@@ -531,14 +529,6 @@ func (s *service) ConfigureWireGuard(name string, privateKey string, listenPort 
 	}
 
 	return s.configureWireguard(name, privateKey, listenPort, firewallMark, differentPeers...)
-}
-
-func (s *service) ConfigureInterface(name string, address string, mtu int) error {
-	return configureInterface(name, address, mtu)
-}
-
-func (s *service) DeleteInterface(name string) error {
-	return deleteInterface(name)
 }
 
 func (s *service) InterfaceStats(name string) (*InterfaceStats, error) {

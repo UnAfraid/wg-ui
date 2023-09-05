@@ -70,7 +70,7 @@ func (s *service) CreateServer(ctx context.Context, options *CreateOptions, user
 		return nil, err
 	}
 
-	if err := createdServer.RunHooks(HookActionCreate); err != nil {
+	if err := createdServer.runHooks(HookActionCreate); err != nil {
 		logrus.
 			WithError(err).
 			WithField("server", createdServer.Name).
@@ -107,7 +107,15 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *Up
 		return nil, err
 	}
 
-	if err := updatedServer.RunHooks(HookActionUpdate); err != nil {
+	hookAction := HookActionUpdate
+	if fieldMask.Running {
+		if updatedServer.Running {
+			hookAction = HookActionStart
+		} else {
+			hookAction = HookActionStop
+		}
+	}
+	if err := updatedServer.runHooks(hookAction); err != nil {
 		logrus.
 			WithError(err).
 			WithField("server", updatedServer.Name).
@@ -147,7 +155,7 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 		return nil, err
 	}
 
-	if err := deletedServer.RunHooks(HookActionDelete); err != nil {
+	if err := deletedServer.runHooks(HookActionDelete); err != nil {
 		logrus.
 			WithError(err).
 			WithField("server", deletedServer.Name).

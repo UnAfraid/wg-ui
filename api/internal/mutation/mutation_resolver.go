@@ -11,7 +11,6 @@ import (
 	"github.com/UnAfraid/wg-ui/server"
 	"github.com/UnAfraid/wg-ui/user"
 	"github.com/UnAfraid/wg-ui/wg"
-	"github.com/sirupsen/logrus"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
@@ -255,12 +254,6 @@ func (r *mutationResolver) StartServer(ctx context.Context, input model.StartSer
 		return nil, err
 	}
 
-	if err := srv.RunHooks(server.HookActionStart); err != nil {
-		logrus.WithError(err).
-			WithField("server", srv.Name).
-			Error("failed to run hooks on server start")
-	}
-
 	return &model.StartServerPayload{
 		ClientMutationID: input.ClientMutationID.Value(),
 		Server:           model.ToServer(srv),
@@ -276,12 +269,6 @@ func (r *mutationResolver) StopServer(ctx context.Context, input model.StopServe
 	srv, err := r.wgService.StopServer(ctx, serverId)
 	if err != nil {
 		return nil, err
-	}
-
-	if err := srv.RunHooks(server.HookActionStop); err != nil {
-		logrus.WithError(err).
-			WithField("server", srv.Name).
-			Error("failed to run hooks on server stop")
 	}
 
 	return &model.StopServerPayload{

@@ -95,7 +95,7 @@ func (s *service) CreatePeer(ctx context.Context, serverId string, options *Crea
 		return nil, err
 	}
 
-	if err := createdPeer.RunHooks(HookActionCreate); err != nil {
+	if err := createdPeer.runHooks(HookActionCreate); err != nil {
 		logrus.
 			WithError(err).
 			WithField("peer", peer.Name).
@@ -137,7 +137,7 @@ func (s *service) UpdatePeer(ctx context.Context, peerId string, options *Update
 		return nil, err
 	}
 
-	if err := updatedPeer.RunHooks(HookActionUpdate); err != nil {
+	if err := updatedPeer.runHooks(HookActionUpdate); err != nil {
 		logrus.
 			WithError(err).
 			WithField("peer", peer.Name).
@@ -166,7 +166,7 @@ func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) 
 		return nil, err
 	}
 
-	if err := deletedPeer.RunHooks(HookActionDelete); err != nil {
+	if err := deletedPeer.runHooks(HookActionDelete); err != nil {
 		logrus.
 			WithError(err).
 			WithField("peer", peer.Name).

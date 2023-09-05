@@ -143,7 +143,7 @@ func (p *Peer) update(options *UpdateOptions, fieldMask *UpdateFieldMask) {
 	}
 }
 
-func (p *Peer) RunHooks(action HookAction) error {
+func (p *Peer) runHooks(action HookAction) error {
 	var errs []error
 	for i, hook := range p.Hooks {
 		if !hook.ShouldExecute(action) {
