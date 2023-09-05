@@ -15,7 +15,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var subscriptionPath = path.Join("node", "Peer")
+var (
+	subscriptionPath = path.Join("node", "Peer")
+)
 
 type Service interface {
 	FindPeer(ctx context.Context, options *FindOneOptions) (*Peer, error)
@@ -23,7 +25,7 @@ type Service interface {
 	CreatePeer(ctx context.Context, serverId string, options *CreateOptions, userId string) (*Peer, error)
 	UpdatePeer(ctx context.Context, peerId string, options *UpdateOptions, fieldMask *UpdateFieldMask, userId string) (*Peer, error)
 	DeletePeer(ctx context.Context, peerId string, userId string) (*Peer, error)
-	Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error)
+	Subscribe(ctx context.Context) (<-chan *ChangedEvent, error)
 	HasSubscribers() bool
 }
 
@@ -295,7 +297,7 @@ func (s *service) notify(action string, peer *Peer) error {
 	return nil
 }
 
-func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error) {
+func (s *service) Subscribe(ctx context.Context) (<-chan *ChangedEvent, error) {
 	bytesChannel, err := s.subscription.Subscribe(ctx, path.Join(subscriptionPath, "*"))
 	if err != nil {
 		return nil, err

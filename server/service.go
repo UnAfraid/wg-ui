@@ -24,7 +24,7 @@ type Service interface {
 	CreateServer(ctx context.Context, options *CreateOptions, userId string) (*Server, error)
 	UpdateServer(ctx context.Context, serverId string, options *UpdateOptions, fieldMask *UpdateFieldMask, userId string) (*Server, error)
 	DeleteServer(ctx context.Context, serverId string, userId string) (*Server, error)
-	Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error)
+	Subscribe(ctx context.Context) (<-chan *ChangedEvent, error)
 	HasSubscribers() bool
 }
 
@@ -287,7 +287,7 @@ func (s *service) notify(action string, server *Server) error {
 	return nil
 }
 
-func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error) {
+func (s *service) Subscribe(ctx context.Context) (<-chan *ChangedEvent, error) {
 	bytesChannel, err := s.subscription.Subscribe(ctx, path.Join(subscriptionPath, "*"))
 	if err != nil {
 		return nil, err

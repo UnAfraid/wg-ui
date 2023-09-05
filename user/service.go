@@ -26,7 +26,7 @@ type Service interface {
 	CreateUser(ctx context.Context, options *CreateOptions) (*User, error)
 	UpdateUser(ctx context.Context, userId string, options *UpdateOptions, fieldMask *UpdateFieldMask) (*User, error)
 	DeleteUser(ctx context.Context, userId string) (*User, error)
-	Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error)
+	Subscribe(ctx context.Context) (<-chan *ChangedEvent, error)
 	HasSubscribers() bool
 }
 
@@ -273,7 +273,7 @@ func (s *service) notify(action string, user *User) error {
 	return nil
 }
 
-func (s *service) Subscribe(ctx context.Context) (_ <-chan *ChangedEvent, err error) {
+func (s *service) Subscribe(ctx context.Context) (<-chan *ChangedEvent, error) {
 	bytesChannel, err := s.subscription.Subscribe(ctx, path.Join(subscriptionPath, "*"))
 	if err != nil {
 		return nil, err
