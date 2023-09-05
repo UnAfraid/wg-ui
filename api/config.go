@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/UnAfraid/wg-ui/api/internal/directive"
 	"github.com/UnAfraid/wg-ui/api/internal/mutation"
 	peerResolver "github.com/UnAfraid/wg-ui/api/internal/peer"
 	"github.com/UnAfraid/wg-ui/api/internal/query"
@@ -57,8 +58,6 @@ func newConfig(
 				wgService,
 			),
 		},
-		Directives: resolver.DirectiveRoot{
-			Authenticated: authenticated,
-		},
+		Directives: directive.NewDirectiveRoot(),
 	}
 }
