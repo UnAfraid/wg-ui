@@ -9,7 +9,7 @@ type Hook struct {
 	RunOnStop   bool
 }
 
-func (h *Hook) ShouldExecute(action HookAction) bool {
+func (h *Hook) shouldExecute(action HookAction) bool {
 	switch action {
 	case HookActionCreate:
 		return h.RunOnCreate

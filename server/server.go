@@ -170,7 +170,7 @@ func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) {
 func (s *Server) runHooks(action HookAction) error {
 	var errs []error
 	for i, hook := range s.Hooks {
-		if !hook.ShouldExecute(action) {
+		if !hook.shouldExecute(action) {
 			continue
 		}
 

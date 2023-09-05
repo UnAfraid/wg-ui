@@ -7,7 +7,7 @@ type Hook struct {
 	RunOnDelete bool
 }
 
-func (h *Hook) ShouldExecute(action HookAction) bool {
+func (h *Hook) shouldExecute(action HookAction) bool {
 	switch action {
 	case HookActionCreate:
 		return h.RunOnCreate
