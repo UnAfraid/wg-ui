@@ -38,22 +38,6 @@ func NewMutationResolver(
 	}
 }
 
-func (r *mutationResolver) withServer(ctx context.Context, serverId string, callback func(svc *server.Server)) error {
-	svc, err := r.serverService.FindServer(ctx, &server.FindOneOptions{
-		IdOption: &server.IdOption{
-			Id: serverId,
-		},
-		NameOption: nil,
-	})
-	if err != nil {
-		return err
-	}
-	if svc != nil {
-		callback(svc)
-	}
-	return nil
-}
-
 func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*model.SignInPayload, error) {
 	u, err := r.userService.Authenticate(ctx, input.Email, input.Password)
 	if err != nil {
@@ -293,16 +277,7 @@ func (r *mutationResolver) CreatePeer(ctx context.Context, input model.CreatePee
 		return nil, err
 	}
 
-	peer, err := r.peerService.CreatePeer(ctx, serverId, model.CreatePeerInputToCreateOptions(input), userId)
-	if err != nil {
-		return nil, err
-	}
-
-	err = r.withServer(ctx, peer.ServerId, func(svc *server.Server) {
-		if svc.Enabled && svc.Running {
-			err = r.wgService.AddPeer(svc.Name, svc.PrivateKey, svc.ListenPort, svc.FirewallMark, peer)
-		}
-	})
+	peer, err := r.wgService.CreatePeer(ctx, serverId, model.CreatePeerInputToCreateOptions(input), userId)
 	if err != nil {
 		return nil, err
 	}
@@ -330,16 +305,7 @@ func (r *mutationResolver) UpdatePeer(ctx context.Context, input model.UpdatePee
 	}
 
 	updateOptions, updateFieldMask := model.UpdatePeerInputToUpdatePeerOptionsAndUpdatePeerFieldMask(input)
-	peer, err := r.peerService.UpdatePeer(ctx, peerId, updateOptions, updateFieldMask, userId)
-	if err != nil {
-		return nil, err
-	}
-
-	err = r.withServer(ctx, peer.ServerId, func(svc *server.Server) {
-		if svc.Enabled && svc.Running {
-			err = r.wgService.UpdatePeer(svc.Name, svc.PrivateKey, svc.ListenPort, svc.FirewallMark, peer)
-		}
-	})
+	peer, err := r.wgService.UpdatePeer(ctx, peerId, updateOptions, updateFieldMask, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -366,16 +332,7 @@ func (r *mutationResolver) DeletePeer(ctx context.Context, input model.DeletePee
 		return nil, err
 	}
 
-	peer, err := r.peerService.DeletePeer(ctx, peerId, userId)
-	if err != nil {
-		return nil, err
-	}
-
-	err = r.withServer(ctx, peer.ServerId, func(svc *server.Server) {
-		if svc.Enabled && svc.Running {
-			err = r.wgService.RemovePeer(svc.Name, svc.PrivateKey, svc.ListenPort, svc.FirewallMark, peer)
-		}
-	})
+	peer, err := r.wgService.DeletePeer(ctx, peerId, userId)
 	if err != nil {
 		return nil, err
 	}

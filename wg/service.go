@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"os"
 	"strings"
 	"time"
 
@@ -17,8 +18,12 @@ import (
 )
 
 const (
+	netFamilyAll = 0
+	netFamilyV4  = 2
+	netFamilyV6  = 10
+
 	updateServersInterval     = time.Minute
-	updateServerStatsInterval = time.Second
+	updateServerStatsInterval = 30 * time.Second
 )
 
 type Service interface {
@@ -28,11 +33,10 @@ type Service interface {
 	StartServer(ctx context.Context, serverId string) (*server.Server, error)
 	StopServer(ctx context.Context, serverUd string) (*server.Server, error)
 	ConfigureWireGuard(name string, privateKey string, listenPort *int, firewallMark *int, peers []*peer.Peer) error
-	InterfaceStats(name string) (*InterfaceStats, error)
 	PeerStats(name string, peerPublicKey string) (*PeerStats, error)
-	AddPeer(name string, privateKey string, listenPort *int, firewallMark *int, peer *peer.Peer) error
-	UpdatePeer(name string, privateKey string, listenPort *int, firewallMark *int, peer *peer.Peer) error
-	RemovePeer(name string, privateKey string, listenPort *int, firewallMark *int, peer *peer.Peer) error
+	CreatePeer(ctx context.Context, serverId string, options *peer.CreateOptions, userId string) (*peer.Peer, error)
+	UpdatePeer(ctx context.Context, peerId string, options *peer.UpdateOptions, fieldMask *peer.UpdateFieldMask, userId string) (*peer.Peer, error)
+	DeletePeer(ctx context.Context, peerId string, userId string) (*peer.Peer, error)
 }
 
 type service struct {
@@ -111,12 +115,27 @@ func (s *service) updateServers() {
 	}
 
 	for _, svc := range servers {
-		if !svc.Enabled || !svc.Running {
+		if !svc.Enabled {
 			continue
 		}
 
 		wg, err := s.client.Device(svc.Name)
 		if err != nil {
+			if os.IsNotExist(err) {
+				if svc.Running {
+					updateOptions := &server.UpdateOptions{Running: false}
+					updateFieldMask := &server.UpdateFieldMask{Running: true}
+					if _, err = s.serverService.UpdateServer(context.Background(), svc.Id, updateOptions, updateFieldMask, ""); err != nil {
+						logrus.
+							WithError(err).
+							WithField("serverId", svc.Id).
+							WithField("serverName", svc.Name).
+							Error("failed to update wireguard server")
+					}
+				}
+				return
+			}
+
 			logrus.
 				WithError(err).
 				WithField("serverId", svc.Id).
@@ -163,13 +182,8 @@ func (s *service) updateServers() {
 				continue
 			}
 
-			options := &peer.UpdateOptions{
-				Endpoint: p.Endpoint.String(),
-			}
-			fieldMask := &peer.UpdateFieldMask{
-				Endpoint: true,
-			}
-
+			options := &peer.UpdateOptions{Endpoint: p.Endpoint.String()}
+			fieldMask := &peer.UpdateFieldMask{Endpoint: true}
 			_, err = s.peerService.UpdatePeer(context.Background(), existingPeer.Id, options, fieldMask, "")
 			if err != nil {
 				logrus.
@@ -186,10 +200,6 @@ func (s *service) updateServers() {
 }
 
 func (s *service) updateServerStats() {
-	if !s.serverService.HasSubscribers() {
-		return
-	}
-
 	servers, err := s.serverService.FindServers(context.Background(), &server.FindOptions{})
 	if err != nil {
 		logrus.
@@ -203,7 +213,7 @@ func (s *service) updateServerStats() {
 			continue
 		}
 
-		stats, err := s.InterfaceStats(svc.Name)
+		stats, err := interfaceStats(svc.Name)
 		if err != nil {
 			logrus.
 				WithError(err).
@@ -242,12 +252,8 @@ func (s *service) updateServerStats() {
 		}
 
 		if newInterfaceStats != svc.Stats {
-			updateOptions := &server.UpdateOptions{
-				Stats: newInterfaceStats,
-			}
-			updateFieldMask := &server.UpdateFieldMask{
-				Stats: true,
-			}
+			updateOptions := &server.UpdateOptions{Stats: newInterfaceStats}
+			updateFieldMask := &server.UpdateFieldMask{Stats: true}
 			_, err = s.serverService.UpdateServer(context.Background(), svc.Id, updateOptions, updateFieldMask, "")
 			if err != nil {
 				logrus.
@@ -530,10 +536,6 @@ func (s *service) ConfigureWireGuard(name string, privateKey string, listenPort 
 	return s.configureWireguard(name, privateKey, listenPort, firewallMark, differentPeers...)
 }
 
-func (s *service) InterfaceStats(name string) (*InterfaceStats, error) {
-	return interfaceStats(name)
-}
-
 func (s *service) PeerStats(name string, peerPublicKey string) (*PeerStats, error) {
 	publicKey, err := wgtypes.ParseKey(peerPublicKey)
 	if err != nil {
@@ -559,15 +561,25 @@ func (s *service) PeerStats(name string, peerPublicKey string) (*PeerStats, erro
 	return nil, nil
 }
 
-func (s *service) AddPeer(name string, privateKey string, listenPort *int, firewallMark *int, p *peer.Peer) error {
-	currentDevice, err := s.client.Device(name)
+func (s *service) CreatePeer(ctx context.Context, serverId string, options *peer.CreateOptions, userId string) (*peer.Peer, error) {
+	svc, err := s.findServer(ctx, serverId)
 	if err != nil {
-		return fmt.Errorf("failed to open wireguard device: %w", err)
+		return nil, err
 	}
 
-	peerConfig, err := toPeerConfig(p)
+	createdPeer, err := s.peerService.CreatePeer(ctx, svc.Id, options, userId)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	currentDevice, err := s.client.Device(svc.Name)
+	if err != nil {
+		return createdPeer, fmt.Errorf("failed to open wireguard device: %w", err)
+	}
+
+	peerConfig, err := toPeerConfig(createdPeer)
+	if err != nil {
+		return createdPeer, err
 	}
 
 	var currentPeer *wgtypes.Peer
@@ -592,18 +604,31 @@ func (s *service) AddPeer(name string, privateKey string, listenPort *int, firew
 		}
 	}
 
-	return s.configureWireguard(name, privateKey, listenPort, firewallMark, peerConfig)
+	if err := s.configureWireguard(svc.Name, svc.PrivateKey, svc.ListenPort, svc.FirewallMark, peerConfig); err != nil {
+		return createdPeer, err
+	}
+	return createdPeer, nil
 }
 
-func (s *service) UpdatePeer(name string, privateKey string, listenPort *int, firewallMark *int, p *peer.Peer) error {
-	currentDevice, err := s.client.Device(name)
+func (s *service) UpdatePeer(ctx context.Context, peerId string, options *peer.UpdateOptions, fieldMask *peer.UpdateFieldMask, userId string) (*peer.Peer, error) {
+	updatedPeer, err := s.peerService.UpdatePeer(ctx, peerId, options, fieldMask, userId)
 	if err != nil {
-		return fmt.Errorf("failed to open wireguard device: %w", err)
+		return nil, err
 	}
 
-	peerConfig, err := toPeerConfig(p)
+	svc, err := s.findServer(ctx, updatedPeer.ServerId)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	currentDevice, err := s.client.Device(svc.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open wireguard device: %w", err)
+	}
+
+	peerConfig, err := toPeerConfig(updatedPeer)
+	if err != nil {
+		return nil, err
 	}
 	peerConfig.UpdateOnly = true
 
@@ -614,34 +639,45 @@ func (s *service) UpdatePeer(name string, privateKey string, listenPort *int, fi
 			break
 		}
 	}
-	if currentPeer == nil {
-		return nil
-	}
-
-	peerConfig.UpdateOnly = true
-	if len(currentPeer.AllowedIPs) != len(peerConfig.AllowedIPs) {
-		peerConfig.ReplaceAllowedIPs = true
-	} else {
-		for i := 0; i < len(currentPeer.AllowedIPs); i++ {
-			if currentPeer.AllowedIPs[i].String() != peerConfig.AllowedIPs[i].String() {
-				peerConfig.ReplaceAllowedIPs = true
-				break
+	if currentPeer != nil {
+		peerConfig.UpdateOnly = true
+		if len(currentPeer.AllowedIPs) != len(peerConfig.AllowedIPs) {
+			peerConfig.ReplaceAllowedIPs = true
+		} else {
+			for i := 0; i < len(currentPeer.AllowedIPs); i++ {
+				if currentPeer.AllowedIPs[i].String() != peerConfig.AllowedIPs[i].String() {
+					peerConfig.ReplaceAllowedIPs = true
+					break
+				}
 			}
 		}
 	}
 
-	return s.configureWireguard(name, privateKey, listenPort, firewallMark, peerConfig)
+	if err = s.configureWireguard(svc.Name, svc.PrivateKey, svc.ListenPort, svc.FirewallMark, peerConfig); err != nil {
+		return nil, err
+	}
+	return updatedPeer, nil
 }
 
-func (s *service) RemovePeer(name string, privateKey string, listenPort *int, firewallMark *int, p *peer.Peer) error {
-	currentDevice, err := s.client.Device(name)
+func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) (*peer.Peer, error) {
+	deletedPeer, err := s.peerService.DeletePeer(ctx, peerId, userId)
 	if err != nil {
-		return fmt.Errorf("failed to open wireguard device: %w", err)
+		return nil, err
 	}
 
-	peerConfig, err := toPeerConfig(p)
+	svc, err := s.findServer(ctx, deletedPeer.ServerId)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	currentDevice, err := s.client.Device(svc.Name)
+	if err != nil {
+		return deletedPeer, fmt.Errorf("failed to open wireguard device: %w", err)
+	}
+
+	peerConfig, err := toPeerConfig(deletedPeer)
+	if err != nil {
+		return deletedPeer, err
 	}
 
 	var currentPeer *wgtypes.Peer
@@ -651,12 +687,14 @@ func (s *service) RemovePeer(name string, privateKey string, listenPort *int, fi
 			break
 		}
 	}
-	if currentPeer == nil {
-		return nil
+	if currentPeer != nil {
+		peerConfig.Remove = true
 	}
-	peerConfig.Remove = true
 
-	return s.configureWireguard(name, privateKey, listenPort, firewallMark, peerConfig)
+	if err := s.configureWireguard(svc.Name, svc.PrivateKey, svc.ListenPort, svc.FirewallMark, peerConfig); err != nil {
+		return deletedPeer, err
+	}
+	return deletedPeer, nil
 }
 
 func (s *service) configureWireguard(name string, privateKey string, listenPort *int, firewallMark *int, peers ...wgtypes.PeerConfig) error {
@@ -724,4 +762,19 @@ func toPeerConfig(peer *peer.Peer) (wgtypes.PeerConfig, error) {
 		ReplaceAllowedIPs:           false,
 		AllowedIPs:                  allowedIPs,
 	}, nil
+}
+
+func (s *service) findServer(ctx context.Context, serverId string) (*server.Server, error) {
+	svc, err := s.serverService.FindServer(ctx, &server.FindOneOptions{
+		IdOption: &server.IdOption{
+			Id: serverId,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if svc == nil {
+		return nil, server.ErrServerNotFound
+	}
+	return svc, nil
 }

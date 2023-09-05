@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/UnAfraid/wg-ui/internal/slice"
+	"github.com/UnAfraid/wg-ui/server"
 	"github.com/vishvananda/netlink"
 )
 
@@ -24,7 +25,7 @@ func configureInterface(name string, address string, mtu int) error {
 		}
 	}
 
-	addressList, err := netlink.AddrList(&link, 0)
+	addressList, err := netlink.AddrList(&link, netFamilyAll)
 	if err != nil {
 		return fmt.Errorf("failed to get interface: %s address list: %w", name, err)
 	}
@@ -80,7 +81,7 @@ func deleteInterface(name string) error {
 	return nil
 }
 
-func interfaceStats(name string) (*InterfaceStats, error) {
+func interfaceStats(name string) (*server.Stats, error) {
 	link, err := netlink.LinkByName(name)
 	if err != nil {
 		if os.IsNotExist(err) || errors.As(err, &netlink.LinkNotFoundError{}) {
@@ -90,7 +91,7 @@ func interfaceStats(name string) (*InterfaceStats, error) {
 	}
 
 	statistics := link.Attrs().Statistics
-	return &InterfaceStats{
+	return &server.Stats{
 		RxPackets:         statistics.RxPackets,
 		TxPackets:         statistics.TxPackets,
 		RxBytes:           statistics.RxBytes,
@@ -134,7 +135,7 @@ func findForeignInterfaces(knownInterfaces []string) (foreignInterfaces []Foreig
 			continue
 		}
 
-		addrList, err := netlink.AddrList(link, 0)
+		addrList, err := netlink.AddrList(link, netFamilyAll)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get address list for interface %s", name)
 		}
