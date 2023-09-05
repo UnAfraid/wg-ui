@@ -12,6 +12,7 @@ type HttpServer struct {
 	FrontendEnabled         bool   `default:"true" split_words:"true"`
 	GraphiQLEnabled         bool   `default:"true" split_words:"true"`
 	GraphiQLEndpoint        string `default:"/graphiql" split_words:"true"`
+	GraphiQLVersion         string `default:"default" split_words:"true"`
 	SandboxExplorerEnabled  bool   `default:"true" split_words:"true"`
 	SandboxExplorerEndpoint string `default:"/sandbox" split_words:"true"`
 	PlaygroundEnabled       bool   `default:"false" split_words:"true"`

@@ -13,6 +13,7 @@ import (
 	"github.com/UnAfraid/wg-ui/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/api/internal/tools/frontend"
+	"github.com/UnAfraid/wg-ui/api/internal/tools/graphiqlsse"
 	"github.com/UnAfraid/wg-ui/api/internal/tools/playground"
 	"github.com/UnAfraid/wg-ui/api/internal/tools/voyager"
 	"github.com/UnAfraid/wg-ui/auth"
@@ -24,6 +25,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -96,7 +98,15 @@ func NewRouter(
 		}
 
 		if conf.HttpServer.GraphiQLEnabled {
-			r.Handle(conf.HttpServer.GraphiQLEndpoint, gqlplayground.Handler("GraphiQL Playground", "/query"))
+			handlerFunc := gqlplayground.Handler("GraphiQL Playground", "/query")
+			switch conf.HttpServer.GraphiQLVersion {
+			case "default":
+			case "sse":
+				handlerFunc = graphiqlsse.Handler("GraphiQL SSE Playground", "/query")
+			default:
+				logrus.WithField("graphiqlVersion", conf.HttpServer.GraphiQLVersion).Warn("unsupported graphiql version, using default")
+			}
+			r.Handle(conf.HttpServer.GraphiQLEndpoint, handlerFunc)
 		}
 
 		if conf.HttpServer.SandboxExplorerEnabled {
