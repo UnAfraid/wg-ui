@@ -10,6 +10,7 @@ import (
 	sybscriptionResolver "github.com/UnAfraid/wg-ui/api/internal/subscription"
 	userResolver "github.com/UnAfraid/wg-ui/api/internal/user"
 	"github.com/UnAfraid/wg-ui/auth"
+	"github.com/UnAfraid/wg-ui/manage"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"
 	"github.com/UnAfraid/wg-ui/user"
@@ -23,6 +24,7 @@ func newConfig(
 	serverService server.Service,
 	peerService peer.Service,
 	wgService wg.Service,
+	manageService manage.Service,
 ) resolver.Config {
 	return resolver.Config{
 		Resolvers: &resolverRoot{
@@ -34,10 +36,7 @@ func newConfig(
 			),
 			mutationResolver: mutation.NewMutationResolver(
 				authService,
-				userService,
-				serverService,
-				peerService,
-				wgService,
+				manageService,
 			),
 			subscriptionResolver: sybscriptionResolver.NewSubscriptionResolver(
 				userService,

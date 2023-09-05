@@ -15,6 +15,7 @@ import (
 	"github.com/UnAfraid/wg-ui/config"
 	"github.com/UnAfraid/wg-ui/datastore"
 	"github.com/UnAfraid/wg-ui/datastore/bbolt"
+	"github.com/UnAfraid/wg-ui/manage"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"
 	"github.com/UnAfraid/wg-ui/subscription"
@@ -92,6 +93,12 @@ func main() {
 
 	subscriptionImpl := subscription.NewInMemorySubscription()
 
+	serverRepository := bbolt.NewServerRepository(db)
+	serverService := server.NewService(serverRepository, subscriptionImpl)
+
+	peerRepository := bbolt.NewPeerRepository(db)
+	peerService := peer.NewService(peerRepository, serverService, subscriptionImpl)
+
 	userRepository := bbolt.NewUserRepository(db)
 	userService, err := user.NewService(userRepository, subscriptionImpl, conf.Initial.Email, conf.Initial.Password)
 	if err != nil {
@@ -100,12 +107,6 @@ func main() {
 			Fatal("failed to initialize user service")
 		return
 	}
-
-	serverRepository := bbolt.NewServerRepository(db)
-	serverService := server.NewService(serverRepository, subscriptionImpl)
-
-	peerRepository := bbolt.NewPeerRepository(db)
-	peerService := peer.NewService(peerRepository, serverService, subscriptionImpl)
 
 	wgService, err := wg.NewService(serverService, peerService)
 	if err != nil {
@@ -118,6 +119,8 @@ func main() {
 
 	authService := auth.NewService(jwt.SigningMethodHS256, jwtSecretBytes, jwtSecretBytes, conf.JwtDuration)
 
+	manageService := manage.NewService(userService, serverService, peerService, wgService)
+
 	router := api.NewRouter(
 		conf,
 		authService,
@@ -125,6 +128,7 @@ func main() {
 		serverService,
 		peerService,
 		wgService,
+		manageService,
 	)
 
 	httpServer := http.Server{

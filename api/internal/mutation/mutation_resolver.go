@@ -2,49 +2,36 @@ package mutation
 
 import (
 	"context"
-	"errors"
 
 	"github.com/UnAfraid/wg-ui/api/internal/model"
 	"github.com/UnAfraid/wg-ui/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/auth"
-	"github.com/UnAfraid/wg-ui/peer"
-	"github.com/UnAfraid/wg-ui/server"
-	"github.com/UnAfraid/wg-ui/user"
-	"github.com/UnAfraid/wg-ui/wg"
+	"github.com/UnAfraid/wg-ui/manage"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
 type mutationResolver struct {
 	authService   auth.Service
-	userService   user.Service
-	serverService server.Service
-	peerService   peer.Service
-	wgService     wg.Service
+	manageService manage.Service
 }
 
 func NewMutationResolver(
 	authService auth.Service,
-	userService user.Service,
-	serverService server.Service,
-	peerService peer.Service,
-	wgService wg.Service,
+	manageService manage.Service,
 ) resolver.MutationResolver {
 	return &mutationResolver{
 		authService:   authService,
-		userService:   userService,
-		serverService: serverService,
-		peerService:   peerService,
-		wgService:     wgService,
+		manageService: manageService,
 	}
 }
 
 func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*model.SignInPayload, error) {
-	u, err := r.userService.Authenticate(ctx, input.Email, input.Password)
+	u, err := r.manageService.Authenticate(ctx, input.Email, input.Password)
 	if err != nil {
 		return nil, err
 	}
-	user := model.ToUser(u)
 
+	user := model.ToUser(u)
 	tokenString, expiresIn, expiresAt, err := r.authService.Sign(user.ID.Base64())
 	if err != nil {
 		return nil, err
@@ -59,7 +46,7 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.CreateUserPayload, error) {
-	createdUser, err := r.userService.CreateUser(ctx, model.CreateUserInputToUserCreateUserOptions(input))
+	createdUser, err := r.manageService.CreateUser(ctx, model.CreateUserInputToUserCreateUserOptions(input))
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +68,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UpdateUse
 		return nil, err
 	}
 
-	updatedUser, err := r.userService.UpdateUser(ctx, userId, updateOptions, updateFieldMask)
+	updatedUser, err := r.manageService.UpdateUser(ctx, userId, updateOptions, updateFieldMask)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +85,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input model.DeleteUse
 		return nil, err
 	}
 
-	deletedUser, err := r.userService.DeleteUser(ctx, userId)
+	deletedUser, err := r.manageService.DeleteUser(ctx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +96,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input model.DeleteUse
 	}, nil
 }
 
-func (r *mutationResolver) GenerateWireguardKey(ctx context.Context, input model.GenerateWireguardKeyInput) (*model.GenerateWireguardKeyPayload, error) {
+func (r *mutationResolver) GenerateWireguardKey(_ context.Context, input model.GenerateWireguardKeyInput) (*model.GenerateWireguardKeyPayload, error) {
 	key, err := wgtypes.GeneratePrivateKey()
 	if err != nil {
 		return nil, err
@@ -138,7 +125,7 @@ func (r *mutationResolver) CreateServer(ctx context.Context, input model.CreateS
 		return nil, err
 	}
 
-	createdServer, err := r.serverService.CreateServer(ctx, createOptions, userId)
+	createdServer, err := r.manageService.CreateServer(ctx, createOptions, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -170,29 +157,15 @@ func (r *mutationResolver) UpdateServer(ctx context.Context, input model.UpdateS
 		return nil, err
 	}
 
-	updatedServer, err := r.serverService.UpdateServer(ctx, serverId, updateOptions, updateFieldMask, userId)
+	updatedServer, err := r.manageService.UpdateServer(ctx, serverId, updateOptions, updateFieldMask, userId)
 	if err != nil {
 		return nil, err
-	}
-
-	var errs []error
-	if updatedServer.Enabled && updateOptions.Running {
-		peers, err := r.peerService.FindPeers(ctx, &peer.FindOptions{
-			ServerId: &serverId,
-		})
-		if err != nil {
-			errs = append(errs, err)
-		} else {
-			if err := r.wgService.ConfigureWireGuard(updatedServer.Name, updatedServer.PrivateKey, updatedServer.ListenPort, updatedServer.FirewallMark, peers); err != nil {
-				errs = append(errs, err)
-			}
-		}
 	}
 
 	return &model.UpdateServerPayload{
 		ClientMutationID: input.ClientMutationID.Value(),
 		Server:           model.ToServer(updatedServer),
-	}, errors.Join(errs...)
+	}, nil
 }
 
 func (r *mutationResolver) DeleteServer(ctx context.Context, input model.DeleteServerInput) (*model.DeleteServerPayload, error) {
@@ -211,12 +184,7 @@ func (r *mutationResolver) DeleteServer(ctx context.Context, input model.DeleteS
 		return nil, err
 	}
 
-	stoppedServer, err := r.wgService.StopServer(ctx, serverId)
-	if err != nil {
-		return nil, err
-	}
-
-	deletedServer, err := r.serverService.DeleteServer(ctx, stoppedServer.Id, userId)
+	deletedServer, err := r.manageService.DeleteServer(ctx, serverId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +201,7 @@ func (r *mutationResolver) StartServer(ctx context.Context, input model.StartSer
 		return nil, err
 	}
 
-	srv, err := r.wgService.StartServer(ctx, serverId)
+	srv, err := r.manageService.StartServer(ctx, serverId)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +218,7 @@ func (r *mutationResolver) StopServer(ctx context.Context, input model.StopServe
 		return nil, err
 	}
 
-	srv, err := r.wgService.StopServer(ctx, serverId)
+	srv, err := r.manageService.StopServer(ctx, serverId)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +245,7 @@ func (r *mutationResolver) CreatePeer(ctx context.Context, input model.CreatePee
 		return nil, err
 	}
 
-	peer, err := r.wgService.CreatePeer(ctx, serverId, model.CreatePeerInputToCreateOptions(input), userId)
+	peer, err := r.manageService.CreatePeer(ctx, serverId, model.CreatePeerInputToCreateOptions(input), userId)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +273,7 @@ func (r *mutationResolver) UpdatePeer(ctx context.Context, input model.UpdatePee
 	}
 
 	updateOptions, updateFieldMask := model.UpdatePeerInputToUpdatePeerOptionsAndUpdatePeerFieldMask(input)
-	peer, err := r.wgService.UpdatePeer(ctx, peerId, updateOptions, updateFieldMask, userId)
+	peer, err := r.manageService.UpdatePeer(ctx, peerId, updateOptions, updateFieldMask, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +300,7 @@ func (r *mutationResolver) DeletePeer(ctx context.Context, input model.DeletePee
 		return nil, err
 	}
 
-	peer, err := r.wgService.DeletePeer(ctx, peerId, userId)
+	peer, err := r.manageService.DeletePeer(ctx, peerId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +322,7 @@ func (r *mutationResolver) ImportForeignServer(ctx context.Context, input model.
 		return nil, err
 	}
 
-	server, err := r.wgService.ImportForeignServer(ctx, input.Name, userId)
+	server, err := r.manageService.ImportForeignServer(ctx, input.Name, userId)
 	if err != nil {
 		return nil, err
 	}

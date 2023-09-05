@@ -9,5 +9,6 @@ type UpdateFieldMask struct {
 	PresharedKey        bool
 	PersistentKeepalive bool
 	Hooks               bool
+	CreateUserId        bool
 	UpdateUserId        bool
 }

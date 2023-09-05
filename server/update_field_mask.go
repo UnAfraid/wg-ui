@@ -13,5 +13,6 @@ type UpdateFieldMask struct {
 	MTU          bool
 	Stats        bool
 	Hooks        bool
+	CreateUserId bool
 	UpdateUserId bool
 }

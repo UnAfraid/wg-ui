@@ -45,9 +45,11 @@ func NewService(
 		userRepository: userRepository,
 		subscription:   subscription,
 	}
+
 	if err := s.initializeInitialUser(context.Background(), initialEmail, initialPassword); err != nil {
 		return nil, err
 	}
+
 	return s, nil
 }
 

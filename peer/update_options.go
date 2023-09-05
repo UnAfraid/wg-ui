@@ -10,4 +10,6 @@ type UpdateOptions struct {
 	PresharedKey        string
 	PersistentKeepalive int
 	Hooks               []*Hook
+	CreateUserId        string
+	UpdateUserId        string
 }

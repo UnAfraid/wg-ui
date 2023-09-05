@@ -13,4 +13,6 @@ type UpdateOptions struct {
 	MTU          int
 	Stats        Stats
 	Hooks        []*Hook
+	CreateUserId string
+	UpdateUserId string
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/UnAfraid/wg-ui/api/internal/tools/voyager"
 	"github.com/UnAfraid/wg-ui/auth"
 	"github.com/UnAfraid/wg-ui/config"
+	"github.com/UnAfraid/wg-ui/manage"
 	"github.com/UnAfraid/wg-ui/peer"
 	"github.com/UnAfraid/wg-ui/server"
 	"github.com/UnAfraid/wg-ui/user"
@@ -41,6 +42,7 @@ func NewRouter(
 	serverService server.Service,
 	peerService peer.Service,
 	wgService wg.Service,
+	manageService manage.Service,
 ) http.Handler {
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins:      conf.CorsAllowedOrigins,
@@ -56,6 +58,7 @@ func NewRouter(
 		serverService,
 		peerService,
 		wgService,
+		manageService,
 	)
 
 	authHandler := handler.NewAuthenticationMiddleware(authService, userService)
