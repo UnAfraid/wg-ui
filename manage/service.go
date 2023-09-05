@@ -282,49 +282,64 @@ func (s *service) findPeer(ctx context.Context, peerId string) (*peer.Peer, erro
 func (s *service) cleanup(ctx context.Context) {
 	started := time.Now()
 
-	removedOrphanServerUsers := s.cleanupServers(ctx)
-	removedOrphanPeerUsers := s.cleanupPeers(ctx)
+	removedOrphanServerUsers := s.cleanupOrphanedUsersFromServers(ctx)
+	removedOrphanPeerUsers := s.cleanupOrphanedUsersFromPeers(ctx)
+	removedOrphanPeerServers := s.cleanupOrphanedPeersFromServers(ctx)
 
-	if removedOrphanServerUsers > 0 || removedOrphanPeerUsers > 0 {
+	if removedOrphanServerUsers > 0 || removedOrphanPeerUsers > 0 || removedOrphanPeerServers > 0 {
 		logrus.
+			WithField("duration", time.Since(started).String()).
 			WithField("removedOrphanServerUsers", removedOrphanServerUsers).
 			WithField("removedOrphanPeerUsers", removedOrphanPeerUsers).
-			WithField("duration", time.Since(started).String()).
-			Warn("orphaned users found")
+			WithField("removedOrphanPeerServers", removedOrphanPeerServers).
+			Warn("orphaned data found")
 	}
 }
 
-func (s *service) cleanupServers(ctx context.Context) int {
-	var removedOrphanServerUsers int
+func (s *service) cleanupOrphanedUsersFromServers(ctx context.Context) int {
+	var count int
 	servers, err := s.serverService.FindServers(ctx, &server.FindOptions{})
 	if err != nil {
 		logrus.WithError(err).Warn("failed to find servers")
 	}
 
 	for _, svc := range servers {
-		removedOrphanServerUsers += s.cleanupOrphanedUserFromServer(ctx, svc)
+		count += s.cleanupOrphanedUserFromServer(ctx, svc)
 	}
-	return removedOrphanServerUsers
+	return count
 }
 
-func (s *service) cleanupPeers(ctx context.Context) int {
-	var removedOrphanPeerUsers int
+func (s *service) cleanupOrphanedUsersFromPeers(ctx context.Context) int {
+	var count int
 	peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{})
 	if err != nil {
 		logrus.WithError(err).Warn("failed to find peers")
 	}
 
 	for _, p := range peers {
-		removedOrphanPeerUsers += s.cleanupOrphanedUserFromPeer(ctx, p)
+		count += s.cleanupOrphanedUserFromPeer(ctx, p)
 	}
-	return removedOrphanPeerUsers
+	return count
+}
+
+func (s *service) cleanupOrphanedPeersFromServers(ctx context.Context) int {
+	var count int
+	peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{})
+	if err != nil {
+		logrus.WithError(err).Warn("failed to find peers")
+	}
+
+	for _, p := range peers {
+		count += s.cleanupOrphanedServerFromPeer(ctx, p)
+	}
+	return count
 }
 
 func (s *service) cleanupOrphanedUserFromServer(ctx context.Context, svc *server.Server) int {
-	var removedOrphanedUsers int
+	var count int
 	if svc.CreateUserId != "" {
 		if _, err := s.findUserById(ctx, svc.CreateUserId); errors.Is(err, user.ErrUserNotFound) {
-			removedOrphanedUsers++
+			count++
 			updateOptions := server.UpdateOptions{}
 			updateFieldMask := server.UpdateFieldMask{CreateUserId: true}
 			if _, err := s.serverService.UpdateServer(ctx, svc.Id, &updateOptions, &updateFieldMask, ""); err != nil {
@@ -335,7 +350,7 @@ func (s *service) cleanupOrphanedUserFromServer(ctx context.Context, svc *server
 
 	if svc.UpdateUserId != "" {
 		if _, err := s.findUserById(ctx, svc.UpdateUserId); errors.Is(err, user.ErrUserNotFound) {
-			removedOrphanedUsers++
+			count++
 			updateOptions := server.UpdateOptions{}
 			updateFieldMask := server.UpdateFieldMask{UpdateUserId: true}
 			if _, err := s.serverService.UpdateServer(ctx, svc.Id, &updateOptions, &updateFieldMask, ""); err != nil {
@@ -343,14 +358,14 @@ func (s *service) cleanupOrphanedUserFromServer(ctx context.Context, svc *server
 			}
 		}
 	}
-	return removedOrphanedUsers
+	return count
 }
 
 func (s *service) cleanupOrphanedUserFromPeer(ctx context.Context, p *peer.Peer) int {
-	var removedOrphanedUsers int
+	var count int
 	if p.CreateUserId != "" {
 		if _, err := s.findUserById(ctx, p.CreateUserId); errors.Is(err, user.ErrUserNotFound) {
-			removedOrphanedUsers++
+			count++
 			updateOptions := peer.UpdateOptions{}
 			updateFieldMask := peer.UpdateFieldMask{CreateUserId: true}
 			if _, err := s.peerService.UpdatePeer(ctx, p.Id, &updateOptions, &updateFieldMask, ""); err != nil {
@@ -361,7 +376,7 @@ func (s *service) cleanupOrphanedUserFromPeer(ctx context.Context, p *peer.Peer)
 
 	if p.UpdateUserId != "" {
 		if _, err := s.findUserById(ctx, p.UpdateUserId); errors.Is(err, user.ErrUserNotFound) {
-			removedOrphanedUsers++
+			count++
 			updateOptions := peer.UpdateOptions{}
 			updateFieldMask := peer.UpdateFieldMask{UpdateUserId: true}
 			if _, err := s.peerService.UpdatePeer(ctx, p.Id, &updateOptions, &updateFieldMask, ""); err != nil {
@@ -369,5 +384,16 @@ func (s *service) cleanupOrphanedUserFromPeer(ctx context.Context, p *peer.Peer)
 			}
 		}
 	}
-	return removedOrphanedUsers
+	return count
+}
+
+func (s *service) cleanupOrphanedServerFromPeer(ctx context.Context, p *peer.Peer) int {
+	var count int
+	if _, err := s.findServer(ctx, p.ServerId); errors.Is(err, server.ErrServerNotFound) {
+		count++
+		if _, err := s.peerService.DeletePeer(ctx, p.Id, ""); err != nil {
+			logrus.WithError(err).Warn("failed to delete peer")
+		}
+	}
+	return count
 }
