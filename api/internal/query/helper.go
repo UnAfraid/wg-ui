@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/UnAfraid/wg-ui/api/handler"
+	"github.com/UnAfraid/wg-ui/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/api/internal/model"
 	"github.com/UnAfraid/wg-ui/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/internal/adapt"
