@@ -1,0 +1,1 @@
+import{a as t,b as s,o as p,c as r,h as a}from "./entry.fdfc6421.js";const c=t({props:{},layout:"boxed",setup(o, {}){}});function _(o, e, u, f, i, m){const n=a;return p(),r(n,{onResolve:e[0]||(e[0]= d=>o.$router.push("/"))})}const $=s(c,[["render",_]]);export{$ as default};

@@ -4,8 +4,6 @@
 *.dll
 *.so
 *.dylib
-/app
-test/
 
 # Test binary, built with `go test -c`
 *.test
@@ -14,7 +12,7 @@ test/
 *.out
 
 # JetBrains IDEs
-.idea
+.idea/
 *.iml
 *.ipr
 

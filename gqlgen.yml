@@ -4,7 +4,7 @@ schema:
 
 # Where should the generated server code go?
 exec:
-  filename: api/internal/resolver/generated.go
+  filename: pkg/api/internal/resolver/generated.go
 
 # Enable Apollo federation support
 # federation:
@@ -12,7 +12,7 @@ exec:
 #   package: graph
 
 model:
-  filename: api/internal/model/generated.go
+  filename: pkg/api/internal/model/generated.go
 
 # Where should the resolver implementations go?
 # resolver:
@@ -66,6 +66,6 @@ nullable_input_omittable: true
 # your liking
 models:
   ID:
-    model: github.com/UnAfraid/wg-ui/api/internal/model.ID
+    model: github.com/UnAfraid/wg-ui/pkg/api/internal/model.ID
   DateTime:
-    model: github.com/UnAfraid/wg-ui/api/internal/model.DateTime
+    model: github.com/UnAfraid/wg-ui/pkg/api/internal/model.DateTime
