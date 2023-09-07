@@ -18,6 +18,9 @@ builds:
       - mipsle
       - mips64
       - mips64le
+    gomips:
+      - softfloat
+      - hardfloat
   - id: docker-release
     binary: app
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -extldflags "-static"
@@ -76,6 +79,10 @@ archives:
       {{ .ProjectName }}_
       {{- title .Os }}_
       {{- .Arch }}
+      {{- if eq .Arch "mips" }}_{{- title .Mips }}{{ end }}
+      {{- if eq .Arch "mipsle" }}_{{- title .Mips }}{{ end }}
+      {{- if eq .Arch "mips64" }}_{{- title .Mips }}{{ end }}
+      {{- if eq .Arch "mips64le" }}_{{- title .Mips }}{{ end }}
     builds:
       - release
     files:
