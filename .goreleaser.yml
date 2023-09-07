@@ -14,6 +14,8 @@ builds:
     goarch:
       - amd64
       - arm64
+      - mips
+      - mipsle
   - id: docker-release
     binary: app
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -extldflags "-static"
