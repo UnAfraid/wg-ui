@@ -16,6 +16,8 @@ builds:
       - arm64
       - mips
       - mipsle
+      - mips64
+      - mips64le
   - id: docker-release
     binary: app
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -extldflags "-static"
@@ -70,8 +72,7 @@ changelog:
       - Merge pull request
       - Merge branch
 archives:
-  - rlcp: true
-    name_template: >-
+  - name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
       {{- .Arch }}
