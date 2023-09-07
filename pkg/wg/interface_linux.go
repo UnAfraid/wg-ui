@@ -81,17 +81,17 @@ func deleteInterface(name string) error {
 	return nil
 }
 
-func interfaceStats(name string) (*server.Stats, error) {
+func interfaceStats(name string) (server.Stats, error) {
 	link, err := netlink.LinkByName(name)
 	if err != nil {
 		if os.IsNotExist(err) || errors.As(err, &netlink.LinkNotFoundError{}) {
-			return nil, nil
+			return server.Stats{}, nil
 		}
-		return nil, fmt.Errorf("failed to find link by name: %w", err)
+		return server.Stats{}, fmt.Errorf("failed to find link by name: %w", err)
 	}
 
 	statistics := link.Attrs().Statistics
-	return &server.Stats{
+	return server.Stats{
 		RxPackets:         statistics.RxPackets,
 		TxPackets:         statistics.TxPackets,
 		RxBytes:           statistics.RxBytes,

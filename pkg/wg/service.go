@@ -212,42 +212,13 @@ func (s *service) updateServerStats() {
 			continue
 		}
 
-		stats, err := interfaceStats(svc.Name)
+		newInterfaceStats, err := interfaceStats(svc.Name)
 		if err != nil {
 			logrus.
 				WithError(err).
 				WithField("name", svc.Name).
 				Warn("failed to get interface stats")
 			continue
-		}
-		if stats == nil {
-			continue
-		}
-
-		newInterfaceStats := server.Stats{
-			RxPackets:         stats.RxPackets,
-			TxPackets:         stats.TxPackets,
-			RxBytes:           stats.RxBytes,
-			TxBytes:           stats.TxBytes,
-			RxErrors:          stats.RxErrors,
-			TxErrors:          stats.TxErrors,
-			RxDropped:         stats.RxDropped,
-			TxDropped:         stats.TxDropped,
-			Multicast:         stats.Multicast,
-			Collisions:        stats.Collisions,
-			RxLengthErrors:    stats.RxLengthErrors,
-			RxOverErrors:      stats.RxOverErrors,
-			RxCrcErrors:       stats.RxCrcErrors,
-			RxFrameErrors:     stats.RxFrameErrors,
-			RxFifoErrors:      stats.RxFifoErrors,
-			RxMissedErrors:    stats.RxMissedErrors,
-			TxAbortedErrors:   stats.TxAbortedErrors,
-			TxCarrierErrors:   stats.TxCarrierErrors,
-			TxFifoErrors:      stats.TxFifoErrors,
-			TxHeartbeatErrors: stats.TxHeartbeatErrors,
-			TxWindowErrors:    stats.TxWindowErrors,
-			RxCompressed:      stats.RxCompressed,
-			TxCompressed:      stats.TxCompressed,
 		}
 
 		if newInterfaceStats != svc.Stats {
