@@ -3,11 +3,13 @@ package wg
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"slices"
 	"strings"
 
 	"github.com/UnAfraid/wg-ui/pkg/server"
+	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 )
 
@@ -64,6 +66,117 @@ func configureInterface(name string, address string, mtu int) error {
 	}
 
 	return nil
+}
+
+func configureRoutes(name string, allowedIPs []net.IPNet) error {
+	link, err := netlink.LinkByName(name)
+	if err != nil {
+		if os.IsNotExist(err) || errors.As(err, &netlink.LinkNotFoundError{}) {
+			return nil
+		}
+		return fmt.Errorf("failed to find link by name: %w", err)
+	}
+
+	routes, err := netlink.RouteList(link, netFamilyAll)
+	if err != nil {
+		return fmt.Errorf("failed to get routes: %w", err)
+	}
+
+	routesToAdd, routesToUpdate, routesToRemove := computeRoutes(link, routes, allowedIPs)
+
+	for i, route := range routesToAdd {
+		if err = netlink.RouteAdd(routesToAdd[i]); err != nil {
+			return fmt.Errorf("failed to add route for %s - %w", route.Dst.String(), err)
+		}
+
+		logrus.
+			WithField("name", link.Attrs().Name).
+			WithField("route", route.Dst.String()).
+			Debug("route added")
+	}
+
+	for i, route := range routesToUpdate {
+		if err = netlink.RouteReplace(routesToAdd[i]); err != nil {
+			return fmt.Errorf("failed to replace route for %s - %w", route.Dst.String(), err)
+		}
+
+		logrus.
+			WithField("name", link.Attrs().Name).
+			WithField("route", route.Dst.String()).
+			Debug("route replaced")
+	}
+
+	for i, route := range routesToRemove {
+		if err = netlink.RouteDel(routesToAdd[i]); err != nil {
+			return fmt.Errorf("failed to delete route for %s - %w", route.Dst.String(), err)
+		}
+
+		logrus.
+			WithField("name", link.Attrs().Name).
+			WithField("route", route.Dst.String()).
+			Debug("route deleted")
+	}
+	return nil
+}
+
+func computeRoutes(link netlink.Link, existingRoutes []netlink.Route, allowedIPs []net.IPNet) ([]*netlink.Route, []*netlink.Route, []*netlink.Route) {
+	var routesToAdd []*netlink.Route
+	var routesToUpdate []*netlink.Route
+	var routesToRemove []*netlink.Route
+	for i, allowedIP := range allowedIPs {
+		var existingRoute *netlink.Route
+		for _, route := range existingRoutes {
+			if route.Dst != nil && route.Dst.IP.Equal(allowedIP.IP) && slices.Equal(route.Dst.Mask, allowedIP.Mask) {
+				existingRoute = &existingRoutes[i]
+				break
+			}
+		}
+		if existingRoute != nil {
+			var update bool
+			if existingRoute.Scope != netlink.SCOPE_LINK {
+				existingRoute.Scope = netlink.SCOPE_LINK
+				update = true
+			}
+
+			if existingRoute.Protocol != netlink.RouteProtocol(3) {
+				existingRoute.Protocol = netlink.RouteProtocol(3)
+				update = true
+			}
+
+			if existingRoute.Type != 1 {
+				existingRoute.Type = 1
+				update = true
+			}
+
+			if update {
+				routesToUpdate = append(routesToUpdate, existingRoute)
+			}
+			continue
+		}
+
+		routesToAdd = append(routesToAdd, &netlink.Route{
+			LinkIndex: link.Attrs().Index,
+			Scope:     netlink.SCOPE_LINK,
+			Dst:       &allowedIP,
+			Protocol:  netlink.RouteProtocol(3),
+			Type:      1,
+		})
+	}
+
+	for i, existingRoute := range existingRoutes {
+		var exists bool
+		for _, allowedIP := range allowedIPs {
+			exists = existingRoute.Dst != nil && existingRoute.Dst.IP.Equal(allowedIP.IP) && slices.Equal(existingRoute.Dst.Mask, allowedIP.Mask)
+			if exists {
+				break
+			}
+		}
+		if !exists {
+			routesToRemove = append(routesToRemove, &existingRoutes[i])
+		}
+	}
+
+	return routesToAdd, routesToUpdate, routesToRemove
 }
 
 func deleteInterface(name string) error {

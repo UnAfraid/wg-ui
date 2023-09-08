@@ -436,6 +436,19 @@ func (s *service) StopServer(ctx context.Context, serverId string) (*server.Serv
 	return s.serverService.UpdateServer(ctx, serverId, updateServerOptions, updateServerFieldMask, "")
 }
 
+func (s *service) getAllowedIPs(name string) ([]net.IPNet, error) {
+	currentDevice, err := s.client.Device(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open wireguard device: %w", err)
+	}
+
+	var allowedIPs []net.IPNet
+	for _, p := range currentDevice.Peers {
+		allowedIPs = append(allowedIPs, p.AllowedIPs...)
+	}
+	return allowedIPs, nil
+}
+
 func (s *service) ConfigureWireGuard(name string, privateKey string, listenPort *int, firewallMark *int, peers []*peer.Peer) error {
 	currentDevice, err := s.client.Device(name)
 	if err != nil {
@@ -655,6 +668,15 @@ func (s *service) configureWireguard(name string, privateKey string, listenPort 
 
 	if err = s.client.ConfigureDevice(name, wgConfig); err != nil {
 		return fmt.Errorf("failed to configure device: %w", err)
+	}
+
+	allowedIPs, err := s.getAllowedIPs(name)
+	if err != nil {
+		return fmt.Errorf("failed to get allowed ips: %w", err)
+	}
+
+	if err := configureRoutes(name, allowedIPs); err != nil {
+		return fmt.Errorf("failed to configure routes: %w", err)
 	}
 
 	return nil

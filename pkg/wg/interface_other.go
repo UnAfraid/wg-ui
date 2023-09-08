@@ -3,10 +3,16 @@
 package wg
 
 import (
+	"net"
+
 	"github.com/UnAfraid/wg-ui/pkg/server"
 )
 
 func configureInterface(name string, address string, mtu int) error {
+	return nil
+}
+
+func configureRoutes(name string, allowedIPs []net.IPNet) error {
 	return nil
 }
 
