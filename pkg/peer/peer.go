@@ -61,9 +61,11 @@ func (p *Peer) validate(fieldMask *UpdateFieldMask) error {
 	}
 
 	if fieldMask == nil || fieldMask.Endpoint {
-		_, err := netip.ParseAddrPort(p.Endpoint)
-		if err != nil {
-			return fmt.Errorf("invalid endpoint: %w", err)
+		if p.Endpoint != "" {
+			_, err := netip.ParseAddrPort(p.Endpoint)
+			if err != nil {
+				return fmt.Errorf("invalid endpoint: %w", err)
+			}
 		}
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/netip"
 	"path"
 	"strings"
 	"time"
@@ -216,14 +215,6 @@ func newId() (string, error) {
 func processCreatePeer(server *server.Server, options *CreateOptions, userId string) (*Peer, error) {
 	if options == nil {
 		return nil, ErrCreatePeerOptionsRequired
-	}
-
-	if options.Endpoint != "" {
-		endpointAddrPort, err := netip.ParseAddrPort(options.Endpoint)
-		if err != nil {
-			return nil, fmt.Errorf("invalid endpoint: %w", err)
-		}
-		options.Endpoint = endpointAddrPort.String()
 	}
 
 	id, err := newId()
