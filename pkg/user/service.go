@@ -153,7 +153,7 @@ func (s *service) initializeInitialUser(ctx context.Context, email string, passw
 			email = "admin@example.com"
 		}
 		if password == "" || password == "random" {
-			password = generateRandomPassword(16, 0, 4, 4)
+			password = generateRandomPassword(32, 4, 4)
 			generatedRandomPassword = true
 		}
 		createdUser, err := s.CreateUser(ctx, &CreateOptions{
