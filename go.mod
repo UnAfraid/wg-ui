@@ -3,7 +3,7 @@ module github.com/UnAfraid/wg-ui
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.37
+	github.com/99designs/gqlgen v0.17.38
 	github.com/UnAfraid/searchindex v0.0.0-20230707222905-bbf56d7105a6
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/golang-jwt/jwt/v5 v5.0.0
@@ -11,9 +11,9 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/graph-gophers/dataloader/v7 v7.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/rs/cors v1.10.0
+	github.com/rs/cors v1.10.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/vektah/gqlparser/v2 v2.5.9
+	github.com/vektah/gqlparser/v2 v2.5.10
 	github.com/vishvananda/netlink v1.2.1-beta.2
 	go.etcd.io/bbolt v1.3.7
 	go.uber.org/automaxprocs v1.5.3
@@ -25,7 +25,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.6 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
