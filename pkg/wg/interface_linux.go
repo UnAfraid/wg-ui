@@ -8,9 +8,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
+
+	"github.com/UnAfraid/wg-ui/pkg/server"
 )
 
 func configureInterface(name string, address string, mtu int) error {

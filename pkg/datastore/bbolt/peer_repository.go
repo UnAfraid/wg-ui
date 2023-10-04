@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/UnAfraid/searchindex"
+	"go.etcd.io/bbolt"
+
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
-	"go.etcd.io/bbolt"
 )
 
 const (

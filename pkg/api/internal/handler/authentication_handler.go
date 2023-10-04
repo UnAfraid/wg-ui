@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/auth"
 	"github.com/UnAfraid/wg-ui/pkg/user"

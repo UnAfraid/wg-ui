@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
+
+	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 )
 
 var namePattern = regexp.MustCompile("[a-zA-Z0-9.-_]{1,16}")

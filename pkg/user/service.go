@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UnAfraid/wg-ui/pkg/subscription"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+
+	"github.com/UnAfraid/wg-ui/pkg/subscription"
 )
 
 var (

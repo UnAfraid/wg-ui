@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/graph-gophers/dataloader/v7"
+
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
-	"github.com/graph-gophers/dataloader/v7"
 )
 
 var (

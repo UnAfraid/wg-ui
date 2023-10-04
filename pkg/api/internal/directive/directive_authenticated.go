@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 )
 

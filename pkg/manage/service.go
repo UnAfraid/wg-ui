@@ -5,11 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
 	"github.com/UnAfraid/wg-ui/pkg/wg"
-	"github.com/sirupsen/logrus"
 )
 
 type Service interface {

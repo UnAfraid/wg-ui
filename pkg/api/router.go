@@ -10,6 +10,11 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	gqlplayground "github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/websocket"
+	"github.com/rs/cors"
+	"github.com/sirupsen/logrus"
+
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/tools/frontend"
@@ -23,10 +28,6 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
 	"github.com/UnAfraid/wg-ui/pkg/wg"
-	"github.com/go-chi/chi/v5"
-	"github.com/gorilla/websocket"
-	"github.com/rs/cors"
-	"github.com/sirupsen/logrus"
 )
 
 const (

@@ -10,6 +10,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/sirupsen/logrus"
+	"go.uber.org/automaxprocs/maxprocs"
+
 	"github.com/UnAfraid/wg-ui/pkg/api"
 	"github.com/UnAfraid/wg-ui/pkg/auth"
 	"github.com/UnAfraid/wg-ui/pkg/config"
@@ -21,9 +25,6 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 	"github.com/UnAfraid/wg-ui/pkg/user"
 	"github.com/UnAfraid/wg-ui/pkg/wg"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/sirupsen/logrus"
-	"go.uber.org/automaxprocs/maxprocs"
 )
 
 const (

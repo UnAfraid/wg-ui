@@ -3,11 +3,12 @@ package mutation
 import (
 	"context"
 
+	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
+
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/pkg/auth"
 	"github.com/UnAfraid/wg-ui/pkg/manage"
-	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
 type mutationResolver struct {

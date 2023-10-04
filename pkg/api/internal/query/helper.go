@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/graph-gophers/dataloader/v7"
+
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
-	"github.com/graph-gophers/dataloader/v7"
 )
 
 func idsToStringIds(idKind model.IdKind, ids []*model.ID) ([]string, error) {
