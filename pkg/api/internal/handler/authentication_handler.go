@@ -13,7 +13,7 @@ import (
 )
 
 type AuthenticationHandler interface {
-	WebsocketMiddleware() func(ctx context.Context, payload transport.InitPayload) (context.Context, error)
+	WebsocketMiddleware() func(ctx context.Context, payload transport.InitPayload) (context.Context, *transport.InitPayload, error)
 	AuthenticationMiddleware() func(http.Handler) http.Handler
 }
 
@@ -29,15 +29,15 @@ func NewAuthenticationMiddleware(authService auth.Service, userService user.Serv
 	}
 }
 
-func (ah *authenticationHandler) WebsocketMiddleware() func(ctx context.Context, payload transport.InitPayload) (context.Context, error) {
-	return func(ctx context.Context, payload transport.InitPayload) (context.Context, error) {
+func (ah *authenticationHandler) WebsocketMiddleware() func(ctx context.Context, payload transport.InitPayload) (context.Context, *transport.InitPayload, error) {
+	return func(ctx context.Context, payload transport.InitPayload) (context.Context, *transport.InitPayload, error) {
 		authorizationHeader := payload.Authorization()
 		if len(authorizationHeader) <= 7 || strings.ToUpper(authorizationHeader[0:6]) != "BEARER" {
-			return ctx, nil
+			return ctx, nil, nil
 		}
 
 		tokenString := authorizationHeader[7:]
-		return ah.processToken(ctx, tokenString), nil
+		return ah.processToken(ctx, tokenString), nil, nil
 	}
 }
 
