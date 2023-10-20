@@ -5,6 +5,11 @@
 *.so
 *.dylib
 
+# OS temporary files
+.DS_Store
+._*
+thumbs.db
+
 # Test binary, built with `go test -c`
 *.test
 
