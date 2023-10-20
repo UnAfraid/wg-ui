@@ -7,6 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/UnAfraid/wg-ui/pkg/dbx"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
@@ -30,23 +31,26 @@ type Service interface {
 }
 
 type service struct {
-	userService   user.Service
-	serverService server.Service
-	peerService   peer.Service
-	wgService     wg.Service
+	transactionScoper dbx.TransactionScoper
+	userService       user.Service
+	serverService     server.Service
+	peerService       peer.Service
+	wgService         wg.Service
 }
 
 func NewService(
+	transactionScoper dbx.TransactionScoper,
 	userService user.Service,
 	serverService server.Service,
 	peerService peer.Service,
 	wgService wg.Service,
 ) Service {
 	s := &service{
-		userService:   userService,
-		serverService: serverService,
-		peerService:   peerService,
-		wgService:     wgService,
+		transactionScoper: transactionScoper,
+		userService:       userService,
+		serverService:     serverService,
+		peerService:       peerService,
+		wgService:         wgService,
 	}
 
 	s.cleanup(context.Background())
@@ -67,34 +71,36 @@ func (s *service) UpdateUser(ctx context.Context, userId string, options *user.U
 }
 
 func (s *service) DeleteUser(ctx context.Context, userId string) (*user.User, error) {
-	deletedUser, err := s.userService.DeleteUser(ctx, userId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*user.User, error) {
+		deletedUser, err := s.userService.DeleteUser(ctx, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	servers, err := s.serverService.FindServers(ctx, &server.FindOptions{
-		CreateUserId: &deletedUser.Id,
-		UpdateUserId: &deletedUser.Id,
+		servers, err := s.serverService.FindServers(ctx, &server.FindOptions{
+			CreateUserId: &deletedUser.Id,
+			UpdateUserId: &deletedUser.Id,
+		})
+		if err != nil {
+			logrus.WithError(err).Warn("failed to find servers")
+		}
+		for _, svc := range servers {
+			s.cleanupOrphanedUserFromServer(ctx, svc)
+		}
+
+		peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
+			CreateUserId: &deletedUser.Id,
+			UpdateUserId: &deletedUser.Id,
+		})
+		if err != nil {
+			logrus.WithError(err).Warn("failed to find peers")
+		}
+		for _, p := range peers {
+			s.cleanupOrphanedUserFromPeer(ctx, p)
+		}
+
+		return deletedUser, nil
 	})
-	if err != nil {
-		logrus.WithError(err).Warn("failed to find servers")
-	}
-	for _, svc := range servers {
-		s.cleanupOrphanedUserFromServer(ctx, svc)
-	}
-
-	peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
-		CreateUserId: &deletedUser.Id,
-		UpdateUserId: &deletedUser.Id,
-	})
-	if err != nil {
-		logrus.WithError(err).Warn("failed to find peers")
-	}
-	for _, p := range peers {
-		s.cleanupOrphanedUserFromPeer(ctx, p)
-	}
-
-	return deletedUser, nil
 }
 
 func (s *service) CreateServer(ctx context.Context, options *server.CreateOptions, userId string) (*server.Server, error) {
@@ -124,39 +130,41 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *se
 }
 
 func (s *service) DeleteServer(ctx context.Context, serverId string, userId string) (*server.Server, error) {
-	svc, err := s.findServer(ctx, serverId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*server.Server, error) {
+		svc, err := s.findServer(ctx, serverId)
+		if err != nil {
+			return nil, err
+		}
 
-	if _, err = s.wgService.StopServer(ctx, svc.Id); err != nil {
-		logrus.
-			WithError(err).
-			WithField("serverId", svc.Id).
-			WithField("serverName", svc.Name).
-			Warn("failed to stop server")
-	}
+		if _, err = s.wgService.StopServer(ctx, svc.Id); err != nil {
+			logrus.
+				WithError(err).
+				WithField("serverId", svc.Id).
+				WithField("serverName", svc.Name).
+				Warn("failed to stop server")
+		}
 
-	deletedServer, err := s.serverService.DeleteServer(ctx, serverId, userId)
-	if err != nil {
-		return nil, err
-	}
+		deletedServer, err := s.serverService.DeleteServer(ctx, serverId, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
-		ServerId: &svc.Id,
+		peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
+			ServerId: &svc.Id,
+		})
+		if err != nil {
+			logrus.
+				WithError(err).
+				WithField("serverId", svc.Id).
+				WithField("serverName", svc.Name).
+				Warn("failed to find peers")
+		}
+		for _, p := range peers {
+			s.cleanupOrphanedServerFromPeer(ctx, p)
+		}
+
+		return deletedServer, nil
 	})
-	if err != nil {
-		logrus.
-			WithError(err).
-			WithField("serverId", svc.Id).
-			WithField("serverName", svc.Name).
-			Warn("failed to find peers")
-	}
-	for _, p := range peers {
-		s.cleanupOrphanedServerFromPeer(ctx, p)
-	}
-
-	return deletedServer, nil
 }
 
 func (s *service) StartServer(ctx context.Context, serverId string) (*server.Server, error) {

@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
+	"github.com/UnAfraid/wg-ui/pkg/dbx"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 )
@@ -30,20 +31,23 @@ type Service interface {
 }
 
 type service struct {
-	peerRepository Repository
-	serverService  server.Service
-	subscription   subscription.Subscription
+	peerRepository    Repository
+	transactionScoper dbx.TransactionScoper
+	serverService     server.Service
+	subscription      subscription.Subscription
 }
 
 func NewService(
 	peerRepository Repository,
+	transactionScoper dbx.TransactionScoper,
 	serverService server.Service,
 	subscription subscription.Subscription,
 ) Service {
 	return &service{
-		peerRepository: peerRepository,
-		serverService:  serverService,
-		subscription:   subscription,
+		peerRepository:    peerRepository,
+		transactionScoper: transactionScoper,
+		serverService:     serverService,
+		subscription:      subscription,
 	}
 }
 
@@ -59,114 +63,120 @@ func (s *service) FindPeers(ctx context.Context, options *FindOptions) ([]*Peer,
 }
 
 func (s *service) CreatePeer(ctx context.Context, serverId string, options *CreateOptions, userId string) (*Peer, error) {
-	srv, err := s.findServerById(ctx, serverId)
-	if err != nil {
-		return nil, err
-	}
-
-	existingPeers, err := s.findPeersByServerId(ctx, serverId)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, peer := range existingPeers {
-		if strings.EqualFold(peer.Name, options.Name) {
-			return nil, ErrPeerNameAlreadyInUse
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*Peer, error) {
+		srv, err := s.findServerById(ctx, serverId)
+		if err != nil {
+			return nil, err
 		}
-		if strings.EqualFold(peer.PublicKey, options.PublicKey) {
-			return nil, ErrPublicKeyAlreadyExists
+
+		existingPeers, err := s.findPeersByServerId(ctx, serverId)
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	peer, err := processCreatePeer(srv, options, userId)
-	if err != nil {
-		return nil, err
-	}
+		for _, peer := range existingPeers {
+			if strings.EqualFold(peer.Name, options.Name) {
+				return nil, ErrPeerNameAlreadyInUse
+			}
+			if strings.EqualFold(peer.PublicKey, options.PublicKey) {
+				return nil, ErrPublicKeyAlreadyExists
+			}
+		}
 
-	if err := peer.validate(nil); err != nil {
-		return nil, err
-	}
+		peer, err := processCreatePeer(srv, options, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	createdPeer, err := s.peerRepository.Create(ctx, peer)
-	if err != nil {
-		return nil, err
-	}
+		if err := peer.validate(nil); err != nil {
+			return nil, err
+		}
 
-	if err := createdPeer.runHooks(HookActionCreate); err != nil {
-		logrus.
-			WithError(err).
-			WithField("peer", peer.Name).
-			Warn("failed to run hooks on peer create")
-	}
+		createdPeer, err := s.peerRepository.Create(ctx, peer)
+		if err != nil {
+			return nil, err
+		}
 
-	if err = s.notify(ChangedActionCreated, createdPeer); err != nil {
-		logrus.WithError(err).Warn("failed to notify peer created event")
-	}
+		if err := createdPeer.runHooks(HookActionCreate); err != nil {
+			logrus.
+				WithError(err).
+				WithField("peer", peer.Name).
+				Warn("failed to run hooks on peer create")
+		}
 
-	return createdPeer, nil
+		if err = s.notify(ChangedActionCreated, createdPeer); err != nil {
+			logrus.WithError(err).Warn("failed to notify peer created event")
+		}
+
+		return createdPeer, nil
+	})
 }
 
 func (s *service) UpdatePeer(ctx context.Context, peerId string, options *UpdateOptions, fieldMask *UpdateFieldMask, userId string) (*Peer, error) {
-	peer, err := s.findPeerById(ctx, peerId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*Peer, error) {
+		peer, err := s.findPeerById(ctx, peerId)
+		if err != nil {
+			return nil, err
+		}
 
-	existingPeers, err := s.findPeersByServerId(ctx, peer.ServerId)
-	if err != nil {
-		return nil, err
-	}
+		existingPeers, err := s.findPeersByServerId(ctx, peer.ServerId)
+		if err != nil {
+			return nil, err
+		}
 
-	if err = processUpdatePeer(existingPeers, peer, options, fieldMask, userId); err != nil {
-		return nil, err
-	}
+		if err = processUpdatePeer(existingPeers, peer, options, fieldMask, userId); err != nil {
+			return nil, err
+		}
 
-	if err := peer.validate(fieldMask); err != nil {
-		return nil, err
-	}
+		if err := peer.validate(fieldMask); err != nil {
+			return nil, err
+		}
 
-	updatedPeer, err := s.peerRepository.Update(ctx, peer, fieldMask)
-	if err != nil {
-		return nil, err
-	}
+		updatedPeer, err := s.peerRepository.Update(ctx, peer, fieldMask)
+		if err != nil {
+			return nil, err
+		}
 
-	if err := updatedPeer.runHooks(HookActionUpdate); err != nil {
-		logrus.
-			WithError(err).
-			WithField("peer", peer.Name).
-			Warn("failed to run hooks on peer update")
-	}
+		if err := updatedPeer.runHooks(HookActionUpdate); err != nil {
+			logrus.
+				WithError(err).
+				WithField("peer", peer.Name).
+				Warn("failed to run hooks on peer update")
+		}
 
-	if err = s.notify(ChangedActionUpdated, updatedPeer); err != nil {
-		logrus.WithError(err).Warn("failed to notify peer updated event")
-	}
+		if err = s.notify(ChangedActionUpdated, updatedPeer); err != nil {
+			logrus.WithError(err).Warn("failed to notify peer updated event")
+		}
 
-	return updatedPeer, nil
+		return updatedPeer, nil
+	})
 }
 
 func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) (*Peer, error) {
-	peer, err := s.findPeerById(ctx, peerId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*Peer, error) {
+		peer, err := s.findPeerById(ctx, peerId)
+		if err != nil {
+			return nil, err
+		}
 
-	deletedPeer, err := s.peerRepository.Delete(ctx, peer.Id, userId)
-	if err != nil {
-		return nil, err
-	}
+		deletedPeer, err := s.peerRepository.Delete(ctx, peer.Id, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	if err := deletedPeer.runHooks(HookActionDelete); err != nil {
-		logrus.
-			WithError(err).
-			WithField("peer", peer.Name).
-			Warn("failed to run hooks on peer delete")
-	}
+		if err := deletedPeer.runHooks(HookActionDelete); err != nil {
+			logrus.
+				WithError(err).
+				WithField("peer", peer.Name).
+				Warn("failed to run hooks on peer delete")
+		}
 
-	if err = s.notify(ChangedActionDeleted, deletedPeer); err != nil {
-		logrus.WithError(err).Warn("failed to notify peer deleted event")
-	}
+		if err = s.notify(ChangedActionDeleted, deletedPeer); err != nil {
+			logrus.WithError(err).Warn("failed to notify peer deleted event")
+		}
 
-	return deletedPeer, nil
+		return deletedPeer, nil
+	})
 }
 
 func (s *service) findServerById(ctx context.Context, serverId string) (*server.Server, error) {
