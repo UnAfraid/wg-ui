@@ -142,7 +142,7 @@ func NewRouter(
 		r.Handle("/api/query", gqlHandler)
 	})
 
-	if conf.HttpServer.FrontendEnabled {
+	if conf.HttpServer.FrontendEnabled && frontend.HasContent() {
 		router.Mount("/", frontend.Handler())
 	}
 

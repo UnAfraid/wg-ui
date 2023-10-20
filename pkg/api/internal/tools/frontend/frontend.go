@@ -10,6 +10,14 @@ import (
 //go:embed app/*
 var content embed.FS
 
+func HasContent() bool {
+	files, err := content.ReadDir("app")
+	if err != nil {
+		return false
+	}
+	return len(files) > 1
+}
+
 func Handler() http.Handler {
 	appFs, err := fs.Sub(content, "app")
 	if err != nil {
