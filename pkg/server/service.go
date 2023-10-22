@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path"
 	"strings"
@@ -273,12 +274,14 @@ func processUpdateServer(server *Server, options *UpdateOptions, fieldMask *Upda
 
 	if fieldMask.PrivateKey {
 		if len(strings.TrimSpace(options.PrivateKey)) == 0 {
-			key, err := wgtypes.GeneratePrivateKey()
-			if err != nil {
-				return fmt.Errorf("failed to generate private key: %w", err)
-			}
-			options.PrivateKey = key.String()
+			return errors.New("private key is required")
 		}
+
+		key, err := wgtypes.ParseKey(options.PrivateKey)
+		if err != nil {
+			return fmt.Errorf("failed to parse private key: %w", err)
+		}
+		options.PrivateKey = key.String()
 	}
 
 	if userId != "" {
