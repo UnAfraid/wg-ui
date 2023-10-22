@@ -35,6 +35,7 @@ type Service interface {
 	DeletePeer(ctx context.Context, peerId string, userId string) (*peer.Peer, error)
 	PeerStats(ctx context.Context, name string, peerPublicKey string) (*backend.PeerStats, error)
 	ForeignServers(ctx context.Context) ([]*backend.ForeignServer, error)
+	Close()
 }
 
 type service struct {
@@ -43,6 +44,8 @@ type service struct {
 	serverService     server.Service
 	peerService       peer.Service
 	wireguardService  wireguard.Service
+	stopChan          chan struct{}
+	stoppedChan       chan struct{}
 }
 
 func NewService(
@@ -51,6 +54,8 @@ func NewService(
 	serverService server.Service,
 	peerService peer.Service,
 	wireguardService wireguard.Service,
+	automaticStatsUpdateInterval time.Duration,
+	automaticStatsUpdateOnlyWithSubscribers bool,
 ) Service {
 	s := &service{
 		transactionScoper: transactionScoper,
@@ -58,10 +63,16 @@ func NewService(
 		serverService:     serverService,
 		peerService:       peerService,
 		wireguardService:  wireguardService,
+		stopChan:          make(chan struct{}),
+		stoppedChan:       make(chan struct{}),
 	}
 
 	s.cleanup(context.Background())
 	s.init()
+
+	if automaticStatsUpdateInterval.Seconds() > 0 {
+		go s.run(automaticStatsUpdateInterval, automaticStatsUpdateOnlyWithSubscribers)
+	}
 
 	return s
 }
@@ -88,6 +99,22 @@ func (s *service) init() {
 		if _, err = s.configureDevice(ctx, srv, peers); err != nil {
 			logrus.WithError(err).WithField("name", srv.Name).Error("failed to configure wireguard device")
 			return
+		}
+	}
+}
+
+func (s *service) run(interval time.Duration, automaticStatsUpdateOnlyWithSubscribers bool) {
+	defer close(s.stoppedChan)
+	ctx := context.Background()
+
+	for {
+		select {
+		case <-s.stopChan:
+			return
+		case <-time.After(interval):
+			if !automaticStatsUpdateOnlyWithSubscribers || s.serverService.HasSubscribers() {
+				s.updateServersStats(ctx)
+			}
 		}
 	}
 }
@@ -389,6 +416,11 @@ func (s *service) ForeignServers(ctx context.Context) ([]*backend.ForeignServer,
 	return s.wireguardService.FindForeignServers(ctx, knownInterfaces)
 }
 
+func (s *service) Close() {
+	close(s.stopChan)
+	<-s.stoppedChan
+}
+
 func (s *service) configurePeerDevice(ctx context.Context, p *peer.Peer, userId string) (*peer.Peer, error) {
 	srv, err := s.findServer(ctx, p.ServerId)
 	if err != nil {
@@ -632,4 +664,70 @@ func (s *service) cleanupOrphanedServerFromPeer(ctx context.Context, p *peer.Pee
 		}
 	}
 	return count
+}
+
+func (s *service) updateServersStats(ctx context.Context) {
+	servers, err := s.serverService.FindServers(ctx, &server.FindOptions{})
+	if err != nil {
+		logrus.
+			WithError(err).
+			Error("failed to find servers")
+		return
+	}
+
+	for _, srv := range servers {
+		if err := s.updateServerStats(ctx, srv); err != nil {
+			logrus.
+				WithError(err).
+				WithField("name", srv.Name).
+				Warn("failed to get interface stats")
+			continue
+		}
+	}
+}
+
+func (s *service) updateServerStats(ctx context.Context, srv *server.Server) error {
+	if !srv.Enabled || !srv.Running {
+		return nil
+	}
+
+	stats, err := s.wireguardService.Stats(ctx, srv.Name)
+	if err != nil {
+		return fmt.Errorf("failed to get device stats: %w", err)
+	}
+
+	newStats := server.Stats{
+		RxPackets:         stats.RxPackets,
+		TxPackets:         stats.TxPackets,
+		RxBytes:           stats.RxBytes,
+		TxBytes:           stats.TxBytes,
+		RxErrors:          stats.RxErrors,
+		TxErrors:          stats.TxErrors,
+		RxDropped:         stats.RxDropped,
+		TxDropped:         stats.TxDropped,
+		Multicast:         stats.Multicast,
+		Collisions:        stats.Collisions,
+		RxLengthErrors:    stats.RxLengthErrors,
+		RxOverErrors:      stats.RxOverErrors,
+		RxCrcErrors:       stats.RxCrcErrors,
+		RxFrameErrors:     stats.RxFrameErrors,
+		RxFifoErrors:      stats.RxFifoErrors,
+		RxMissedErrors:    stats.RxMissedErrors,
+		TxAbortedErrors:   stats.TxAbortedErrors,
+		TxCarrierErrors:   stats.TxCarrierErrors,
+		TxFifoErrors:      stats.TxFifoErrors,
+		TxHeartbeatErrors: stats.TxHeartbeatErrors,
+		TxWindowErrors:    stats.TxWindowErrors,
+		RxCompressed:      stats.RxCompressed,
+		TxCompressed:      stats.TxCompressed,
+	}
+
+	if newStats != srv.Stats {
+		updateOptions := &server.UpdateOptions{Stats: newStats}
+		updateFieldMask := &server.UpdateFieldMask{Stats: true}
+		if _, err = s.serverService.UpdateServer(ctx, srv.Id, updateOptions, updateFieldMask, ""); err != nil {
+			return fmt.Errorf("failed to update server stats: %w", err)
+		}
+	}
+	return nil
 }

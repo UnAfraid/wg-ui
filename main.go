@@ -142,7 +142,16 @@ func main() {
 
 	authService := auth.NewService(jwt.SigningMethodHS256, jwtSecretBytes, jwtSecretBytes, conf.JwtDuration)
 
-	manageService := manage.NewService(transactionScoper, userService, serverService, peerService, wireguardService)
+	manageService := manage.NewService(
+		transactionScoper,
+		userService,
+		serverService,
+		peerService,
+		wireguardService,
+		conf.AutomaticStatsUpdateInterval,
+		conf.AutomaticStatsUpdateOnlyWithSubscribers,
+	)
+	defer manageService.Close()
 
 	router := api.NewRouter(
 		conf,
