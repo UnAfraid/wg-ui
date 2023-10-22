@@ -2019,7 +2019,7 @@ var sources = []*ast.Source{
     description: String
     enabled: Boolean
     privateKey: String
-    publicKey: String @deprecated(reason: "removed, the public key can be derived from private key")
+    publicKey: String @deprecated(reason: "No longer supported, the public key will be derived from private key")
     listenPort: Int
     firewallMark: Int
     address: String!
@@ -2147,7 +2147,7 @@ var sources = []*ast.Source{
     id: ID!
     description: String
     enabled: Boolean
-    publicKey: String @deprecated(reason: "removed, the public key can be derived from private key")
+    publicKey: String @deprecated(reason: "No longer supported, the public key will be derived from private key")
     privateKey: String
     listenPort: Int
     firewallMark: Int
