@@ -449,8 +449,13 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 }
 
 func (s *service) updateServer(ctx context.Context, srv *server.Server, device *backend.Device, userId string) (*server.Server, error) {
+	status, err := s.wireguardService.Status(ctx, srv.Name)
+	if err != nil {
+		return nil, err
+	}
+
 	updateOptions := server.UpdateOptions{
-		Running:      true,
+		Running:      status,
 		PublicKey:    device.Wireguard.PublicKey,
 		PrivateKey:   device.Wireguard.PrivateKey,
 		ListenPort:   adapt.ToPointerNilZero(device.Wireguard.ListenPort),
@@ -458,9 +463,9 @@ func (s *service) updateServer(ctx context.Context, srv *server.Server, device *
 		MTU:          device.Interface.Mtu,
 	}
 	updateFieldMask := server.UpdateFieldMask{
-		Running:      true,
-		PublicKey:    strings.EqualFold(srv.PublicKey, device.Wireguard.PublicKey),
-		PrivateKey:   strings.EqualFold(srv.PrivateKey, device.Wireguard.PrivateKey),
+		Running:      srv.Running != status,
+		PublicKey:    !strings.EqualFold(srv.PublicKey, device.Wireguard.PublicKey),
+		PrivateKey:   !strings.EqualFold(srv.PrivateKey, device.Wireguard.PrivateKey),
 		ListenPort:   adapt.Dereference(srv.ListenPort) != device.Wireguard.ListenPort,
 		FirewallMark: adapt.Dereference(srv.FirewallMark) != device.Wireguard.FirewallMark,
 		MTU:          srv.MTU != device.Interface.Mtu,
