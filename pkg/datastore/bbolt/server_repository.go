@@ -179,7 +179,8 @@ func (r *serverRepository) Update(ctx context.Context, s *server.Server, fieldMa
 			updatedServer.Running = s.Running
 		}
 
-		if fieldMask.PublicKey {
+		if fieldMask.PrivateKey {
+			updatedServer.PrivateKey = s.PrivateKey
 			updatedServer.PublicKey = s.PublicKey
 		}
 

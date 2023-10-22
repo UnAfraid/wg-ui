@@ -311,7 +311,6 @@ func (s *service) ImportForeignServer(ctx context.Context, name string, userId s
 			Description:  "",
 			Enabled:      true,
 			Running:      true,
-			PublicKey:    device.Wireguard.PublicKey,
 			PrivateKey:   device.Wireguard.PrivateKey,
 			ListenPort:   adapt.ToPointerNilZero(device.Wireguard.ListenPort),
 			FirewallMark: adapt.ToPointerNilZero(device.Wireguard.FirewallMark),
@@ -456,7 +455,6 @@ func (s *service) updateServer(ctx context.Context, srv *server.Server, device *
 
 	updateOptions := server.UpdateOptions{
 		Running:      status,
-		PublicKey:    device.Wireguard.PublicKey,
 		PrivateKey:   device.Wireguard.PrivateKey,
 		ListenPort:   adapt.ToPointerNilZero(device.Wireguard.ListenPort),
 		FirewallMark: adapt.ToPointerNilZero(device.Wireguard.FirewallMark),
@@ -464,7 +462,6 @@ func (s *service) updateServer(ctx context.Context, srv *server.Server, device *
 	}
 	updateFieldMask := server.UpdateFieldMask{
 		Running:      srv.Running != status,
-		PublicKey:    !strings.EqualFold(srv.PublicKey, device.Wireguard.PublicKey),
 		PrivateKey:   !strings.EqualFold(srv.PrivateKey, device.Wireguard.PrivateKey),
 		ListenPort:   adapt.Dereference(srv.ListenPort) != device.Wireguard.ListenPort,
 		FirewallMark: adapt.Dereference(srv.FirewallMark) != device.Wireguard.FirewallMark,

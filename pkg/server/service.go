@@ -214,13 +214,20 @@ func processCreateServer(options *CreateOptions, userId string) (*Server, error)
 		return nil, ErrCreateServerOptionsRequired
 	}
 
+	var publicKey string
 	if len(strings.TrimSpace(options.PrivateKey)) == 0 {
 		key, err := wgtypes.GeneratePrivateKey()
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate private key: %w", err)
 		}
 		options.PrivateKey = key.String()
-		options.PublicKey = key.PublicKey().String()
+		publicKey = key.PublicKey().String()
+	} else {
+		key, err := wgtypes.ParseKey(options.PrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse private key: %w", err)
+		}
+		publicKey = key.PublicKey().String()
 	}
 
 	if options.MTU == 0 {
@@ -240,7 +247,7 @@ func processCreateServer(options *CreateOptions, userId string) (*Server, error)
 		Description:  options.Description,
 		Enabled:      options.Enabled,
 		Running:      options.Running,
-		PublicKey:    options.PublicKey,
+		PublicKey:    publicKey,
 		PrivateKey:   options.PrivateKey,
 		ListenPort:   options.ListenPort,
 		FirewallMark: options.FirewallMark,
@@ -271,7 +278,6 @@ func processUpdateServer(server *Server, options *UpdateOptions, fieldMask *Upda
 				return fmt.Errorf("failed to generate private key: %w", err)
 			}
 			options.PrivateKey = key.String()
-			options.PublicKey = key.PublicKey().String()
 		}
 	}
 
@@ -280,7 +286,9 @@ func processUpdateServer(server *Server, options *UpdateOptions, fieldMask *Upda
 		fieldMask.UpdateUserId = true
 	}
 
-	server.update(options, fieldMask)
+	if err := server.update(options, fieldMask); err != nil {
+		return err
+	}
 	server.UpdatedAt = time.Now()
 	return nil
 }

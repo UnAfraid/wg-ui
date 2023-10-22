@@ -10,7 +10,6 @@ func CreateServerInputToCreateServerOptions(input CreateServerInput) (_ *server.
 		Name:         input.Name,
 		Description:  adapt.Dereference(input.Description.Value()),
 		Enabled:      adapt.Dereference(input.Enabled.Value()),
-		PublicKey:    adapt.Dereference(input.PublicKey.Value()),
 		PrivateKey:   adapt.Dereference(input.PrivateKey.Value()),
 		ListenPort:   input.ListenPort.Value(),
 		FirewallMark: input.FirewallMark.Value(),
@@ -81,7 +80,6 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 	fieldMask = &server.UpdateFieldMask{
 		Description:  input.Description.IsSet(),
 		Enabled:      input.Enabled.IsSet(),
-		PublicKey:    input.PublicKey.IsSet(),
 		PrivateKey:   input.PrivateKey.IsSet(),
 		ListenPort:   input.ListenPort.IsSet(),
 		FirewallMark: input.FirewallMark.IsSet(),
@@ -94,7 +92,6 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 	var (
 		description  string
 		enabled      bool
-		publicKey    string
 		privateKey   string
 		listenPort   *int
 		firewallMark *int
@@ -110,10 +107,6 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 
 	if fieldMask.Enabled {
 		enabled = adapt.Dereference(input.Enabled.Value())
-	}
-
-	if fieldMask.PublicKey {
-		publicKey = adapt.Dereference(input.PublicKey.Value())
 	}
 
 	if fieldMask.PrivateKey {
@@ -147,7 +140,6 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 	options = &server.UpdateOptions{
 		Description:  description,
 		Enabled:      enabled,
-		PublicKey:    publicKey,
 		PrivateKey:   privateKey,
 		ListenPort:   listenPort,
 		FirewallMark: firewallMark,

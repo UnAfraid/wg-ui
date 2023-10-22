@@ -5,7 +5,6 @@ type CreateOptions struct {
 	Description  string
 	Enabled      bool
 	Running      bool
-	PublicKey    string
 	PrivateKey   string
 	ListenPort   *int
 	FirewallMark *int
