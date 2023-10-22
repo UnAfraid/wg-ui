@@ -96,7 +96,7 @@ func main() {
 		return
 	}
 
-	transactionScoper := dbx.NewBBoltTransactionScope(db)
+	transactionScoper := dbx.NewBBoltTransactionScoper(db)
 	subscriptionImpl := subscription.NewInMemorySubscription()
 
 	serverRepository := bbolt.NewServerRepository(db)
@@ -115,7 +115,6 @@ func main() {
 	}
 
 	var wireguardBackend backend.Backend
-
 	switch strings.ToLower(conf.Backend) {
 	case "linux":
 		wireguardBackend, err = linux.NewLinuxBackend()

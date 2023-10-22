@@ -11,18 +11,18 @@ type contextKey struct{ name string }
 
 var bboltTxKey = contextKey{name: "bboltTxKey"}
 
-type bboltTransactionScope struct {
+type bboltTransactionScoper struct {
 	db *bbolt.DB
 }
 
-func NewBBoltTransactionScope(db *bbolt.DB) TransactionScoper {
-	return &bboltTransactionScope{
+func NewBBoltTransactionScoper(db *bbolt.DB) TransactionScoper {
+	return &bboltTransactionScoper{
 		db: db,
 	}
 }
 
-func (txScope *bboltTransactionScope) InTransactionScope(ctx context.Context, transactionScope func(ctx context.Context) error) (err error) {
-	return InBBoltTransactionScope(ctx, txScope.db, func(ctx context.Context, tx *bbolt.Tx) error {
+func (bts *bboltTransactionScoper) InTransactionScope(ctx context.Context, transactionScope func(ctx context.Context) error) (err error) {
+	return InBBoltTransactionScope(ctx, bts.db, func(ctx context.Context, tx *bbolt.Tx) error {
 		return transactionScope(ctx)
 	})
 }
