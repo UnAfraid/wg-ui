@@ -9,16 +9,19 @@ import (
 )
 
 type Config struct {
-	BoltDB                     *BoltDB       `split_words:"true"`
-	HttpServer                 *HttpServer   `split_words:"true"`
-	DebugServer                *DebugServer  `split_words:"true"`
-	Initial                    *Initial      `required:"true"`
-	CorsAllowedOrigins         []string      `split_words:"true" default:"*"`
-	CorsAllowCredentials       bool          `split_words:"true" default:"true"`
-	CorsAllowPrivateNetwork    bool          `split_words:"true" default:"false"`
-	SubscriptionAllowedOrigins []string      `split_words:"true" default:"*"`
-	JwtSecret                  string        `required:"true" split_words:"true"`
-	JwtDuration                time.Duration `split_words:"true" default:"8h"`
+	Backend                                 string        `required:"true" default:"linux"`
+	BoltDB                                  *BoltDB       `split_words:"true"`
+	HttpServer                              *HttpServer   `split_words:"true"`
+	DebugServer                             *DebugServer  `split_words:"true"`
+	Initial                                 *Initial      `required:"true"`
+	AutomaticStatsUpdateInterval            time.Duration `split_words:"true" default:"30s"`
+	AutomaticStatsUpdateOnlyWithSubscribers bool          `split_words:"true" default:"false"`
+	CorsAllowedOrigins                      []string      `split_words:"true" default:"*"`
+	CorsAllowCredentials                    bool          `split_words:"true" default:"true"`
+	CorsAllowPrivateNetwork                 bool          `split_words:"true" default:"false"`
+	SubscriptionAllowedOrigins              []string      `split_words:"true" default:"*"`
+	JwtSecret                               string        `required:"true" split_words:"true"`
+	JwtDuration                             time.Duration `split_words:"true" default:"8h"`
 }
 
 func Load(prefix string) (*Config, error) {

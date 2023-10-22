@@ -45,7 +45,7 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
-	golang.zx2c4.com/wireguard v0.0.0-20231018191413-24ea13351eb7 // indirect
+	golang.zx2c4.com/wireguard v0.0.0-20231022001213-2e0774f246fb // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

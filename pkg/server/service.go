@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
+	"github.com/UnAfraid/wg-ui/pkg/dbx"
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 )
 
@@ -30,14 +32,16 @@ type Service interface {
 }
 
 type service struct {
-	serverRepository Repository
-	subscription     subscription.Subscription
+	serverRepository  Repository
+	transactionScoper dbx.TransactionScoper
+	subscription      subscription.Subscription
 }
 
-func NewService(serverRepository Repository, subscription subscription.Subscription) Service {
+func NewService(serverRepository Repository, transactionScoper dbx.TransactionScoper, subscription subscription.Subscription) Service {
 	return &service{
-		serverRepository: serverRepository,
-		subscription:     subscription,
+		serverRepository:  serverRepository,
+		transactionScoper: transactionScoper,
+		subscription:      subscription,
 	}
 }
 
@@ -66,100 +70,106 @@ func (s *service) CreateServer(ctx context.Context, options *CreateOptions, user
 		return nil, err
 	}
 
-	createdServer, err := s.serverRepository.Create(ctx, server)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*Server, error) {
+		createdServer, err := s.serverRepository.Create(ctx, server)
+		if err != nil {
+			return nil, err
+		}
 
-	if err := createdServer.runHooks(HookActionCreate); err != nil {
-		logrus.
-			WithError(err).
-			WithField("server", createdServer.Name).
-			Warn("failed to run hooks on server create")
-	}
+		if err := createdServer.runHooks(HookActionCreate); err != nil {
+			logrus.
+				WithError(err).
+				WithField("server", createdServer.Name).
+				Warn("failed to run hooks on server create")
+		}
 
-	if err = s.notify(ChangedActionCreated, createdServer); err != nil {
-		logrus.WithError(err).Warn("failed to notify server created event")
-	}
+		if err = s.notify(ChangedActionCreated, createdServer); err != nil {
+			logrus.WithError(err).Warn("failed to notify server created event")
+		}
 
-	return createdServer, nil
+		return createdServer, nil
+	})
 }
 
 func (s *service) UpdateServer(ctx context.Context, serverId string, options *UpdateOptions, fieldMask *UpdateFieldMask, userId string) (*Server, error) {
-	server, err := s.findServerById(ctx, serverId)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := processUpdateServer(server, options, fieldMask, userId); err != nil {
-		return nil, err
-	}
-
-	if err := server.validate(fieldMask); err != nil {
-		return nil, err
-	}
-
-	updatedServer, err := s.serverRepository.Update(ctx, server, fieldMask)
-	if err != nil {
-		return nil, err
-	}
-
-	hookAction := HookActionUpdate
-	if fieldMask.Running {
-		if updatedServer.Running {
-			hookAction = HookActionStart
-		} else {
-			hookAction = HookActionStop
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*Server, error) {
+		server, err := s.findServerById(ctx, serverId)
+		if err != nil {
+			return nil, err
 		}
-	}
-	if err := updatedServer.runHooks(hookAction); err != nil {
-		logrus.
-			WithError(err).
-			WithField("server", updatedServer.Name).
-			Warn("failed to run hooks on server update")
-	}
 
-	action := ChangedActionUpdated
-	if fieldMask.Running {
-		if updatedServer.Running {
-			action = ChangedActionStarted
-		} else {
-			action = ChangedActionStopped
+		if err := processUpdateServer(server, options, fieldMask, userId); err != nil {
+			return nil, err
 		}
-	} else if fieldMask.Stats {
-		action = ChangedActionInterfaceStatsUpdated
-	}
 
-	if err = s.notify(action, updatedServer); err != nil {
-		logrus.WithError(err).Warn("failed to notify server updated event")
-	}
+		if err := server.validate(fieldMask); err != nil {
+			return nil, err
+		}
 
-	return updatedServer, nil
+		updatedServer, err := s.serverRepository.Update(ctx, server, fieldMask)
+		if err != nil {
+			return nil, err
+		}
+
+		hookAction := HookActionUpdate
+		if fieldMask.Running {
+			if updatedServer.Running {
+				hookAction = HookActionStart
+			} else {
+				hookAction = HookActionStop
+			}
+		}
+		if err := updatedServer.runHooks(hookAction); err != nil {
+			logrus.
+				WithError(err).
+				WithField("server", updatedServer.Name).
+				Warn("failed to run hooks on server update")
+		}
+
+		action := ChangedActionUpdated
+		if fieldMask.Running {
+			if updatedServer.Running {
+				action = ChangedActionStarted
+			} else {
+				action = ChangedActionStopped
+			}
+		} else if fieldMask.Stats {
+			action = ChangedActionInterfaceStatsUpdated
+		}
+
+		if err = s.notify(action, updatedServer); err != nil {
+			logrus.WithError(err).Warn("failed to notify server updated event")
+		}
+
+		return updatedServer, nil
+	})
 }
 
 func (s *service) DeleteServer(ctx context.Context, serverId string, userId string) (*Server, error) {
-	server, err := s.findServerById(ctx, serverId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*Server, error) {
+		server, err := s.findServerById(ctx, serverId)
+		if err != nil {
+			return nil, err
+		}
 
-	deletedServer, err := s.serverRepository.Delete(ctx, server.Id, userId)
-	if err != nil {
-		return nil, err
-	}
+		deletedServer, err := s.serverRepository.Delete(ctx, server.Id, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	if err := deletedServer.runHooks(HookActionDelete); err != nil {
-		logrus.
-			WithError(err).
-			WithField("server", deletedServer.Name).
-			Warn("failed to run hooks on server delete")
-	}
+		if err := deletedServer.runHooks(HookActionDelete); err != nil {
+			logrus.
+				WithError(err).
+				WithField("server", deletedServer.Name).
+				Warn("failed to run hooks on server delete")
+		}
 
-	if err = s.notify(ChangedActionDeleted, deletedServer); err != nil {
-		logrus.WithError(err).Warn("failed to notify server deleted event")
-	}
+		if err = s.notify(ChangedActionDeleted, deletedServer); err != nil {
+			logrus.WithError(err).Warn("failed to notify server deleted event")
+		}
 
-	return deletedServer, nil
+		return deletedServer, nil
+	})
 }
 
 func (s *service) findServerById(ctx context.Context, serverId string) (*Server, error) {
@@ -205,13 +215,20 @@ func processCreateServer(options *CreateOptions, userId string) (*Server, error)
 		return nil, ErrCreateServerOptionsRequired
 	}
 
+	var publicKey string
 	if len(strings.TrimSpace(options.PrivateKey)) == 0 {
 		key, err := wgtypes.GeneratePrivateKey()
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate private key: %w", err)
 		}
 		options.PrivateKey = key.String()
-		options.PublicKey = key.PublicKey().String()
+		publicKey = key.PublicKey().String()
+	} else {
+		key, err := wgtypes.ParseKey(options.PrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse private key: %w", err)
+		}
+		publicKey = key.PublicKey().String()
 	}
 
 	if options.MTU == 0 {
@@ -231,7 +248,7 @@ func processCreateServer(options *CreateOptions, userId string) (*Server, error)
 		Description:  options.Description,
 		Enabled:      options.Enabled,
 		Running:      options.Running,
-		PublicKey:    options.PublicKey,
+		PublicKey:    publicKey,
 		PrivateKey:   options.PrivateKey,
 		ListenPort:   options.ListenPort,
 		FirewallMark: options.FirewallMark,
@@ -257,13 +274,14 @@ func processUpdateServer(server *Server, options *UpdateOptions, fieldMask *Upda
 
 	if fieldMask.PrivateKey {
 		if len(strings.TrimSpace(options.PrivateKey)) == 0 {
-			key, err := wgtypes.GeneratePrivateKey()
-			if err != nil {
-				return fmt.Errorf("failed to generate private key: %w", err)
-			}
-			options.PrivateKey = key.String()
-			options.PublicKey = key.PublicKey().String()
+			return errors.New("private key is required")
 		}
+
+		key, err := wgtypes.ParseKey(options.PrivateKey)
+		if err != nil {
+			return fmt.Errorf("failed to parse private key: %w", err)
+		}
+		options.PrivateKey = key.String()
 	}
 
 	if userId != "" {
@@ -271,7 +289,9 @@ func processUpdateServer(server *Server, options *UpdateOptions, fieldMask *Upda
 		fieldMask.UpdateUserId = true
 	}
 
-	server.update(options, fieldMask)
+	if err := server.update(options, fieldMask); err != nil {
+		return err
+	}
 	server.UpdatedAt = time.Now()
 	return nil
 }

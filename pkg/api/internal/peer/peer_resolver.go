@@ -6,22 +6,18 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
-	"github.com/UnAfraid/wg-ui/pkg/peer"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
+	"github.com/UnAfraid/wg-ui/pkg/manage"
 )
 
 type peerResolver struct {
-	peerService peer.Service
-	wgService   wg.Service
+	manageService manage.Service
 }
 
 func NewPeerResolver(
-	peerService peer.Service,
-	wgService wg.Service,
+	manageService manage.Service,
 ) resolver.PeerResolver {
 	return &peerResolver{
-		wgService:   wgService,
-		peerService: peerService,
+		manageService: manageService,
 	}
 }
 
@@ -66,7 +62,7 @@ func (r *peerResolver) Stats(ctx context.Context, p *model.Peer) (*model.PeerSta
 		return nil, nil
 	}
 
-	stats, err := r.wgService.PeerStats(server.Name, p.PublicKey)
+	stats, err := r.manageService.PeerStats(ctx, server.Name, p.PublicKey)
 	if err != nil {
 		return nil, err
 	}

@@ -29,8 +29,8 @@ func NewPeerRepository(db *bbolt.DB) peer.Repository {
 	}
 }
 
-func (r *peerRepository) FindOne(_ context.Context, options *peer.FindOneOptions) (*peer.Peer, error) {
-	return dbView(r.db, peerBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*peer.Peer, error) {
+func (r *peerRepository) FindOne(ctx context.Context, options *peer.FindOneOptions) (*peer.Peer, error) {
+	return dbTx(ctx, r.db, peerBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*peer.Peer, error) {
 		if idOption := options.IdOption; idOption != nil {
 			jsonState := bucket.Get([]byte(idOption.Id))
 			if jsonState == nil {
@@ -61,8 +61,8 @@ func (r *peerRepository) FindOne(_ context.Context, options *peer.FindOneOptions
 	})
 }
 
-func (r *peerRepository) FindAll(_ context.Context, options *peer.FindOptions) ([]*peer.Peer, error) {
-	return dbView(r.db, peerBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) ([]*peer.Peer, error) {
+func (r *peerRepository) FindAll(ctx context.Context, options *peer.FindOptions) ([]*peer.Peer, error) {
+	return dbTx(ctx, r.db, peerBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) ([]*peer.Peer, error) {
 		var peers []*peer.Peer
 		var peersCount int
 		var searchList searchindex.SearchList[*peer.Peer]
@@ -139,8 +139,8 @@ func (r *peerRepository) FindAll(_ context.Context, options *peer.FindOptions) (
 	})
 }
 
-func (r *peerRepository) Create(_ context.Context, p *peer.Peer) (*peer.Peer, error) {
-	return dbUpdate(r.db, peerBucket, true, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*peer.Peer, error) {
+func (r *peerRepository) Create(ctx context.Context, p *peer.Peer) (*peer.Peer, error) {
+	return dbTx(ctx, r.db, peerBucket, true, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*peer.Peer, error) {
 		id := []byte(p.Id)
 		if bucket.Get(id) != nil {
 			return nil, peer.ErrPeerIdAlreadyExists
@@ -155,8 +155,8 @@ func (r *peerRepository) Create(_ context.Context, p *peer.Peer) (*peer.Peer, er
 	})
 }
 
-func (r *peerRepository) Update(_ context.Context, p *peer.Peer, fieldMask *peer.UpdateFieldMask) (*peer.Peer, error) {
-	return dbUpdate(r.db, peerBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*peer.Peer, error) {
+func (r *peerRepository) Update(ctx context.Context, p *peer.Peer, fieldMask *peer.UpdateFieldMask) (*peer.Peer, error) {
+	return dbTx(ctx, r.db, peerBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*peer.Peer, error) {
 		id := []byte(p.Id)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {
@@ -219,8 +219,8 @@ func (r *peerRepository) Update(_ context.Context, p *peer.Peer, fieldMask *peer
 	})
 }
 
-func (r *peerRepository) Delete(_ context.Context, peerId string, deleteUserId string) (*peer.Peer, error) {
-	return dbUpdate(r.db, peerBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*peer.Peer, error) {
+func (r *peerRepository) Delete(ctx context.Context, peerId string, deleteUserId string) (*peer.Peer, error) {
+	return dbTx(ctx, r.db, peerBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*peer.Peer, error) {
 		id := []byte(peerId)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {

@@ -4,7 +4,6 @@ type UpdateOptions struct {
 	Description  string
 	Enabled      bool
 	Running      bool
-	PublicKey    string
 	PrivateKey   string
 	ListenPort   *int
 	FirewallMark *int

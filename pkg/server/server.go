@@ -114,7 +114,7 @@ func (s *Server) validate(fieldMask *UpdateFieldMask) error {
 
 	return nil
 }
-func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) {
+func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) error {
 	if fieldMask.Description {
 		s.Description = options.Description
 	}
@@ -127,8 +127,13 @@ func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) {
 		s.Running = options.Running
 	}
 
-	if fieldMask.PublicKey {
-		s.PublicKey = options.PublicKey
+	if fieldMask.PrivateKey {
+		s.PrivateKey = options.PrivateKey
+		key, err := wgtypes.ParseKey(s.PrivateKey)
+		if err != nil {
+			return fmt.Errorf("failed to parse private key: %w", err)
+		}
+		s.PublicKey = key.PublicKey().String()
 	}
 
 	if fieldMask.ListenPort {
@@ -166,6 +171,8 @@ func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) {
 	if fieldMask.UpdateUserId {
 		s.UpdateUserId = options.UpdateUserId
 	}
+
+	return nil
 }
 
 func (s *Server) runHooks(action HookAction) error {

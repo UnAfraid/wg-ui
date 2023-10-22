@@ -3,7 +3,7 @@ input UpdateServerInput {
     id: ID!
     description: String
     enabled: Boolean
-    publicKey: String
+    publicKey: String @deprecated(reason: "No longer supported, the public key will be derived from private key")
     privateKey: String
     listenPort: Int
     firewallMark: Int

@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
+	"github.com/UnAfraid/wg-ui/pkg/dbx"
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 )
 
@@ -32,19 +33,22 @@ type Service interface {
 }
 
 type service struct {
-	userRepository Repository
-	subscription   subscription.Subscription
+	userRepository    Repository
+	transactionScoper dbx.TransactionScoper
+	subscription      subscription.Subscription
 }
 
 func NewService(
 	userRepository Repository,
+	transactionScoper dbx.TransactionScoper,
 	subscription subscription.Subscription,
 	initialEmail string,
 	initialPassword string,
 ) (Service, error) {
 	s := &service{
-		userRepository: userRepository,
-		subscription:   subscription,
+		userRepository:    userRepository,
+		transactionScoper: transactionScoper,
+		subscription:      subscription,
 	}
 
 	if err := s.initializeInitialUser(context.Background(), initialEmail, initialPassword); err != nil {
@@ -91,92 +95,100 @@ func (s *service) CreateUser(ctx context.Context, options *CreateOptions) (*User
 		return nil, err
 	}
 
-	createdUser, err := s.userRepository.Create(ctx, user)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*User, error) {
+		createdUser, err := s.userRepository.Create(ctx, user)
+		if err != nil {
+			return nil, err
+		}
 
-	if err = s.notify(ChangedActionCreated, createdUser); err != nil {
-		logrus.WithError(err).Warn("failed to notify user created event")
-	}
+		if err = s.notify(ChangedActionCreated, createdUser); err != nil {
+			logrus.WithError(err).Warn("failed to notify user created event")
+		}
 
-	return createdUser, nil
+		return createdUser, nil
+	})
 }
 
 func (s *service) UpdateUser(ctx context.Context, userId string, options *UpdateOptions, fieldMask *UpdateFieldMask) (*User, error) {
-	user, err := s.findUserById(ctx, userId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*User, error) {
+		user, err := s.findUserById(ctx, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	if err := processUpdateUser(user, options, fieldMask); err != nil {
-		return nil, err
-	}
+		if err := processUpdateUser(user, options, fieldMask); err != nil {
+			return nil, err
+		}
 
-	updatedUser, err := s.userRepository.Update(ctx, user, fieldMask)
-	if err != nil {
-		return nil, err
-	}
+		updatedUser, err := s.userRepository.Update(ctx, user, fieldMask)
+		if err != nil {
+			return nil, err
+		}
 
-	if err = s.notify(ChangedActionUpdated, updatedUser); err != nil {
-		logrus.WithError(err).Warn("failed to notify user updated event")
-	}
+		if err = s.notify(ChangedActionUpdated, updatedUser); err != nil {
+			logrus.WithError(err).Warn("failed to notify user updated event")
+		}
 
-	return updatedUser, nil
+		return updatedUser, nil
+	})
 }
 
 func (s *service) DeleteUser(ctx context.Context, userId string) (*User, error) {
-	user, err := s.findUserById(ctx, userId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*User, error) {
+		user, err := s.findUserById(ctx, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	deletedUser, err := s.userRepository.Delete(ctx, user.Id)
-	if err != nil {
-		return nil, err
-	}
+		deletedUser, err := s.userRepository.Delete(ctx, user.Id)
+		if err != nil {
+			return nil, err
+		}
 
-	if err = s.notify(ChangedActionDeleted, deletedUser); err != nil {
-		logrus.WithError(err).Warn("failed to notify user deleted event")
-	}
+		if err = s.notify(ChangedActionDeleted, deletedUser); err != nil {
+			logrus.WithError(err).Warn("failed to notify user deleted event")
+		}
 
-	return deletedUser, nil
+		return deletedUser, nil
+	})
 }
 
 func (s *service) initializeInitialUser(ctx context.Context, email string, password string) error {
-	users, err := s.userRepository.FindAll(ctx, &FindOptions{})
-	if err != nil {
-		return err
-	}
-	if len(users) == 0 {
-		var generatedRandomPassword bool
-		if email == "" {
-			email = "admin@example.com"
-		}
-		if password == "" || password == "random" {
-			password = generateRandomPassword(32, 4, 4)
-			generatedRandomPassword = true
-		}
-		createdUser, err := s.CreateUser(ctx, &CreateOptions{
-			Email:    email,
-			Password: password,
-		})
+	return s.transactionScoper.InTransactionScope(ctx, func(ctx context.Context) error {
+		users, err := s.userRepository.FindAll(ctx, &FindOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to create admin user: %w", err)
+			return err
 		}
+		if len(users) == 0 {
+			var generatedRandomPassword bool
+			if email == "" {
+				email = "admin@example.com"
+			}
+			if password == "" || password == "random" {
+				password = generateRandomPassword(32, 4, 4)
+				generatedRandomPassword = true
+			}
+			createdUser, err := s.CreateUser(ctx, &CreateOptions{
+				Email:    email,
+				Password: password,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to create admin user: %w", err)
+			}
 
-		if generatedRandomPassword {
-			logrus.
-				WithField("email", createdUser.Email).
-				WithField("password", password).
-				Info("admin user created")
-		} else {
-			logrus.
-				WithField("email", createdUser.Email).
-				Info("admin user created")
+			if generatedRandomPassword {
+				logrus.
+					WithField("email", createdUser.Email).
+					WithField("password", password).
+					Info("admin user created")
+			} else {
+				logrus.
+					WithField("email", createdUser.Email).
+					Info("admin user created")
+			}
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func (s *service) findUserById(ctx context.Context, userId string) (*User, error) {

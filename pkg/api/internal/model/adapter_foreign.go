@@ -1,11 +1,13 @@
 package model
 
 import (
+	"net"
+
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
 )
 
-func ToForeignInterface(foreignInterface *wg.ForeignInterface) *ForeignInterface {
+func ToForeignInterface(foreignInterface *backend.ForeignInterface) *ForeignInterface {
 	if foreignInterface == nil {
 		return nil
 	}
@@ -17,13 +19,13 @@ func ToForeignInterface(foreignInterface *wg.ForeignInterface) *ForeignInterface
 	}
 }
 
-func ToForeignServer(foreignServer *wg.ForeignServer) *ForeignServer {
+func ToForeignServer(foreignServer *backend.ForeignServer) *ForeignServer {
 	if foreignServer == nil {
 		return nil
 	}
 
 	return &ForeignServer{
-		ForeignInterface: ToForeignInterface(foreignServer.ForeignInterface),
+		ForeignInterface: ToForeignInterface(foreignServer.Interface),
 		Name:             foreignServer.Name,
 		Type:             foreignServer.Type,
 		PublicKey:        foreignServer.PublicKey,
@@ -33,19 +35,21 @@ func ToForeignServer(foreignServer *wg.ForeignServer) *ForeignServer {
 	}
 }
 
-func ToForeignPeer(foreignPeer *wg.ForeignPeer) *ForeignPeer {
+func ToForeignPeer(foreignPeer *backend.Peer) *ForeignPeer {
 	if foreignPeer == nil {
 		return nil
 	}
 
 	return &ForeignPeer{
-		PublicKey:                   foreignPeer.PublicKey,
-		Endpoint:                    foreignPeer.Endpoint,
-		AllowedIps:                  foreignPeer.AllowedIPs,
-		PersistentKeepAliveInterval: int(foreignPeer.PersistentKeepaliveInterval),
-		LastHandshakeTime:           adapt.ToPointer(foreignPeer.LastHandshakeTime),
-		ReceiveBytes:                float64(foreignPeer.ReceiveBytes),
-		TransmitBytes:               float64(foreignPeer.TransmitBytes),
-		ProtocolVersion:             foreignPeer.ProtocolVersion,
+		PublicKey: foreignPeer.PublicKey,
+		Endpoint:  adapt.ToPointerNilZero(foreignPeer.Endpoint),
+		AllowedIps: adapt.Array(foreignPeer.AllowedIPs, func(allowedIp net.IPNet) string {
+			return allowedIp.String()
+		}),
+		PersistentKeepAliveInterval: int(foreignPeer.PersistentKeepalive.Seconds()),
+		LastHandshakeTime:           adapt.ToPointer(foreignPeer.Stats.LastHandshakeTime),
+		ReceiveBytes:                float64(foreignPeer.Stats.ReceiveBytes),
+		TransmitBytes:               float64(foreignPeer.Stats.TransmitBytes),
+		ProtocolVersion:             foreignPeer.Stats.ProtocolVersion,
 	}
 }

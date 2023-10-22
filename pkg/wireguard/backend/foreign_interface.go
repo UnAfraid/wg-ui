@@ -1,4 +1,4 @@
-package wg
+package backend
 
 type ForeignInterface struct {
 	Name      string

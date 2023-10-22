@@ -29,8 +29,8 @@ func NewServerRepository(db *bbolt.DB) server.Repository {
 	}
 }
 
-func (r *serverRepository) FindOne(_ context.Context, options *server.FindOneOptions) (*server.Server, error) {
-	return dbView(r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
+func (r *serverRepository) FindOne(ctx context.Context, options *server.FindOneOptions) (*server.Server, error) {
+	return dbTx(ctx, r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
 		if idOption := options.IdOption; idOption != nil {
 			jsonState := bucket.Get([]byte(idOption.Id))
 			if jsonState == nil {
@@ -60,8 +60,8 @@ func (r *serverRepository) FindOne(_ context.Context, options *server.FindOneOpt
 	})
 }
 
-func (r *serverRepository) FindAll(_ context.Context, options *server.FindOptions) ([]*server.Server, error) {
-	return dbView(r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) ([]*server.Server, error) {
+func (r *serverRepository) FindAll(ctx context.Context, options *server.FindOptions) ([]*server.Server, error) {
+	return dbTx(ctx, r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) ([]*server.Server, error) {
 		var servers []*server.Server
 		var serversCount int
 		var searchList searchindex.SearchList[*server.Server]
@@ -138,8 +138,8 @@ func (r *serverRepository) FindAll(_ context.Context, options *server.FindOption
 	})
 }
 
-func (r *serverRepository) Create(_ context.Context, s *server.Server) (*server.Server, error) {
-	return dbUpdate(r.db, serverBucket, true, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
+func (r *serverRepository) Create(ctx context.Context, s *server.Server) (*server.Server, error) {
+	return dbTx(ctx, r.db, serverBucket, true, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
 		id := []byte(s.Id)
 		if bucket.Get(id) != nil {
 			return nil, server.ErrServerIdAlreadyExists
@@ -154,8 +154,8 @@ func (r *serverRepository) Create(_ context.Context, s *server.Server) (*server.
 	})
 }
 
-func (r *serverRepository) Update(_ context.Context, s *server.Server, fieldMask *server.UpdateFieldMask) (*server.Server, error) {
-	return dbUpdate(r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
+func (r *serverRepository) Update(ctx context.Context, s *server.Server, fieldMask *server.UpdateFieldMask) (*server.Server, error) {
+	return dbTx(ctx, r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
 		id := []byte(s.Id)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {
@@ -179,7 +179,8 @@ func (r *serverRepository) Update(_ context.Context, s *server.Server, fieldMask
 			updatedServer.Running = s.Running
 		}
 
-		if fieldMask.PublicKey {
+		if fieldMask.PrivateKey {
+			updatedServer.PrivateKey = s.PrivateKey
 			updatedServer.PublicKey = s.PublicKey
 		}
 
@@ -230,8 +231,8 @@ func (r *serverRepository) Update(_ context.Context, s *server.Server, fieldMask
 	})
 }
 
-func (r *serverRepository) Delete(_ context.Context, serverId string, deleteUserId string) (*server.Server, error) {
-	return dbUpdate(r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
+func (r *serverRepository) Delete(ctx context.Context, serverId string, deleteUserId string) (*server.Server, error) {
+	return dbTx(ctx, r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*server.Server, error) {
 		id := []byte(serverId)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -19,12 +20,15 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/config"
 	"github.com/UnAfraid/wg-ui/pkg/datastore"
 	"github.com/UnAfraid/wg-ui/pkg/datastore/bbolt"
+	"github.com/UnAfraid/wg-ui/pkg/dbx"
 	"github.com/UnAfraid/wg-ui/pkg/manage"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 	"github.com/UnAfraid/wg-ui/pkg/user"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/linux"
 )
 
 const (
@@ -92,16 +96,17 @@ func main() {
 		return
 	}
 
+	transactionScoper := dbx.NewBBoltTransactionScoper(db)
 	subscriptionImpl := subscription.NewInMemorySubscription()
 
 	serverRepository := bbolt.NewServerRepository(db)
-	serverService := server.NewService(serverRepository, subscriptionImpl)
+	serverService := server.NewService(serverRepository, transactionScoper, subscriptionImpl)
 
 	peerRepository := bbolt.NewPeerRepository(db)
-	peerService := peer.NewService(peerRepository, serverService, subscriptionImpl)
+	peerService := peer.NewService(peerRepository, transactionScoper, serverService, subscriptionImpl)
 
 	userRepository := bbolt.NewUserRepository(db)
-	userService, err := user.NewService(userRepository, subscriptionImpl, conf.Initial.Email, conf.Initial.Password)
+	userService, err := user.NewService(userRepository, transactionScoper, subscriptionImpl, conf.Initial.Email, conf.Initial.Password)
 	if err != nil {
 		logrus.
 			WithError(err).
@@ -109,18 +114,44 @@ func main() {
 		return
 	}
 
-	wgService, err := wg.NewService(serverService, peerService)
-	if err != nil {
+	var wireguardBackend backend.Backend
+	switch strings.ToLower(conf.Backend) {
+	case "linux":
+		wireguardBackend, err = linux.NewLinuxBackend()
+		if err != nil {
+			logrus.
+				WithError(err).
+				Fatal("failed to initialize linux backend for wireguard")
+			return
+		}
+	default:
 		logrus.
 			WithError(err).
-			Fatal("failed to initialize WireGuard service")
+			Fatal("unsupported wireguard backend")
 		return
 	}
-	defer wgService.Close()
+
+	wireguardService := wireguard.NewService(wireguardBackend)
+	defer func() {
+		if err := wireguardService.Close(context.Background()); err != nil {
+			logrus.
+				WithError(err).
+				Error("failed to close wireguard service")
+		}
+	}()
 
 	authService := auth.NewService(jwt.SigningMethodHS256, jwtSecretBytes, jwtSecretBytes, conf.JwtDuration)
 
-	manageService := manage.NewService(userService, serverService, peerService, wgService)
+	manageService := manage.NewService(
+		transactionScoper,
+		userService,
+		serverService,
+		peerService,
+		wireguardService,
+		conf.AutomaticStatsUpdateInterval,
+		conf.AutomaticStatsUpdateOnlyWithSubscribers,
+	)
+	defer manageService.Close()
 
 	router := api.NewRouter(
 		conf,
@@ -128,7 +159,6 @@ func main() {
 		userService,
 		serverService,
 		peerService,
-		wgService,
 		manageService,
 	)
 

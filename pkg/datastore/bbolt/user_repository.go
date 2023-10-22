@@ -28,8 +28,8 @@ func NewUserRepository(db *bbolt.DB) user.Repository {
 	}
 }
 
-func (r *userRepository) FindOne(_ context.Context, options *user.FindOneOptions) (*user.User, error) {
-	return dbView(r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
+func (r *userRepository) FindOne(ctx context.Context, options *user.FindOneOptions) (*user.User, error) {
+	return dbTx(ctx, r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
 		if idOption := options.IdOption; idOption != nil {
 			jsonState := bucket.Get([]byte(idOption.Id))
 			if jsonState == nil {
@@ -63,8 +63,8 @@ func (r *userRepository) FindOne(_ context.Context, options *user.FindOneOptions
 	})
 }
 
-func (r *userRepository) FindAll(_ context.Context, options *user.FindOptions) ([]*user.User, error) {
-	return dbView(r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) ([]*user.User, error) {
+func (r *userRepository) FindAll(ctx context.Context, options *user.FindOptions) ([]*user.User, error) {
+	return dbTx(ctx, r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) ([]*user.User, error) {
 		var users []*user.User
 		var usersCount int
 		var searchList searchindex.SearchList[*user.User]
@@ -112,8 +112,8 @@ func (r *userRepository) FindAll(_ context.Context, options *user.FindOptions) (
 	})
 }
 
-func (r *userRepository) Create(_ context.Context, u *user.User) (*user.User, error) {
-	return dbUpdate(r.db, userBucket, true, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
+func (r *userRepository) Create(ctx context.Context, u *user.User) (*user.User, error) {
+	return dbTx(ctx, r.db, userBucket, true, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
 		id := []byte(u.Id)
 		if bucket.Get(id) != nil {
 			return nil, user.ErrUserIdAlreadyExists
@@ -128,8 +128,8 @@ func (r *userRepository) Create(_ context.Context, u *user.User) (*user.User, er
 	})
 }
 
-func (r *userRepository) Update(_ context.Context, u *user.User, fieldMask *user.UpdateFieldMask) (*user.User, error) {
-	return dbUpdate(r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
+func (r *userRepository) Update(ctx context.Context, u *user.User, fieldMask *user.UpdateFieldMask) (*user.User, error) {
+	return dbTx(ctx, r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
 		id := []byte(u.Id)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {
@@ -160,8 +160,8 @@ func (r *userRepository) Update(_ context.Context, u *user.User, fieldMask *user
 	})
 }
 
-func (r *userRepository) Delete(_ context.Context, userId string) (*user.User, error) {
-	return dbUpdate(r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
+func (r *userRepository) Delete(ctx context.Context, userId string) (*user.User, error) {
+	return dbTx(ctx, r.db, userBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (*user.User, error) {
 		id := []byte(userId)
 		jsonState := bucket.Get(id)
 		if jsonState == nil {
