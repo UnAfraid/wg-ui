@@ -197,12 +197,22 @@ func (r *mutationResolver) DeleteServer(ctx context.Context, input model.DeleteS
 }
 
 func (r *mutationResolver) StartServer(ctx context.Context, input model.StartServerInput) (*model.StartServerPayload, error) {
+	user, err := model.ContextToUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, err := user.ID.String(model.IdKindUser)
+	if err != nil {
+		return nil, err
+	}
+
 	serverId, err := input.ID.String(model.IdKindServer)
 	if err != nil {
 		return nil, err
 	}
 
-	srv, err := r.manageService.StartServer(ctx, serverId)
+	srv, err := r.manageService.StartServer(ctx, serverId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -214,12 +224,22 @@ func (r *mutationResolver) StartServer(ctx context.Context, input model.StartSer
 }
 
 func (r *mutationResolver) StopServer(ctx context.Context, input model.StopServerInput) (*model.StopServerPayload, error) {
+	user, err := model.ContextToUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, err := user.ID.String(model.IdKindUser)
+	if err != nil {
+		return nil, err
+	}
+
 	serverId, err := input.ID.String(model.IdKindServer)
 	if err != nil {
 		return nil, err
 	}
 
-	srv, err := r.manageService.StopServer(ctx, serverId)
+	srv, err := r.manageService.StopServer(ctx, serverId, userId)
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,6 @@
-package wg
+//go:build linux
+
+package linux
 
 import (
 	"github.com/vishvananda/netlink"

@@ -27,7 +27,6 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
 )
 
 const (
@@ -42,7 +41,6 @@ func NewRouter(
 	userService user.Service,
 	serverService server.Service,
 	peerService peer.Service,
-	wgService wg.Service,
 	manageService manage.Service,
 ) http.Handler {
 	corsMiddleware := cors.New(cors.Options{
@@ -58,7 +56,6 @@ func NewRouter(
 		userService,
 		serverService,
 		peerService,
-		wgService,
 		manageService,
 	)
 

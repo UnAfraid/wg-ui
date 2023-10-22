@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -25,7 +26,9 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 	"github.com/UnAfraid/wg-ui/pkg/user"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/linux"
 )
 
 const (
@@ -111,18 +114,36 @@ func main() {
 		return
 	}
 
-	wgService, err := wg.NewService(serverService, peerService)
-	if err != nil {
+	var wireguardBackend backend.Backend
+
+	switch strings.ToLower(conf.Backend) {
+	case "linux":
+		wireguardBackend, err = linux.NewLinuxBackend()
+		if err != nil {
+			logrus.
+				WithError(err).
+				Fatal("failed to initialize linux backend for wireguard")
+			return
+		}
+	default:
 		logrus.
 			WithError(err).
-			Fatal("failed to initialize WireGuard service")
+			Fatal("unsupported wireguard backend")
 		return
 	}
-	defer wgService.Close()
+
+	wireguardService := wireguard.NewService(wireguardBackend)
+	defer func() {
+		if err := wireguardService.Close(context.Background()); err != nil {
+			logrus.
+				WithError(err).
+				Error("failed to close wireguard service")
+		}
+	}()
 
 	authService := auth.NewService(jwt.SigningMethodHS256, jwtSecretBytes, jwtSecretBytes, conf.JwtDuration)
 
-	manageService := manage.NewService(transactionScoper, userService, serverService, peerService, wgService)
+	manageService := manage.NewService(transactionScoper, userService, serverService, peerService, wireguardService)
 
 	router := api.NewRouter(
 		conf,
@@ -130,7 +151,6 @@ func main() {
 		userService,
 		serverService,
 		peerService,
-		wgService,
 		manageService,
 	)
 

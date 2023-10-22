@@ -8,25 +8,17 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
-	"github.com/UnAfraid/wg-ui/pkg/server"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
 )
 
 type serverResolver struct {
-	serverService server.Service
-	peerService   peer.Service
-	wgService     wg.Service
+	peerService peer.Service
 }
 
 func NewServerResolver(
-	serverService server.Service,
 	peerService peer.Service,
-	wgService wg.Service,
 ) resolver.ServerResolver {
 	return &serverResolver{
-		serverService: serverService,
-		peerService:   peerService,
-		wgService:     wgService,
+		peerService: peerService,
 	}
 }
 

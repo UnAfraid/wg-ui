@@ -1,4 +1,4 @@
-package wg
+package backend
 
 import (
 	"time"

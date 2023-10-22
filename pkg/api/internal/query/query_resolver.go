@@ -10,30 +10,30 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
+	"github.com/UnAfraid/wg-ui/pkg/manage"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
 )
 
 type queryResolver struct {
-	wgService     wg.Service
 	peerService   peer.Service
 	serverService server.Service
 	userService   user.Service
+	manageService manage.Service
 }
 
 func NewQueryResolver(
-	wgService wg.Service,
 	peerService peer.Service,
 	serverService server.Service,
 	userService user.Service,
+	manageService manage.Service,
 ) resolver.QueryResolver {
 	return &queryResolver{
-		wgService:     wgService,
 		peerService:   peerService,
 		serverService: serverService,
 		userService:   userService,
+		manageService: manageService,
 	}
 }
 
@@ -138,7 +138,7 @@ func (r *queryResolver) Peers(ctx context.Context, query *string) ([]*model.Peer
 }
 
 func (r *queryResolver) ForeignServers(ctx context.Context) ([]*model.ForeignServer, error) {
-	foreignServers, err := r.wgService.ForeignServers(ctx)
+	foreignServers, err := r.manageService.ForeignServers(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -3,7 +3,7 @@ package model
 import (
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
 )
 
 func CreatePeerInputToCreateOptions(input CreatePeerInput) *peer.CreateOptions {
@@ -140,7 +140,7 @@ func PeerHookInputToPeerHook(hook *PeerHookInput) *peer.Hook {
 	}
 }
 
-func ToPeerStats(stats *wg.PeerStats) *PeerStats {
+func ToPeerStats(stats *backend.PeerStats) *PeerStats {
 	if stats == nil {
 		return nil
 	}

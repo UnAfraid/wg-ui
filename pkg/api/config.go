@@ -14,7 +14,6 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
 )
 
 //go:generate go run github.com/99designs/gqlgen --config ../../gqlgen.yml generate
@@ -23,16 +22,15 @@ func newConfig(
 	userService user.Service,
 	serverService server.Service,
 	peerService peer.Service,
-	wgService wg.Service,
 	manageService manage.Service,
 ) resolver.Config {
 	return resolver.Config{
 		Resolvers: &resolverRoot{
 			queryResolver: query.NewQueryResolver(
-				wgService,
 				peerService,
 				serverService,
 				userService,
+				manageService,
 			),
 			mutationResolver: mutation.NewMutationResolver(
 				authService,
@@ -48,13 +46,10 @@ func newConfig(
 				peerService,
 			),
 			serverResolver: serverResolver.NewServerResolver(
-				serverService,
 				peerService,
-				wgService,
 			),
 			peerResolver: peerResolver.NewPeerResolver(
-				peerService,
-				wgService,
+				manageService,
 			),
 		},
 		Directives: directive.NewDirectiveRoot(),

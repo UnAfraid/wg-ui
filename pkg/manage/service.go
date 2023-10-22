@@ -3,15 +3,20 @@ package manage
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/UnAfraid/wg-ui/pkg/dbx"
+	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
-	"github.com/UnAfraid/wg-ui/pkg/wg"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
 )
 
 type Service interface {
@@ -22,12 +27,14 @@ type Service interface {
 	CreateServer(ctx context.Context, options *server.CreateOptions, userId string) (*server.Server, error)
 	UpdateServer(ctx context.Context, serverId string, options *server.UpdateOptions, fieldMask *server.UpdateFieldMask, userId string) (*server.Server, error)
 	DeleteServer(ctx context.Context, serverId string, userId string) (*server.Server, error)
-	StartServer(ctx context.Context, serverId string) (*server.Server, error)
-	StopServer(ctx context.Context, serverId string) (*server.Server, error)
+	StartServer(ctx context.Context, serverId string, userId string) (*server.Server, error)
+	StopServer(ctx context.Context, serverId string, userId string) (*server.Server, error)
 	ImportForeignServer(ctx context.Context, name string, userId string) (*server.Server, error)
 	CreatePeer(ctx context.Context, serverId string, options *peer.CreateOptions, userId string) (*peer.Peer, error)
 	UpdatePeer(ctx context.Context, peerId string, options *peer.UpdateOptions, fieldMask *peer.UpdateFieldMask, userId string) (*peer.Peer, error)
 	DeletePeer(ctx context.Context, peerId string, userId string) (*peer.Peer, error)
+	PeerStats(ctx context.Context, name string, peerPublicKey string) (*backend.PeerStats, error)
+	ForeignServers(ctx context.Context) ([]*backend.ForeignServer, error)
 }
 
 type service struct {
@@ -35,7 +42,7 @@ type service struct {
 	userService       user.Service
 	serverService     server.Service
 	peerService       peer.Service
-	wgService         wg.Service
+	wireguardService  wireguard.Service
 }
 
 func NewService(
@@ -43,14 +50,14 @@ func NewService(
 	userService user.Service,
 	serverService server.Service,
 	peerService peer.Service,
-	wgService wg.Service,
+	wireguardService wireguard.Service,
 ) Service {
 	s := &service{
 		transactionScoper: transactionScoper,
 		userService:       userService,
 		serverService:     serverService,
 		peerService:       peerService,
-		wgService:         wgService,
+		wireguardService:  wireguardService,
 	}
 
 	s.cleanup(context.Background())
@@ -104,29 +111,53 @@ func (s *service) DeleteUser(ctx context.Context, userId string) (*user.User, er
 }
 
 func (s *service) CreateServer(ctx context.Context, options *server.CreateOptions, userId string) (*server.Server, error) {
-	createdServer, err := s.serverService.CreateServer(ctx, options, userId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*server.Server, error) {
+		createdServer, err := s.serverService.CreateServer(ctx, options, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	if createdServer.Enabled {
-		return s.wgService.StartServer(ctx, createdServer.Id)
-	}
+		if createdServer.Enabled {
+			device, err := s.configureDevice(ctx, createdServer, nil)
+			if err != nil {
+				return nil, err
+			}
+			return s.updateServer(ctx, createdServer, device, userId)
+		}
 
-	return createdServer, nil
+		return createdServer, nil
+	})
 }
 
 func (s *service) UpdateServer(ctx context.Context, serverId string, options *server.UpdateOptions, fieldMask *server.UpdateFieldMask, userId string) (*server.Server, error) {
-	updatedServer, err := s.serverService.UpdateServer(ctx, serverId, options, fieldMask, userId)
-	if err != nil {
-		return nil, err
-	}
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*server.Server, error) {
+		updatedServer, err := s.serverService.UpdateServer(ctx, serverId, options, fieldMask, userId)
+		if err != nil {
+			return nil, err
+		}
 
-	if !updatedServer.Enabled {
-		return s.wgService.StopServer(ctx, updatedServer.Id)
-	}
+		if !updatedServer.Enabled {
+			status, err := s.wireguardService.Status(ctx, updatedServer.Name)
+			if err != nil {
+				return nil, err
+			}
 
-	return updatedServer, nil
+			if status {
+				if err := s.wireguardService.Down(ctx, updatedServer.Name); err != nil {
+					return nil, err
+				}
+				updateOptions := server.UpdateOptions{
+					Running: false,
+				}
+				updateFieldMask := server.UpdateFieldMask{
+					Running: true,
+				}
+				return s.serverService.UpdateServer(ctx, updatedServer.Id, &updateOptions, &updateFieldMask, userId)
+			}
+		}
+
+		return updatedServer, nil
+	})
 }
 
 func (s *service) DeleteServer(ctx context.Context, serverId string, userId string) (*server.Server, error) {
@@ -136,7 +167,7 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 			return nil, err
 		}
 
-		if _, err = s.wgService.StopServer(ctx, svc.Id); err != nil {
+		if err = s.wireguardService.Down(ctx, svc.Name); err != nil {
 			logrus.
 				WithError(err).
 				WithField("serverId", svc.Id).
@@ -167,72 +198,247 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 	})
 }
 
-func (s *service) StartServer(ctx context.Context, serverId string) (*server.Server, error) {
-	return s.wgService.StartServer(ctx, serverId)
+func (s *service) StartServer(ctx context.Context, serverId string, userId string) (*server.Server, error) {
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*server.Server, error) {
+		srv, err := s.findServer(ctx, serverId)
+		if err != nil {
+			return nil, err
+		}
+
+		peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
+			ServerId: &srv.Id,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		device, err := s.configureDevice(ctx, srv, peers)
+		if err != nil {
+			return nil, err
+		}
+		return s.updateServer(ctx, srv, device, userId)
+	})
 }
 
-func (s *service) StopServer(ctx context.Context, serverId string) (*server.Server, error) {
-	return s.wgService.StopServer(ctx, serverId)
+func (s *service) StopServer(ctx context.Context, serverId string, userId string) (*server.Server, error) {
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*server.Server, error) {
+		srv, err := s.findServer(ctx, serverId)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := s.wireguardService.Down(ctx, srv.Name); err != nil {
+			return nil, err
+		}
+
+		updateOptions := server.UpdateOptions{
+			Running: false,
+		}
+		updateFieldMask := server.UpdateFieldMask{
+			Running: true,
+		}
+		return s.serverService.UpdateServer(ctx, srv.Id, &updateOptions, &updateFieldMask, userId)
+	})
 }
 
 func (s *service) ImportForeignServer(ctx context.Context, name string, userId string) (*server.Server, error) {
-	return s.wgService.ImportForeignServer(ctx, name, userId)
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*server.Server, error) {
+		servers, err := s.serverService.FindServers(ctx, &server.FindOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to find servers: %w", err)
+		}
+
+		knownInterfaces := adapt.Array(servers, func(server *server.Server) string {
+			return server.Name
+		})
+
+		foreignInterfaces, err := s.wireguardService.FindForeignServers(ctx, knownInterfaces)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find foreign interfaces: %w", err)
+		}
+
+		var foreignInterface *backend.ForeignInterface
+		for _, fn := range foreignInterfaces {
+			if strings.EqualFold(fn.Name, name) {
+				foreignInterface = fn.Interface
+				break
+			}
+		}
+
+		if foreignInterface == nil {
+			return nil, fmt.Errorf("foreign interface: %s not found", name)
+		}
+
+		device, err := s.wireguardService.Device(ctx, foreignInterface.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open interface: %s", foreignInterface.Name)
+		}
+
+		var address string
+		if len(foreignInterface.Addresses) != 0 {
+			address = foreignInterface.Addresses[0]
+		}
+
+		createServer, err := s.serverService.CreateServer(ctx, &server.CreateOptions{
+			Name:         foreignInterface.Name,
+			Description:  "",
+			Enabled:      true,
+			Running:      true,
+			PublicKey:    device.Wireguard.PublicKey,
+			PrivateKey:   device.Wireguard.PrivateKey,
+			ListenPort:   adapt.ToPointerNilZero(device.Wireguard.ListenPort),
+			FirewallMark: adapt.ToPointerNilZero(device.Wireguard.FirewallMark),
+			Address:      address,
+			DNS:          nil,
+			MTU:          foreignInterface.Mtu,
+		}, userId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create server: %w", err)
+		}
+
+		for i, p := range device.Wireguard.Peers {
+			_, err := s.peerService.CreatePeer(ctx, createServer.Id, &peer.CreateOptions{
+				Name:        fmt.Sprintf("Peer #%d", i+1),
+				Description: "",
+				PublicKey:   p.PublicKey,
+				Endpoint:    p.Endpoint,
+				AllowedIPs: adapt.Array(p.AllowedIPs, func(allowedIp net.IPNet) string {
+					return allowedIp.String()
+				}),
+				PresharedKey:        p.PresharedKey,
+				PersistentKeepalive: int(p.PersistentKeepalive.Seconds()),
+			}, userId)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create peer: %w", err)
+			}
+		}
+
+		return createServer, nil
+	})
 }
 
 func (s *service) CreatePeer(ctx context.Context, serverId string, options *peer.CreateOptions, userId string) (*peer.Peer, error) {
-	createdPeer, err := s.peerService.CreatePeer(ctx, serverId, options, userId)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := s.wgService.AddPeer(ctx, createdPeer.Id); err != nil {
-		logrus.
-			WithError(err).
-			WithField("peerId", createdPeer.Id).
-			WithField("peerName", createdPeer.Name).
-			Warn("failed to add peer")
-	}
-
-	return createdPeer, nil
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*peer.Peer, error) {
+		createdPeer, err := s.peerService.CreatePeer(ctx, serverId, options, userId)
+		if err != nil {
+			return nil, err
+		}
+		return s.configurePeerDevice(ctx, createdPeer, userId)
+	})
 }
 
 func (s *service) UpdatePeer(ctx context.Context, peerId string, options *peer.UpdateOptions, fieldMask *peer.UpdateFieldMask, userId string) (*peer.Peer, error) {
-	updatedPeer, err := s.peerService.UpdatePeer(ctx, peerId, options, fieldMask, userId)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := s.wgService.UpdatePeer(ctx, peerId); err != nil {
-		logrus.
-			WithError(err).
-			WithField("peerId", updatedPeer.Id).
-			WithField("peerName", updatedPeer.Name).
-			Warn("failed to update peer")
-	}
-
-	return updatedPeer, nil
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*peer.Peer, error) {
+		updatedPeer, err := s.peerService.UpdatePeer(ctx, peerId, options, fieldMask, userId)
+		if err != nil {
+			return nil, err
+		}
+		return s.configurePeerDevice(ctx, updatedPeer, userId)
+	})
 }
 
 func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) (*peer.Peer, error) {
-	p, err := s.findPeer(ctx, peerId)
+	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*peer.Peer, error) {
+		deletedPeer, err := s.peerService.DeletePeer(ctx, peerId, userId)
+		if err != nil {
+			return nil, err
+		}
+		return s.configurePeerDevice(ctx, deletedPeer, userId)
+	})
+}
+
+func (s *service) PeerStats(ctx context.Context, name string, peerPublicKey string) (*backend.PeerStats, error) {
+	return s.wireguardService.PeerStats(ctx, name, peerPublicKey)
+}
+
+func (s *service) ForeignServers(ctx context.Context) ([]*backend.ForeignServer, error) {
+	servers, err := s.serverService.FindServers(ctx, &server.FindOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to find servers: %w", err)
+	}
+
+	knownInterfaces := adapt.Array(servers, func(server *server.Server) string {
+		return server.Name
+	})
+	return s.wireguardService.FindForeignServers(ctx, knownInterfaces)
+}
+
+func (s *service) configurePeerDevice(ctx context.Context, p *peer.Peer, userId string) (*peer.Peer, error) {
+	srv, err := s.findServer(ctx, p.ServerId)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.wgService.RemovePeer(ctx, peerId); err != nil {
-		logrus.
-			WithError(err).
-			WithField("peerId", p.Id).
-			WithField("peerName", p.Name).
-			Warn("failed to remove peer")
-	}
-
-	deletedPeer, err := s.peerService.DeletePeer(ctx, peerId, userId)
+	status, err := s.wireguardService.Status(ctx, srv.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	return deletedPeer, nil
+	if !status {
+		return p, nil
+	}
+
+	peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
+		ServerId: &srv.Id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	device, err := s.configureDevice(ctx, srv, peers)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := s.updateServer(ctx, srv, device, userId); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers []*peer.Peer) (*backend.Device, error) {
+	return s.wireguardService.Up(ctx, backend.ConfigureOptions{
+		InterfaceOptions: backend.InterfaceOptions{
+			Name:    srv.Name,
+			Address: srv.Address,
+			Mtu:     srv.MTU,
+		},
+		WireguardOptions: backend.WireguardOptions{
+			PrivateKey:   srv.PrivateKey,
+			ListenPort:   srv.ListenPort,
+			FirewallMark: srv.FirewallMark,
+			Peers: adapt.Array(peers, func(peer *peer.Peer) *backend.PeerOptions {
+				return &backend.PeerOptions{
+					PublicKey:           peer.PublicKey,
+					Endpoint:            peer.Endpoint,
+					AllowedIPs:          peer.AllowedIPs,
+					PresharedKey:        peer.PresharedKey,
+					PersistentKeepalive: peer.PersistentKeepalive,
+				}
+			}),
+		},
+	})
+}
+
+func (s *service) updateServer(ctx context.Context, srv *server.Server, device *backend.Device, userId string) (*server.Server, error) {
+	updateOptions := server.UpdateOptions{
+		Running:      true,
+		PublicKey:    device.Wireguard.PublicKey,
+		PrivateKey:   device.Wireguard.PrivateKey,
+		ListenPort:   adapt.ToPointerNilZero(device.Wireguard.ListenPort),
+		FirewallMark: adapt.ToPointerNilZero(device.Wireguard.FirewallMark),
+		MTU:          device.Interface.Mtu,
+	}
+	updateFieldMask := server.UpdateFieldMask{
+		Running:      true,
+		PublicKey:    strings.EqualFold(srv.PublicKey, device.Wireguard.PublicKey),
+		PrivateKey:   strings.EqualFold(srv.PrivateKey, device.Wireguard.PrivateKey),
+		ListenPort:   adapt.Dereference(srv.ListenPort) != device.Wireguard.ListenPort,
+		FirewallMark: adapt.Dereference(srv.FirewallMark) != device.Wireguard.FirewallMark,
+		MTU:          srv.MTU != device.Interface.Mtu,
+	}
+	return s.serverService.UpdateServer(ctx, srv.Id, &updateOptions, &updateFieldMask, userId)
 }
 
 func (s *service) findUserById(ctx context.Context, userId string) (*user.User, error) {
