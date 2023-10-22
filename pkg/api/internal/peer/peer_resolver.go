@@ -62,7 +62,7 @@ func (r *peerResolver) Stats(ctx context.Context, p *model.Peer) (*model.PeerSta
 		return nil, nil
 	}
 
-	stats, err := r.manageService.PeerStats(nil, server.Name, p.PublicKey)
+	stats, err := r.manageService.PeerStats(ctx, server.Name, p.PublicKey)
 	if err != nil {
 		return nil, err
 	}
