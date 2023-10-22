@@ -61,8 +61,35 @@ func NewService(
 	}
 
 	s.cleanup(context.Background())
+	s.init()
 
 	return s
+}
+
+func (s *service) init() {
+	ctx := context.Background()
+	servers, err := s.serverService.FindServers(ctx, &server.FindOptions{
+		Enabled: adapt.ToPointerNilZero(true),
+	})
+	if err != nil {
+		logrus.WithError(err).Error("failed to find servers")
+		return
+	}
+
+	for _, srv := range servers {
+		peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
+			ServerId: adapt.ToPointer(srv.Id),
+		})
+		if err != nil {
+			logrus.WithError(err).WithField("name", srv.Name).Error("failed to find peers for server")
+			return
+		}
+
+		if _, err = s.configureDevice(ctx, srv, peers); err != nil {
+			logrus.WithError(err).WithField("name", srv.Name).Error("failed to configure wireguard device")
+			return
+		}
+	}
 }
 
 func (s *service) Authenticate(ctx context.Context, username string, password string) (*user.User, error) {
