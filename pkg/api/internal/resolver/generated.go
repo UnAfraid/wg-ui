@@ -13442,8 +13442,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13451,8 +13449,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "serverId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serverId"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -13460,8 +13456,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.ServerID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13469,8 +13463,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.Name = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13478,8 +13470,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.Description = graphql.OmittableOf(data)
 		case "publicKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicKey"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13487,8 +13477,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.PublicKey = data
 		case "allowedIPs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowedIPs"))
 			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -13496,8 +13484,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.AllowedIPs = data
 		case "endpoint":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endpoint"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13505,8 +13491,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.Endpoint = graphql.OmittableOf(data)
 		case "presharedKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("presharedKey"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13514,8 +13498,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.PresharedKey = graphql.OmittableOf(data)
 		case "persistentKeepalive":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("persistentKeepalive"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -13523,8 +13505,6 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			}
 			it.PersistentKeepalive = graphql.OmittableOf(data)
 		case "hooks":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hooks"))
 			data, err := ec.unmarshalOPeerHookInput2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerHookInputᚄ(ctx, v)
 			if err != nil {
@@ -13552,8 +13532,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13561,8 +13539,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13570,8 +13546,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.Name = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13579,8 +13553,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.Description = graphql.OmittableOf(data)
 		case "enabled":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -13588,8 +13560,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.Enabled = graphql.OmittableOf(data)
 		case "privateKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateKey"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13597,8 +13567,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.PrivateKey = graphql.OmittableOf(data)
 		case "publicKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicKey"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13606,8 +13574,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.PublicKey = graphql.OmittableOf(data)
 		case "listenPort":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("listenPort"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -13615,8 +13581,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.ListenPort = graphql.OmittableOf(data)
 		case "firewallMark":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firewallMark"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -13624,8 +13588,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.FirewallMark = graphql.OmittableOf(data)
 		case "address":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13633,8 +13595,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.Address = data
 		case "dns":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dns"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -13642,8 +13602,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.DNS = graphql.OmittableOf(data)
 		case "mtu":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mtu"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -13651,8 +13609,6 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			}
 			it.Mtu = graphql.OmittableOf(data)
 		case "hooks":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hooks"))
 			data, err := ec.unmarshalOServerHookInput2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerHookInputᚄ(ctx, v)
 			if err != nil {
@@ -13680,8 +13636,6 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13689,8 +13643,6 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13698,8 +13650,6 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 			}
 			it.Email = data
 		case "password":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13727,8 +13677,6 @@ func (ec *executionContext) unmarshalInputDeletePeerInput(ctx context.Context, o
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13736,8 +13684,6 @@ func (ec *executionContext) unmarshalInputDeletePeerInput(ctx context.Context, o
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -13765,8 +13711,6 @@ func (ec *executionContext) unmarshalInputDeleteServerInput(ctx context.Context,
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13774,8 +13718,6 @@ func (ec *executionContext) unmarshalInputDeleteServerInput(ctx context.Context,
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -13803,8 +13745,6 @@ func (ec *executionContext) unmarshalInputDeleteUserInput(ctx context.Context, o
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13812,8 +13752,6 @@ func (ec *executionContext) unmarshalInputDeleteUserInput(ctx context.Context, o
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -13841,8 +13779,6 @@ func (ec *executionContext) unmarshalInputGenerateWireguardKeyInput(ctx context.
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13870,8 +13806,6 @@ func (ec *executionContext) unmarshalInputImportForeignServerInput(ctx context.C
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -13879,8 +13813,6 @@ func (ec *executionContext) unmarshalInputImportForeignServerInput(ctx context.C
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13908,8 +13840,6 @@ func (ec *executionContext) unmarshalInputPeerHookInput(ctx context.Context, obj
 		}
 		switch k {
 		case "command":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("command"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13917,8 +13847,6 @@ func (ec *executionContext) unmarshalInputPeerHookInput(ctx context.Context, obj
 			}
 			it.Command = data
 		case "runOnCreate":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnCreate"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -13926,8 +13854,6 @@ func (ec *executionContext) unmarshalInputPeerHookInput(ctx context.Context, obj
 			}
 			it.RunOnCreate = data
 		case "runOnUpdate":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnUpdate"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -13935,8 +13861,6 @@ func (ec *executionContext) unmarshalInputPeerHookInput(ctx context.Context, obj
 			}
 			it.RunOnUpdate = data
 		case "runOnDelete":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnDelete"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -13964,8 +13888,6 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 		}
 		switch k {
 		case "command":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("command"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -13973,8 +13895,6 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 			}
 			it.Command = data
 		case "runOnCreate":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnCreate"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -13982,8 +13902,6 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 			}
 			it.RunOnCreate = data
 		case "runOnUpdate":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnUpdate"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -13991,8 +13909,6 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 			}
 			it.RunOnUpdate = data
 		case "runOnDelete":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnDelete"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -14000,8 +13916,6 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 			}
 			it.RunOnDelete = data
 		case "runOnStart":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnStart"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -14009,8 +13923,6 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 			}
 			it.RunOnStart = data
 		case "runOnStop":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnStop"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -14038,8 +13950,6 @@ func (ec *executionContext) unmarshalInputSignInInput(ctx context.Context, obj i
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14047,8 +13957,6 @@ func (ec *executionContext) unmarshalInputSignInInput(ctx context.Context, obj i
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -14056,8 +13964,6 @@ func (ec *executionContext) unmarshalInputSignInInput(ctx context.Context, obj i
 			}
 			it.Email = data
 		case "password":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -14085,8 +13991,6 @@ func (ec *executionContext) unmarshalInputStartServerInput(ctx context.Context, 
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14094,8 +13998,6 @@ func (ec *executionContext) unmarshalInputStartServerInput(ctx context.Context, 
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -14123,8 +14025,6 @@ func (ec *executionContext) unmarshalInputStopServerInput(ctx context.Context, o
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14132,8 +14032,6 @@ func (ec *executionContext) unmarshalInputStopServerInput(ctx context.Context, o
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -14161,8 +14059,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14170,8 +14066,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -14179,8 +14073,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.ID = data
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14188,8 +14080,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.Name = graphql.OmittableOf(data)
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14197,8 +14087,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.Description = graphql.OmittableOf(data)
 		case "publicKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicKey"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14206,8 +14094,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.PublicKey = graphql.OmittableOf(data)
 		case "endpoint":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endpoint"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14215,8 +14101,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.Endpoint = graphql.OmittableOf(data)
 		case "allowedIPs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowedIPs"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -14224,8 +14108,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.AllowedIPs = graphql.OmittableOf(data)
 		case "presharedKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("presharedKey"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14233,8 +14115,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.PresharedKey = graphql.OmittableOf(data)
 		case "persistentKeepalive":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("persistentKeepalive"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -14242,8 +14122,6 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			}
 			it.PersistentKeepalive = graphql.OmittableOf(data)
 		case "hooks":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hooks"))
 			data, err := ec.unmarshalOPeerHookInput2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerHookInputᚄ(ctx, v)
 			if err != nil {
@@ -14271,8 +14149,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14280,8 +14156,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -14289,8 +14163,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.ID = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14298,8 +14170,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.Description = graphql.OmittableOf(data)
 		case "enabled":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -14307,8 +14177,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.Enabled = graphql.OmittableOf(data)
 		case "publicKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicKey"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14316,8 +14184,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.PublicKey = graphql.OmittableOf(data)
 		case "privateKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateKey"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14325,8 +14191,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.PrivateKey = graphql.OmittableOf(data)
 		case "listenPort":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("listenPort"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -14334,8 +14198,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.ListenPort = graphql.OmittableOf(data)
 		case "firewallMark":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firewallMark"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -14343,8 +14205,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.FirewallMark = graphql.OmittableOf(data)
 		case "address":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14352,8 +14212,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.Address = graphql.OmittableOf(data)
 		case "dns":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dns"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -14361,8 +14219,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.DNS = graphql.OmittableOf(data)
 		case "mtu":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mtu"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -14370,8 +14226,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			}
 			it.Mtu = graphql.OmittableOf(data)
 		case "hooks":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hooks"))
 			data, err := ec.unmarshalOServerHookInput2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerHookInputᚄ(ctx, v)
 			if err != nil {
@@ -14399,8 +14253,6 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 		}
 		switch k {
 		case "clientMutationId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14408,8 +14260,6 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
 		case "id":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
 			if err != nil {
@@ -14417,8 +14267,6 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 			}
 			it.ID = data
 		case "email":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -14426,8 +14274,6 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 			}
 			it.Email = graphql.OmittableOf(data)
 		case "password":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
