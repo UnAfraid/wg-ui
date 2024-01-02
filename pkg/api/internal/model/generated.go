@@ -143,6 +143,9 @@ type ImportForeignServerPayload struct {
 	Server           *Server `json:"server,omitempty"`
 }
 
+type Mutation struct {
+}
+
 type Peer struct {
 	ID                  ID          `json:"id"`
 	Server              *Server     `json:"server"`
@@ -192,6 +195,9 @@ type PeerStats struct {
 	ReceiveBytes      float64    `json:"receiveBytes"`
 	TransmitBytes     float64    `json:"transmitBytes"`
 	ProtocolVersion   int        `json:"protocolVersion"`
+}
+
+type Query struct {
 }
 
 type Server struct {
@@ -305,6 +311,9 @@ type StopServerInput struct {
 type StopServerPayload struct {
 	ClientMutationID *string `json:"clientMutationId,omitempty"`
 	Server           *Server `json:"server,omitempty"`
+}
+
+type Subscription struct {
 }
 
 type UpdatePeerInput struct {
