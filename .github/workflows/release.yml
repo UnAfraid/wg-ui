@@ -28,12 +28,12 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.0
+          go-version: 1.22.2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18.16.1
+          node-version: 20
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -66,7 +66,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
           tags: |
             type=semver,pattern={{version}}
             latest
@@ -93,7 +93,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean --skip-validate
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
