@@ -61,6 +61,7 @@ func NewRouter(
 
 	authHandler := handler.NewAuthenticationMiddleware(authService, userService)
 	gqlHandler := gqlhandler.New(resolver.NewExecutableSchema(executableSchemaConfig))
+	gqlHandler.SetParserTokenLimit(15_000)
 	gqlHandler.AddTransport(transport.Websocket{
 		InitFunc:              authHandler.WebsocketMiddleware(),
 		KeepAlivePingInterval: websocketsKeepAlivePingInterval,
