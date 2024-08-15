@@ -1,4 +1,3 @@
-version: "3"
 services:
   app:
     image: ghcr.io/unafraid/wg-ui:latest
