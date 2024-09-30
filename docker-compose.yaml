@@ -9,7 +9,7 @@ services:
     volumes:
       - './data:/var/lib/wg-ui'
     ports:
-      - "8080:8080/tcp"
+      - "4580:4580/tcp"
       - "51820:51820/udp"
     sysctls:
       net.ipv4.conf.all.src_valid_mark: 1

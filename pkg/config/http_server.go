@@ -6,7 +6,7 @@ import (
 
 type HttpServer struct {
 	Host                    string `default:""`
-	Port                    uint16 `default:"8080"`
+	Port                    uint16 `default:"4580"`
 	APQCacheEnabled         bool   `default:"false" split_words:"true"`
 	TracingEnabled          bool   `default:"false" split_words:"true"`
 	FrontendEnabled         bool   `default:"true" split_words:"true"`
