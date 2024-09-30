@@ -2231,340 +2231,732 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createPeer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.CreatePeerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreatePeerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_createPeer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_createPeer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.CreatePeerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.CreatePeerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNCreatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreatePeerInput(ctx, tmp)
+	}
+
+	var zeroVal model.CreatePeerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_createServer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.CreateServerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateServerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_createServer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_createServer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.CreateServerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.CreateServerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNCreateServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateServerInput(ctx, tmp)
+	}
+
+	var zeroVal model.CreateServerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.CreateUserInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateUserInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_createUser_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_createUser_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.CreateUserInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.CreateUserInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNCreateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateUserInput(ctx, tmp)
+	}
+
+	var zeroVal model.CreateUserInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_deletePeer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.DeletePeerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNDeletePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeletePeerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_deletePeer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_deletePeer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.DeletePeerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.DeletePeerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNDeletePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeletePeerInput(ctx, tmp)
+	}
+
+	var zeroVal model.DeletePeerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_deleteServer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.DeleteServerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNDeleteServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteServerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_deleteServer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteServer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.DeleteServerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.DeleteServerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNDeleteServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteServerInput(ctx, tmp)
+	}
+
+	var zeroVal model.DeleteServerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.DeleteUserInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNDeleteUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteUserInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_deleteUser_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteUser_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.DeleteUserInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.DeleteUserInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNDeleteUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteUserInput(ctx, tmp)
+	}
+
+	var zeroVal model.DeleteUserInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_generateWireguardKey_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.GenerateWireguardKeyInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNGenerateWireguardKeyInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐGenerateWireguardKeyInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_generateWireguardKey_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_generateWireguardKey_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.GenerateWireguardKeyInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.GenerateWireguardKeyInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNGenerateWireguardKeyInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐGenerateWireguardKeyInput(ctx, tmp)
+	}
+
+	var zeroVal model.GenerateWireguardKeyInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_importForeignServer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.ImportForeignServerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNImportForeignServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐImportForeignServerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_importForeignServer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_importForeignServer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.ImportForeignServerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.ImportForeignServerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNImportForeignServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐImportForeignServerInput(ctx, tmp)
+	}
+
+	var zeroVal model.ImportForeignServerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_signIn_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.SignInInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNSignInInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐSignInInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_signIn_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_signIn_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.SignInInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.SignInInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSignInInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐSignInInput(ctx, tmp)
+	}
+
+	var zeroVal model.SignInInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_startServer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.StartServerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNStartServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStartServerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_startServer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_startServer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.StartServerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.StartServerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNStartServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStartServerInput(ctx, tmp)
+	}
+
+	var zeroVal model.StartServerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_stopServer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.StopServerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNStopServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStopServerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_stopServer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_stopServer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.StopServerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.StopServerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNStopServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStopServerInput(ctx, tmp)
+	}
+
+	var zeroVal model.StopServerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_updatePeer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.UpdatePeerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdatePeerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_updatePeer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_updatePeer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.UpdatePeerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.UpdatePeerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdatePeerInput(ctx, tmp)
+	}
+
+	var zeroVal model.UpdatePeerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_updateServer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.UpdateServerInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdateServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateServerInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_updateServer_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateServer_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.UpdateServerInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.UpdateServerInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdateServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateServerInput(ctx, tmp)
+	}
+
+	var zeroVal model.UpdateServerInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.UpdateUserInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateUserInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Mutation_updateUser_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateUser_argsInput(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.UpdateUserInput, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["input"]
+	if !ok {
+		var zeroVal model.UpdateUserInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateUserInput(ctx, tmp)
+	}
+
+	var zeroVal model.UpdateUserInput
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Query___type_argsName(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["name"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Query___type_argsName(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["name"]
+	if !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+	if tmp, ok := rawArgs["name"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_node_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.ID
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Query_node_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["id"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Query_node_argsID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (model.ID, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["id"]
+	if !ok {
+		var zeroVal model.ID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, tmp)
+	}
+
+	var zeroVal model.ID
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_nodes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []*model.ID
-	if tmp, ok := rawArgs["ids"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
-		arg0, err = ec.unmarshalNID2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐIDᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Query_nodes_argsIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["ids"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Query_nodes_argsIds(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) ([]*model.ID, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["ids"]
+	if !ok {
+		var zeroVal []*model.ID
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+	if tmp, ok := rawArgs["ids"]; ok {
+		return ec.unmarshalNID2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐIDᚄ(ctx, tmp)
+	}
+
+	var zeroVal []*model.ID
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_peers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["query"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Query_peers_argsQuery(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["query"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Query_peers_argsQuery(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["query"]
+	if !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+	if tmp, ok := rawArgs["query"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_servers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["query"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Query_servers_argsQuery(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["query"] = arg0
-	var arg1 *bool
-	if tmp, ok := rawArgs["enabled"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
-		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg1, err := ec.field_Query_servers_argsEnabled(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["enabled"] = arg1
 	return args, nil
+}
+func (ec *executionContext) field_Query_servers_argsQuery(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["query"]
+	if !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+	if tmp, ok := rawArgs["query"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_servers_argsEnabled(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*bool, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["enabled"]
+	if !ok {
+		var zeroVal *bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+	if tmp, ok := rawArgs["enabled"]; ok {
+		return ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+	}
+
+	var zeroVal *bool
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["query"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field_Query_users_argsQuery(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["query"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Query_users_argsQuery(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (*string, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["query"]
+	if !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+	if tmp, ok := rawArgs["query"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 bool
-	if tmp, ok := rawArgs["includeDeprecated"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
-		arg0, err = ec.unmarshalOBoolean2bool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field___Type_enumValues_argsIncludeDeprecated(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["includeDeprecated"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field___Type_enumValues_argsIncludeDeprecated(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (bool, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["includeDeprecated"]
+	if !ok {
+		var zeroVal bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
+	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		return ec.unmarshalOBoolean2bool(ctx, tmp)
+	}
+
+	var zeroVal bool
+	return zeroVal, nil
 }
 
 func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 bool
-	if tmp, ok := rawArgs["includeDeprecated"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
-		arg0, err = ec.unmarshalOBoolean2bool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	arg0, err := ec.field___Type_fields_argsIncludeDeprecated(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["includeDeprecated"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field___Type_fields_argsIncludeDeprecated(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (bool, error) {
+	// We won't call the directive if the argument is null.
+	// Set call_argument_directives_with_null to true to call directives
+	// even if the argument is null.
+	_, ok := rawArgs["includeDeprecated"]
+	if !ok {
+		var zeroVal bool
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("includeDeprecated"))
+	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		return ec.unmarshalOBoolean2bool(ctx, tmp)
+	}
+
+	var zeroVal bool
+	return zeroVal, nil
 }
 
 // endregion ***************************** args.gotpl *****************************
@@ -4395,9 +4787,11 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(model.CreateUserInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.CreateUserPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -4476,9 +4870,11 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(model.UpdateUserInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.UpdateUserPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -4557,9 +4953,11 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["input"].(model.DeleteUserInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.DeleteUserPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -4638,9 +5036,11 @@ func (ec *executionContext) _Mutation_generateWireguardKey(ctx context.Context, 
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().GenerateWireguardKey(rctx, fc.Args["input"].(model.GenerateWireguardKeyInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.GenerateWireguardKeyPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -4721,9 +5121,11 @@ func (ec *executionContext) _Mutation_createServer(ctx context.Context, field gr
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreateServer(rctx, fc.Args["input"].(model.CreateServerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.CreateServerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -4802,9 +5204,11 @@ func (ec *executionContext) _Mutation_updateServer(ctx context.Context, field gr
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdateServer(rctx, fc.Args["input"].(model.UpdateServerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.UpdateServerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -4883,9 +5287,11 @@ func (ec *executionContext) _Mutation_deleteServer(ctx context.Context, field gr
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeleteServer(rctx, fc.Args["input"].(model.DeleteServerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.DeleteServerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -4964,9 +5370,11 @@ func (ec *executionContext) _Mutation_startServer(ctx context.Context, field gra
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().StartServer(rctx, fc.Args["input"].(model.StartServerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.StartServerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -5045,9 +5453,11 @@ func (ec *executionContext) _Mutation_stopServer(ctx context.Context, field grap
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().StopServer(rctx, fc.Args["input"].(model.StopServerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.StopServerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -5126,9 +5536,11 @@ func (ec *executionContext) _Mutation_createPeer(ctx context.Context, field grap
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().CreatePeer(rctx, fc.Args["input"].(model.CreatePeerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.CreatePeerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -5207,9 +5619,11 @@ func (ec *executionContext) _Mutation_updatePeer(ctx context.Context, field grap
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().UpdatePeer(rctx, fc.Args["input"].(model.UpdatePeerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.UpdatePeerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -5288,9 +5702,11 @@ func (ec *executionContext) _Mutation_deletePeer(ctx context.Context, field grap
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().DeletePeer(rctx, fc.Args["input"].(model.DeletePeerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.DeletePeerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -5369,9 +5785,11 @@ func (ec *executionContext) _Mutation_importForeignServer(ctx context.Context, f
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().ImportForeignServer(rctx, fc.Args["input"].(model.ImportForeignServerInput))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.ImportForeignServerPayload
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -5494,9 +5912,11 @@ func (ec *executionContext) _Peer_server(ctx context.Context, field graphql.Coll
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Peer().Server(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.Server
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -5953,9 +6373,11 @@ func (ec *executionContext) _Peer_stats(ctx context.Context, field graphql.Colle
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Peer().Stats(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.PeerStats
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -6024,9 +6446,11 @@ func (ec *executionContext) _Peer_createUser(ctx context.Context, field graphql.
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Peer().CreateUser(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -6099,9 +6523,11 @@ func (ec *executionContext) _Peer_updateUser(ctx context.Context, field graphql.
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Peer().UpdateUser(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -6174,9 +6600,11 @@ func (ec *executionContext) _Peer_deleteUser(ctx context.Context, field graphql.
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Peer().DeleteUser(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -6851,9 +7279,11 @@ func (ec *executionContext) _Query_viewer(ctx context.Context, field graphql.Col
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().Viewer(rctx)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -6929,9 +7359,11 @@ func (ec *executionContext) _Query_node(ctx context.Context, field graphql.Colle
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().Node(rctx, fc.Args["id"].(model.ID))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal model.Node
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -7001,9 +7433,11 @@ func (ec *executionContext) _Query_nodes(ctx context.Context, field graphql.Coll
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().Nodes(rctx, fc.Args["ids"].([]*model.ID))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal []model.Node
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -7076,9 +7510,11 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().Users(rctx, fc.Args["query"].(*string))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal []*model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -7165,9 +7601,11 @@ func (ec *executionContext) _Query_servers(ctx context.Context, field graphql.Co
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().Servers(rctx, fc.Args["query"].(*string), fc.Args["enabled"].(*bool))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal []*model.Server
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -7282,9 +7720,11 @@ func (ec *executionContext) _Query_peers(ctx context.Context, field graphql.Coll
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().Peers(rctx, fc.Args["query"].(*string))
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal []*model.Peer
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -7393,9 +7833,11 @@ func (ec *executionContext) _Query_foreignServers(ctx context.Context, field gra
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Query().ForeignServers(rctx)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal []*model.ForeignServer
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -8132,9 +8574,11 @@ func (ec *executionContext) _Server_peers(ctx context.Context, field graphql.Col
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Server().Peers(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal []*model.Peer
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -8229,9 +8673,11 @@ func (ec *executionContext) _Server_interfaceStats(ctx context.Context, field gr
 			ctx = rctx // use context from middleware stack in children
 			return obj.InterfaceStats, nil
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.ServerInterfaceStats
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -8338,9 +8784,11 @@ func (ec *executionContext) _Server_createUser(ctx context.Context, field graphq
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Server().CreateUser(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -8413,9 +8861,11 @@ func (ec *executionContext) _Server_updateUser(ctx context.Context, field graphq
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Server().UpdateUser(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -8488,9 +8938,11 @@ func (ec *executionContext) _Server_deleteUser(ctx context.Context, field graphq
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Server().DeleteUser(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -10522,9 +10974,11 @@ func (ec *executionContext) _Subscription_userChanged(ctx context.Context, field
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Subscription().UserChanged(rctx)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.UserChangedEvent
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -10606,9 +11060,11 @@ func (ec *executionContext) _Subscription_serverChanged(ctx context.Context, fie
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Subscription().ServerChanged(rctx)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.ServerChangedEvent
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -10690,9 +11146,11 @@ func (ec *executionContext) _Subscription_peerChanged(ctx context.Context, field
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Subscription().PeerChanged(rctx)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal *model.PeerChangedEvent
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -10774,9 +11232,11 @@ func (ec *executionContext) _Subscription_nodeChanged(ctx context.Context, field
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Subscription().NodeChanged(rctx)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal model.NodeChangedEvent
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, nil, directive0)
 		}
@@ -11281,9 +11741,11 @@ func (ec *executionContext) _User_servers(ctx context.Context, field graphql.Col
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.User().Servers(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal []*model.Server
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}
@@ -11384,9 +11846,11 @@ func (ec *executionContext) _User_peers(ctx context.Context, field graphql.Colle
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.User().Peers(rctx, obj)
 		}
+
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Authenticated == nil {
-				return nil, errors.New("directive authenticated is not implemented")
+				var zeroVal []*model.Peer
+				return zeroVal, errors.New("directive authenticated is not implemented")
 			}
 			return ec.directives.Authenticated(ctx, obj, directive0)
 		}

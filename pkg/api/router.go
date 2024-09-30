@@ -83,7 +83,7 @@ func NewRouter(
 
 	if conf.HttpServer.APQCacheEnabled {
 		gqlHandler.Use(extension.AutomaticPersistedQuery{
-			Cache: lru.New(1000),
+			Cache: lru.New[string](1000),
 		})
 	}
 
