@@ -54,7 +54,7 @@ sudo pacman -U --noconfirm wg-ui_*_linux_arm64.pkg.tar.zst
 wget https://raw.githubusercontent.com/UnAfraid/wg-ui/master/docker-compose.yaml
 
 # Download the default .env file
-wget -O .env https://github.com/UnAfraid/wg-ui/blob/master/.env.dist
+wget -O .env https://raw.githubusercontent.com/UnAfraid/wg-ui/master/.env.dist
 
 # Generate random jwt secret
 sed -i "s|WG_UI_JWT_SECRET=Any_secret_base64_value_here|WG_UI_JWT_SECRET=$(head -c 128 </dev/urandom | base64 -w 0 -)|g" .env
