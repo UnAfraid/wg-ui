@@ -116,7 +116,7 @@ func NewRouter(
 		}
 
 		if conf.HttpServer.AltairEnabled {
-			r.Handle(conf.HttpServer.AltairEndpoint, gqlplayground.AltairHandler("Altair Playground", "/query"))
+			r.Handle(conf.HttpServer.AltairEndpoint, gqlplayground.AltairHandler("Altair Playground", "/query", nil))
 		}
 
 		if conf.HttpServer.VoyagerEnabled {
