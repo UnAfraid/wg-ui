@@ -16,7 +16,7 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/user"
 )
 
-//go:generate go run github.com/99designs/gqlgen --config ../../gqlgen.yml generate
+//go:generate go tool github.com/99designs/gqlgen --config ../../gqlgen.yml generate
 func newConfig(
 	authService auth.Service,
 	userService user.Service,
