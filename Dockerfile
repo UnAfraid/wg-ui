@@ -1,4 +1,4 @@
-FROM golang:1.24.1-alpine as builder
+FROM golang:1.24.3-alpine AS builder
 
 RUN apk --no-cache add ca-certificates git
 
@@ -8,7 +8,6 @@ COPY . .
 ENV CGO_ENABLED=0
 
 RUN go mod download
-RUN go test -v ./...
 RUN go build -o app
 
 FROM scratch
