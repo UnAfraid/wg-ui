@@ -74,6 +74,12 @@ jobs:
             maintainer=UnAfraid
             org.opencontainers.image.vendor=UnAfraid
             org.opencontainers.image.documentation=https://github.com/UnAfraid/wg-ui
+            org.opencontainers.image.description=Self-contained WireGuard management service with a web UI and GraphQL API written in pure Go.
+          annotations: |
+            maintainer=UnAfraid
+            org.opencontainers.image.vendor=UnAfraid
+            org.opencontainers.image.documentation=https://github.com/UnAfraid/wg-ui
+            org.opencontainers.image.description=Self-contained WireGuard management service with a web UI and GraphQL API written in pure Go.
 
       - name: Build Frontend
         run: |
@@ -105,3 +111,4 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
