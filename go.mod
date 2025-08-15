@@ -1,6 +1,6 @@
 module github.com/UnAfraid/wg-ui
 
-go 1.24
+go 1.25
 
 require (
 	github.com/99designs/gqlgen v0.17.78
