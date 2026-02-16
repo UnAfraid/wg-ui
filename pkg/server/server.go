@@ -21,6 +21,7 @@ type Server struct {
 	Id           string
 	Name         string
 	Description  string
+	BackendId    string
 	Enabled      bool
 	Running      bool
 	PublicKey    string
@@ -117,6 +118,10 @@ func (s *Server) validate(fieldMask *UpdateFieldMask) error {
 func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) error {
 	if fieldMask.Description {
 		s.Description = options.Description
+	}
+
+	if fieldMask.BackendId {
+		s.BackendId = options.BackendId
 	}
 
 	if fieldMask.Enabled {

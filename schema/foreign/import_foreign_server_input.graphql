@@ -1,4 +1,11 @@
 input ImportForeignServerInput {
     clientMutationId: String
+    """
+    The ID of the backend to import the foreign server from
+    """
+    backendId: ID!
+    """
+    The name of the foreign server interface to import
+    """
     name: String!
 }

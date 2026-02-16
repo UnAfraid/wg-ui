@@ -22,6 +22,7 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/tools/playground"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/tools/voyager"
 	"github.com/UnAfraid/wg-ui/pkg/auth"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/config"
 	"github.com/UnAfraid/wg-ui/pkg/manage"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
@@ -41,6 +42,7 @@ func NewRouter(
 	userService user.Service,
 	serverService server.Service,
 	peerService peer.Service,
+	backendService backend.Service,
 	manageService manage.Service,
 ) http.Handler {
 	corsMiddleware := cors.New(cors.Options{
@@ -57,6 +59,7 @@ func NewRouter(
 		userService,
 		serverService,
 		peerService,
+		backendService,
 		manageService,
 	)
 
@@ -135,6 +138,7 @@ func NewRouter(
 			userService,
 			serverService,
 			peerService,
+			backendService,
 		))
 
 		r.Handle("/query", gqlHandler)

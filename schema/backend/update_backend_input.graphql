@@ -1,0 +1,8 @@
+input UpdateBackendInput {
+    clientMutationId: String
+    id: ID!
+    name: String
+    description: String
+    url: String
+    enabled: Boolean
+}

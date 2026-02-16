@@ -1,6 +1,7 @@
 package api
 
 import (
+	backendResolver "github.com/UnAfraid/wg-ui/pkg/api/internal/backend"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/directive"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/mutation"
 	peerResolver "github.com/UnAfraid/wg-ui/pkg/api/internal/peer"
@@ -10,6 +11,7 @@ import (
 	sybscriptionResolver "github.com/UnAfraid/wg-ui/pkg/api/internal/subscription"
 	userResolver "github.com/UnAfraid/wg-ui/pkg/api/internal/user"
 	"github.com/UnAfraid/wg-ui/pkg/auth"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/manage"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
@@ -22,6 +24,7 @@ func newConfig(
 	userService user.Service,
 	serverService server.Service,
 	peerService peer.Service,
+	backendService backend.Service,
 	manageService manage.Service,
 ) resolver.Config {
 	return resolver.Config{
@@ -30,16 +33,19 @@ func newConfig(
 				peerService,
 				serverService,
 				userService,
+				backendService,
 				manageService,
 			),
 			mutationResolver: mutation.NewMutationResolver(
 				authService,
+				backendService,
 				manageService,
 			),
 			subscriptionResolver: sybscriptionResolver.NewSubscriptionResolver(
 				userService,
 				serverService,
 				peerService,
+				backendService,
 			),
 			userResolver: userResolver.NewUserResolver(
 				serverService,
@@ -49,6 +55,12 @@ func newConfig(
 				peerService,
 			),
 			peerResolver: peerResolver.NewPeerResolver(
+				manageService,
+			),
+			backendResolver: backendResolver.NewBackendResolver(
+				backendService,
+				serverService,
+				peerService,
 				manageService,
 			),
 		},

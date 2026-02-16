@@ -9,6 +9,7 @@ import (
 	"github.com/graph-gophers/dataloader/v7"
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
@@ -16,9 +17,10 @@ import (
 )
 
 var (
-	userLoaderCtxKey   = &contextKey{"userLoader"}
-	serverLoaderCtxKey = &contextKey{"serverLoader"}
-	peerLoaderCtxKey   = &contextKey{"peerLoader"}
+	userLoaderCtxKey    = &contextKey{"userLoader"}
+	serverLoaderCtxKey  = &contextKey{"serverLoader"}
+	peerLoaderCtxKey    = &contextKey{"peerLoader"}
+	backendLoaderCtxKey = &contextKey{"backendLoader"}
 )
 
 func NewDataLoaderMiddleware(
@@ -27,6 +29,7 @@ func NewDataLoaderMiddleware(
 	userService user.Service,
 	serverService server.Service,
 	peerService peer.Service,
+	backendService backend.Service,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -35,6 +38,7 @@ func NewDataLoaderMiddleware(
 			ctx = context.WithValue(ctx, userLoaderCtxKey, newBatchedLoader(userBatchFn(userService), wait, maxBatch))
 			ctx = context.WithValue(ctx, serverLoaderCtxKey, newBatchedLoader(serverBatchFn(serverService), wait, maxBatch))
 			ctx = context.WithValue(ctx, peerLoaderCtxKey, newBatchedLoader(peerBatchFn(peerService), wait, maxBatch))
+			ctx = context.WithValue(ctx, backendLoaderCtxKey, newBatchedLoader(backendBatchFn(backendService), wait, maxBatch))
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -51,6 +55,10 @@ func ServerLoaderFromContext(ctx context.Context) (*dataloader.Loader[string, *m
 
 func PeerLoaderFromContext(ctx context.Context) (*dataloader.Loader[string, *model.Peer], error) {
 	return dataLoaderFromContext[string, *model.Peer](ctx, peerLoaderCtxKey)
+}
+
+func BackendLoaderFromContext(ctx context.Context) (*dataloader.Loader[string, *model.Backend], error) {
+	return dataLoaderFromContext[string, *model.Backend](ctx, backendLoaderCtxKey)
 }
 
 func dataLoaderFromContext[K comparable, T any](ctx context.Context, contextKey *contextKey) (*dataloader.Loader[K, T], error) {
@@ -86,6 +94,15 @@ func peerBatchFn(peerService peer.Service) func(context.Context, []string) []*da
 			Ids: ids,
 		})
 		return resultAndErrorToDataloaderResult(len(ids), adapt.Array(peers, model.ToPeer), err)
+	}
+}
+
+func backendBatchFn(backendService backend.Service) func(context.Context, []string) []*dataloader.Result[*model.Backend] {
+	return func(ctx context.Context, ids []string) []*dataloader.Result[*model.Backend] {
+		backends, err := backendService.FindBackends(ctx, &backend.FindOptions{
+			Ids: ids,
+		})
+		return resultAndErrorToDataloaderResult(len(ids), adapt.Array(backends, model.ToBackend), err)
 	}
 }
 

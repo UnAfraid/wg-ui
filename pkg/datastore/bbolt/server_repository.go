@@ -83,6 +83,14 @@ func (r *serverRepository) FindAll(ctx context.Context, options *server.FindOpti
 				}
 			}
 
+			if options.BackendId != nil {
+				optionsLen++
+				if s.BackendId == *options.BackendId {
+					servers = append(servers, s)
+					continue
+				}
+			}
+
 			if options.Enabled != nil {
 				optionsLen++
 				if s.Enabled == *options.Enabled {
@@ -169,6 +177,10 @@ func (r *serverRepository) Update(ctx context.Context, s *server.Server, fieldMa
 
 		if fieldMask.Description {
 			updatedServer.Description = s.Description
+		}
+
+		if fieldMask.BackendId {
+			updatedServer.BackendId = s.BackendId
 		}
 
 		if fieldMask.Enabled {

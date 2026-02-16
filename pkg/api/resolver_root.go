@@ -11,6 +11,7 @@ type resolverRoot struct {
 	userResolver         resolver.UserResolver
 	serverResolver       resolver.ServerResolver
 	peerResolver         resolver.PeerResolver
+	backendResolver      resolver.BackendResolver
 }
 
 func (r *resolverRoot) Query() resolver.QueryResolver {
@@ -35,4 +36,8 @@ func (r *resolverRoot) Server() resolver.ServerResolver {
 
 func (r *resolverRoot) Peer() resolver.PeerResolver {
 	return r.peerResolver
+}
+
+func (r *resolverRoot) Backend() resolver.BackendResolver {
+	return r.backendResolver
 }

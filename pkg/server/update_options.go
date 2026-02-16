@@ -2,6 +2,7 @@ package server
 
 type UpdateOptions struct {
 	Description  string
+	BackendId    string
 	Enabled      bool
 	Running      bool
 	PrivateKey   string

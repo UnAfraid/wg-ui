@@ -20,6 +20,10 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
 )
 
+func init() {
+	backend.Register("linux", NewLinuxBackend, true)
+}
+
 type linuxBackend struct {
 	client *wgctrl.Client
 }
@@ -164,6 +168,10 @@ func (lb *linuxBackend) configureWireguard(name string, privateKey string, liste
 
 func (lb *linuxBackend) Close(_ context.Context) error {
 	return lb.client.Close()
+}
+
+func (lb *linuxBackend) Supported() bool {
+	return true
 }
 
 func computePeers(device *wgtypes.Device, peerOptions []*backend.PeerOptions) ([]wgtypes.PeerConfig, error) {

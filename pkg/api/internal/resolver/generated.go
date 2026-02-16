@@ -39,6 +39,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Backend() BackendResolver
 	Mutation() MutationResolver
 	Peer() PeerResolver
 	Query() QueryResolver
@@ -52,6 +53,34 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Backend struct {
+		CreateUser     func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		DeleteUser     func(childComplexity int) int
+		DeletedAt      func(childComplexity int) int
+		Description    func(childComplexity int) int
+		Enabled        func(childComplexity int) int
+		ForeignServers func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Name           func(childComplexity int) int
+		Peers          func(childComplexity int, query *string) int
+		Servers        func(childComplexity int, query *string, enabled *bool) int
+		Supported      func(childComplexity int) int
+		URL            func(childComplexity int) int
+		UpdateUser     func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
+	}
+
+	BackendChangedEvent struct {
+		Action  func(childComplexity int) int
+		Backend func(childComplexity int) int
+	}
+
+	CreateBackendPayload struct {
+		Backend          func(childComplexity int) int
+		ClientMutationID func(childComplexity int) int
+	}
+
 	CreatePeerPayload struct {
 		ClientMutationID func(childComplexity int) int
 		Peer             func(childComplexity int) int
@@ -65,6 +94,11 @@ type ComplexityRoot struct {
 	CreateUserPayload struct {
 		ClientMutationID func(childComplexity int) int
 		User             func(childComplexity int) int
+	}
+
+	DeleteBackendPayload struct {
+		Backend          func(childComplexity int) int
+		ClientMutationID func(childComplexity int) int
 	}
 
 	DeletePeerPayload struct {
@@ -121,9 +155,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		CreateBackend        func(childComplexity int, input model.CreateBackendInput) int
 		CreatePeer           func(childComplexity int, input model.CreatePeerInput) int
 		CreateServer         func(childComplexity int, input model.CreateServerInput) int
 		CreateUser           func(childComplexity int, input model.CreateUserInput) int
+		DeleteBackend        func(childComplexity int, input model.DeleteBackendInput) int
 		DeletePeer           func(childComplexity int, input model.DeletePeerInput) int
 		DeleteServer         func(childComplexity int, input model.DeleteServerInput) int
 		DeleteUser           func(childComplexity int, input model.DeleteUserInput) int
@@ -132,6 +168,7 @@ type ComplexityRoot struct {
 		SignIn               func(childComplexity int, input model.SignInInput) int
 		StartServer          func(childComplexity int, input model.StartServerInput) int
 		StopServer           func(childComplexity int, input model.StopServerInput) int
+		UpdateBackend        func(childComplexity int, input model.UpdateBackendInput) int
 		UpdatePeer           func(childComplexity int, input model.UpdatePeerInput) int
 		UpdateServer         func(childComplexity int, input model.UpdateServerInput) int
 		UpdateUser           func(childComplexity int, input model.UpdateUserInput) int
@@ -139,6 +176,7 @@ type ComplexityRoot struct {
 
 	Peer struct {
 		AllowedIPs          func(childComplexity int) int
+		Backend             func(childComplexity int) int
 		CreateUser          func(childComplexity int) int
 		CreatedAt           func(childComplexity int) int
 		DeleteUser          func(childComplexity int) int
@@ -177,6 +215,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Backends       func(childComplexity int, typeArg *string) int
 		ForeignServers func(childComplexity int) int
 		Node           func(childComplexity int, id model.ID) int
 		Nodes          func(childComplexity int, ids []*model.ID) int
@@ -188,6 +227,7 @@ type ComplexityRoot struct {
 
 	Server struct {
 		Address        func(childComplexity int) int
+		Backend        func(childComplexity int) int
 		CreateUser     func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
 		DNS            func(childComplexity int) int
@@ -267,10 +307,16 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		NodeChanged   func(childComplexity int) int
-		PeerChanged   func(childComplexity int) int
-		ServerChanged func(childComplexity int) int
-		UserChanged   func(childComplexity int) int
+		BackendChanged func(childComplexity int, id *model.ID) int
+		NodeChanged    func(childComplexity int) int
+		PeerChanged    func(childComplexity int) int
+		ServerChanged  func(childComplexity int) int
+		UserChanged    func(childComplexity int) int
+	}
+
+	UpdateBackendPayload struct {
+		Backend          func(childComplexity int) int
+		ClientMutationID func(childComplexity int) int
 	}
 
 	UpdatePeerPayload struct {
@@ -303,6 +349,15 @@ type ComplexityRoot struct {
 	}
 }
 
+type BackendResolver interface {
+	Supported(ctx context.Context, obj *model.Backend) (bool, error)
+	Servers(ctx context.Context, obj *model.Backend, query *string, enabled *bool) ([]*model.Server, error)
+	Peers(ctx context.Context, obj *model.Backend, query *string) ([]*model.Peer, error)
+	ForeignServers(ctx context.Context, obj *model.Backend) ([]*model.ForeignServer, error)
+	CreateUser(ctx context.Context, obj *model.Backend) (*model.User, error)
+	UpdateUser(ctx context.Context, obj *model.Backend) (*model.User, error)
+	DeleteUser(ctx context.Context, obj *model.Backend) (*model.User, error)
+}
 type MutationResolver interface {
 	SignIn(ctx context.Context, input model.SignInInput) (*model.SignInPayload, error)
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.CreateUserPayload, error)
@@ -318,9 +373,13 @@ type MutationResolver interface {
 	UpdatePeer(ctx context.Context, input model.UpdatePeerInput) (*model.UpdatePeerPayload, error)
 	DeletePeer(ctx context.Context, input model.DeletePeerInput) (*model.DeletePeerPayload, error)
 	ImportForeignServer(ctx context.Context, input model.ImportForeignServerInput) (*model.ImportForeignServerPayload, error)
+	CreateBackend(ctx context.Context, input model.CreateBackendInput) (*model.CreateBackendPayload, error)
+	UpdateBackend(ctx context.Context, input model.UpdateBackendInput) (*model.UpdateBackendPayload, error)
+	DeleteBackend(ctx context.Context, input model.DeleteBackendInput) (*model.DeleteBackendPayload, error)
 }
 type PeerResolver interface {
 	Server(ctx context.Context, obj *model.Peer) (*model.Server, error)
+	Backend(ctx context.Context, obj *model.Peer) (*model.Backend, error)
 
 	Stats(ctx context.Context, obj *model.Peer) (*model.PeerStats, error)
 	CreateUser(ctx context.Context, obj *model.Peer) (*model.User, error)
@@ -332,11 +391,14 @@ type QueryResolver interface {
 	Node(ctx context.Context, id model.ID) (model.Node, error)
 	Nodes(ctx context.Context, ids []*model.ID) ([]model.Node, error)
 	Users(ctx context.Context, query *string) ([]*model.User, error)
+	Backends(ctx context.Context, typeArg *string) ([]*model.Backend, error)
 	Servers(ctx context.Context, query *string, enabled *bool) ([]*model.Server, error)
 	Peers(ctx context.Context, query *string) ([]*model.Peer, error)
 	ForeignServers(ctx context.Context) ([]*model.ForeignServer, error)
 }
 type ServerResolver interface {
+	Backend(ctx context.Context, obj *model.Server) (*model.Backend, error)
+
 	Peers(ctx context.Context, obj *model.Server) ([]*model.Peer, error)
 
 	CreateUser(ctx context.Context, obj *model.Server) (*model.User, error)
@@ -344,6 +406,7 @@ type ServerResolver interface {
 	DeleteUser(ctx context.Context, obj *model.Server) (*model.User, error)
 }
 type SubscriptionResolver interface {
+	BackendChanged(ctx context.Context, id *model.ID) (<-chan *model.BackendChangedEvent, error)
 	UserChanged(ctx context.Context) (<-chan *model.UserChangedEvent, error)
 	ServerChanged(ctx context.Context) (<-chan *model.ServerChangedEvent, error)
 	PeerChanged(ctx context.Context) (<-chan *model.PeerChangedEvent, error)
@@ -372,6 +435,133 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Backend.createUser":
+		if e.complexity.Backend.CreateUser == nil {
+			break
+		}
+
+		return e.complexity.Backend.CreateUser(childComplexity), true
+	case "Backend.createdAt":
+		if e.complexity.Backend.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Backend.CreatedAt(childComplexity), true
+	case "Backend.deleteUser":
+		if e.complexity.Backend.DeleteUser == nil {
+			break
+		}
+
+		return e.complexity.Backend.DeleteUser(childComplexity), true
+	case "Backend.deletedAt":
+		if e.complexity.Backend.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.Backend.DeletedAt(childComplexity), true
+	case "Backend.description":
+		if e.complexity.Backend.Description == nil {
+			break
+		}
+
+		return e.complexity.Backend.Description(childComplexity), true
+	case "Backend.enabled":
+		if e.complexity.Backend.Enabled == nil {
+			break
+		}
+
+		return e.complexity.Backend.Enabled(childComplexity), true
+	case "Backend.foreignServers":
+		if e.complexity.Backend.ForeignServers == nil {
+			break
+		}
+
+		return e.complexity.Backend.ForeignServers(childComplexity), true
+	case "Backend.id":
+		if e.complexity.Backend.ID == nil {
+			break
+		}
+
+		return e.complexity.Backend.ID(childComplexity), true
+	case "Backend.name":
+		if e.complexity.Backend.Name == nil {
+			break
+		}
+
+		return e.complexity.Backend.Name(childComplexity), true
+	case "Backend.peers":
+		if e.complexity.Backend.Peers == nil {
+			break
+		}
+
+		args, err := ec.field_Backend_peers_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Backend.Peers(childComplexity, args["query"].(*string)), true
+	case "Backend.servers":
+		if e.complexity.Backend.Servers == nil {
+			break
+		}
+
+		args, err := ec.field_Backend_servers_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Backend.Servers(childComplexity, args["query"].(*string), args["enabled"].(*bool)), true
+	case "Backend.supported":
+		if e.complexity.Backend.Supported == nil {
+			break
+		}
+
+		return e.complexity.Backend.Supported(childComplexity), true
+	case "Backend.url":
+		if e.complexity.Backend.URL == nil {
+			break
+		}
+
+		return e.complexity.Backend.URL(childComplexity), true
+	case "Backend.updateUser":
+		if e.complexity.Backend.UpdateUser == nil {
+			break
+		}
+
+		return e.complexity.Backend.UpdateUser(childComplexity), true
+	case "Backend.updatedAt":
+		if e.complexity.Backend.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Backend.UpdatedAt(childComplexity), true
+
+	case "BackendChangedEvent.action":
+		if e.complexity.BackendChangedEvent.Action == nil {
+			break
+		}
+
+		return e.complexity.BackendChangedEvent.Action(childComplexity), true
+	case "BackendChangedEvent.backend":
+		if e.complexity.BackendChangedEvent.Backend == nil {
+			break
+		}
+
+		return e.complexity.BackendChangedEvent.Backend(childComplexity), true
+
+	case "CreateBackendPayload.backend":
+		if e.complexity.CreateBackendPayload.Backend == nil {
+			break
+		}
+
+		return e.complexity.CreateBackendPayload.Backend(childComplexity), true
+	case "CreateBackendPayload.clientMutationId":
+		if e.complexity.CreateBackendPayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.CreateBackendPayload.ClientMutationID(childComplexity), true
 
 	case "CreatePeerPayload.clientMutationId":
 		if e.complexity.CreatePeerPayload.ClientMutationID == nil {
@@ -411,6 +601,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.CreateUserPayload.User(childComplexity), true
+
+	case "DeleteBackendPayload.backend":
+		if e.complexity.DeleteBackendPayload.Backend == nil {
+			break
+		}
+
+		return e.complexity.DeleteBackendPayload.Backend(childComplexity), true
+	case "DeleteBackendPayload.clientMutationId":
+		if e.complexity.DeleteBackendPayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.DeleteBackendPayload.ClientMutationID(childComplexity), true
 
 	case "DeletePeerPayload.clientMutationId":
 		if e.complexity.DeletePeerPayload.ClientMutationID == nil {
@@ -594,6 +797,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ImportForeignServerPayload.Server(childComplexity), true
 
+	case "Mutation.createBackend":
+		if e.complexity.Mutation.CreateBackend == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createBackend_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateBackend(childComplexity, args["input"].(model.CreateBackendInput)), true
 	case "Mutation.createPeer":
 		if e.complexity.Mutation.CreatePeer == nil {
 			break
@@ -627,6 +841,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(model.CreateUserInput)), true
+	case "Mutation.deleteBackend":
+		if e.complexity.Mutation.DeleteBackend == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteBackend_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteBackend(childComplexity, args["input"].(model.DeleteBackendInput)), true
 	case "Mutation.deletePeer":
 		if e.complexity.Mutation.DeletePeer == nil {
 			break
@@ -715,6 +940,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.StopServer(childComplexity, args["input"].(model.StopServerInput)), true
+	case "Mutation.updateBackend":
+		if e.complexity.Mutation.UpdateBackend == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateBackend_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateBackend(childComplexity, args["input"].(model.UpdateBackendInput)), true
 	case "Mutation.updatePeer":
 		if e.complexity.Mutation.UpdatePeer == nil {
 			break
@@ -755,6 +991,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Peer.AllowedIPs(childComplexity), true
+	case "Peer.backend":
+		if e.complexity.Peer.Backend == nil {
+			break
+		}
+
+		return e.complexity.Peer.Backend(childComplexity), true
 	case "Peer.createUser":
 		if e.complexity.Peer.CreateUser == nil {
 			break
@@ -915,6 +1157,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PeerStats.TransmitBytes(childComplexity), true
 
+	case "Query.backends":
+		if e.complexity.Query.Backends == nil {
+			break
+		}
+
+		args, err := ec.field_Query_backends_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Backends(childComplexity, args["type"].(*string)), true
 	case "Query.foreignServers":
 		if e.complexity.Query.ForeignServers == nil {
 			break
@@ -989,6 +1242,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Server.Address(childComplexity), true
+	case "Server.backend":
+		if e.complexity.Server.Backend == nil {
+			break
+		}
+
+		return e.complexity.Server.Backend(childComplexity), true
 	case "Server.createUser":
 		if e.complexity.Server.CreateUser == nil {
 			break
@@ -1344,6 +1603,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.StopServerPayload.Server(childComplexity), true
 
+	case "Subscription.backendChanged":
+		if e.complexity.Subscription.BackendChanged == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_backendChanged_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.BackendChanged(childComplexity, args["id"].(*model.ID)), true
 	case "Subscription.nodeChanged":
 		if e.complexity.Subscription.NodeChanged == nil {
 			break
@@ -1368,6 +1638,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Subscription.UserChanged(childComplexity), true
+
+	case "UpdateBackendPayload.backend":
+		if e.complexity.UpdateBackendPayload.Backend == nil {
+			break
+		}
+
+		return e.complexity.UpdateBackendPayload.Backend(childComplexity), true
+	case "UpdateBackendPayload.clientMutationId":
+		if e.complexity.UpdateBackendPayload.ClientMutationID == nil {
+			break
+		}
+
+		return e.complexity.UpdateBackendPayload.ClientMutationID(childComplexity), true
 
 	case "UpdatePeerPayload.clientMutationId":
 		if e.complexity.UpdatePeerPayload.ClientMutationID == nil {
@@ -1466,9 +1749,11 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCreateBackendInput,
 		ec.unmarshalInputCreatePeerInput,
 		ec.unmarshalInputCreateServerInput,
 		ec.unmarshalInputCreateUserInput,
+		ec.unmarshalInputDeleteBackendInput,
 		ec.unmarshalInputDeletePeerInput,
 		ec.unmarshalInputDeleteServerInput,
 		ec.unmarshalInputDeleteUserInput,
@@ -1479,6 +1764,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSignInInput,
 		ec.unmarshalInputStartServerInput,
 		ec.unmarshalInputStopServerInput,
+		ec.unmarshalInputUpdateBackendInput,
 		ec.unmarshalInputUpdatePeerInput,
 		ec.unmarshalInputUpdateServerInput,
 		ec.unmarshalInputUpdateUserInput,
@@ -1621,6 +1907,75 @@ var sources = []*ast.Source{
     expiresIn: Int!
 }
 `, BuiltIn: false},
+	{Name: "../../../../schema/backend/backend.graphql", Input: `type Backend implements Node {
+    id: ID!
+    name: String!
+    description: String!
+    url: String!
+    enabled: Boolean!
+    supported: Boolean! @goField(forceResolver: true)
+    """
+    Use this query to find servers on this backend
+    """
+    servers(query: String, enabled: Boolean): [Server!]! @goField(forceResolver: true) @authenticated
+    """
+    Use this query to find peers on this backend
+    """
+    peers(query: String): [Peer!]! @goField(forceResolver: true) @authenticated
+    """
+    Use this query to find foreign servers on this backend
+    """
+    foreignServers: [ForeignServer!]! @goField(forceResolver: true) @authenticated
+    createUser: User @goField(forceResolver: true) @authenticated
+    updateUser: User @goField(forceResolver: true) @authenticated
+    deleteUser: User @goField(forceResolver: true) @authenticated
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    deletedAt: DateTime
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/backend/backend_changed_event.graphql", Input: `type BackendChangedEvent {
+    action: String!
+    backend: Backend!
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/backend/create_backend_input.graphql", Input: `input CreateBackendInput {
+    clientMutationId: String
+    name: String!
+    description: String
+    url: String!
+    enabled: Boolean
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/backend/create_backend_payload.graphql", Input: `type CreateBackendPayload {
+    clientMutationId: String
+    backend: Backend!
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/backend/delete_backend_input.graphql", Input: `input DeleteBackendInput {
+    clientMutationId: String
+    id: ID!
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/backend/delete_backend_payload.graphql", Input: `type DeleteBackendPayload {
+    clientMutationId: String
+    backend: Backend!
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/backend/update_backend_input.graphql", Input: `input UpdateBackendInput {
+    clientMutationId: String
+    id: ID!
+    name: String
+    description: String
+    url: String
+    enabled: Boolean
+}
+`, BuiltIn: false},
+	{Name: "../../../../schema/backend/update_backend_payload.graphql", Input: `type UpdateBackendPayload {
+    clientMutationId: String
+    backend: Backend!
+}
+`, BuiltIn: false},
 	{Name: "../../../../schema/directive/authenticated.graphql", Input: `directive @authenticated on FIELD_DEFINITION
 `, BuiltIn: false},
 	{Name: "../../../../schema/directive/go_field.graphql", Input: `directive @goField(
@@ -1668,6 +2023,13 @@ var sources = []*ast.Source{
 `, BuiltIn: false},
 	{Name: "../../../../schema/foreign/import_foreign_server_input.graphql", Input: `input ImportForeignServerInput {
     clientMutationId: String
+    """
+    The ID of the backend to import the foreign server from
+    """
+    backendId: ID!
+    """
+    The name of the foreign server interface to import
+    """
     name: String!
 }
 `, BuiltIn: false},
@@ -1747,6 +2109,21 @@ var sources = []*ast.Source{
     Use this mutation to import a foreign server
     """
     importForeignServer(input: ImportForeignServerInput!): ImportForeignServerPayload! @authenticated
+
+    """
+    Use this mutation to create a backend
+    """
+    createBackend(input: CreateBackendInput!): CreateBackendPayload! @authenticated
+
+    """
+    Use this mutation to update a backend
+    """
+    updateBackend(input: UpdateBackendInput!): UpdateBackendPayload! @authenticated
+
+    """
+    Use this mutation to delete a backend
+    """
+    deleteBackend(input: DeleteBackendInput!): DeleteBackendPayload! @authenticated
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/node/node.graphql", Input: `interface Node {
@@ -1786,6 +2163,7 @@ var sources = []*ast.Source{
 	{Name: "../../../../schema/peer/peer.graphql", Input: `type Peer implements Node {
     id: ID!
     server: Server! @goField(forceResolver: true) @authenticated
+    backend: Backend! @goField(forceResolver: true) @authenticated
     name: String!
     description: String!
     publicKey: String!
@@ -1867,6 +2245,11 @@ var sources = []*ast.Source{
     users(query: String): [User!]! @authenticated
 
     """
+    Use this query to find backends
+    """
+    backends(type: String): [Backend!]! @authenticated
+
+    """
     Use this query to find servers
     """
     servers(query: String, enabled: Boolean): [Server!]! @authenticated
@@ -1886,6 +2269,7 @@ var sources = []*ast.Source{
     clientMutationId: String
     name: String!
     description: String
+    backendId: ID!
     enabled: Boolean
     privateKey: String
     publicKey: String @deprecated(reason: "No longer supported, the public key will be derived from private key")
@@ -1925,6 +2309,7 @@ var sources = []*ast.Source{
     id: ID!
     name: String!
     description: String!
+    backend: Backend! @goField(forceResolver: true) @authenticated
     enabled: Boolean!
     running: Boolean!
     publicKey: String!
@@ -2015,6 +2400,7 @@ var sources = []*ast.Source{
     clientMutationId: String
     id: ID!
     description: String
+    backendId: ID
     enabled: Boolean
     publicKey: String @deprecated(reason: "No longer supported, the public key will be derived from private key")
     privateKey: String
@@ -2032,6 +2418,7 @@ var sources = []*ast.Source{
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/subscription.graphql", Input: `type Subscription {
+    backendChanged(id: ID): BackendChangedEvent! @authenticated
     userChanged: UserChangedEvent! @authenticated
     serverChanged: ServerChangedEvent! @authenticated
     peerChanged: PeerChangedEvent! @authenticated
@@ -2097,6 +2484,44 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Backend_peers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["query"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Backend_servers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["query"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "enabled", ec.unmarshalOBoolean2ᚖbool)
+	if err != nil {
+		return nil, err
+	}
+	args["enabled"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createBackend_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createPeer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2123,6 +2548,17 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateUserInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteBackend_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNDeleteBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendInput)
 	if err != nil {
 		return nil, err
 	}
@@ -2218,6 +2654,17 @@ func (ec *executionContext) field_Mutation_stopServer_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateBackend_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updatePeer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2259,6 +2706,17 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_backends_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "type", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["type"] = arg0
 	return args, nil
 }
 
@@ -2322,6 +2780,17 @@ func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Subscription_backendChanged_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalOID2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field___Directive_args_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2373,6 +2842,863 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Backend_id(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_name(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_description(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_url(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_url,
+		func(ctx context.Context) (any, error) {
+			return obj.URL, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_enabled(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_supported(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_supported,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Backend().Supported(ctx, obj)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_supported(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_servers(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_servers,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Backend().Servers(ctx, obj, fc.Args["query"].(*string), fc.Args["enabled"].(*bool))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal []*model.Server
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_servers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Server_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Server_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Server_enabled(ctx, field)
+			case "running":
+				return ec.fieldContext_Server_running(ctx, field)
+			case "publicKey":
+				return ec.fieldContext_Server_publicKey(ctx, field)
+			case "listenPort":
+				return ec.fieldContext_Server_listenPort(ctx, field)
+			case "firewallMark":
+				return ec.fieldContext_Server_firewallMark(ctx, field)
+			case "address":
+				return ec.fieldContext_Server_address(ctx, field)
+			case "dns":
+				return ec.fieldContext_Server_dns(ctx, field)
+			case "mtu":
+				return ec.fieldContext_Server_mtu(ctx, field)
+			case "hooks":
+				return ec.fieldContext_Server_hooks(ctx, field)
+			case "peers":
+				return ec.fieldContext_Server_peers(ctx, field)
+			case "interfaceStats":
+				return ec.fieldContext_Server_interfaceStats(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Server_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Server_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Server_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Server_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Server_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Server_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Backend_servers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_peers(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_peers,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Backend().Peers(ctx, obj, fc.Args["query"].(*string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal []*model.Peer
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_peers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Peer_id(ctx, field)
+			case "server":
+				return ec.fieldContext_Peer_server(ctx, field)
+			case "backend":
+				return ec.fieldContext_Peer_backend(ctx, field)
+			case "name":
+				return ec.fieldContext_Peer_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Peer_description(ctx, field)
+			case "publicKey":
+				return ec.fieldContext_Peer_publicKey(ctx, field)
+			case "allowedIPs":
+				return ec.fieldContext_Peer_allowedIPs(ctx, field)
+			case "endpoint":
+				return ec.fieldContext_Peer_endpoint(ctx, field)
+			case "presharedKey":
+				return ec.fieldContext_Peer_presharedKey(ctx, field)
+			case "persistentKeepalive":
+				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
+			case "hooks":
+				return ec.fieldContext_Peer_hooks(ctx, field)
+			case "stats":
+				return ec.fieldContext_Peer_stats(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Peer_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Peer_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Peer_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Peer_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Peer_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Peer_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Backend_peers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_foreignServers(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_foreignServers,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Backend().ForeignServers(ctx, obj)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal []*model.ForeignServer
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNForeignServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignServerᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_foreignServers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "foreignInterface":
+				return ec.fieldContext_ForeignServer_foreignInterface(ctx, field)
+			case "name":
+				return ec.fieldContext_ForeignServer_name(ctx, field)
+			case "type":
+				return ec.fieldContext_ForeignServer_type(ctx, field)
+			case "publicKey":
+				return ec.fieldContext_ForeignServer_publicKey(ctx, field)
+			case "listenPort":
+				return ec.fieldContext_ForeignServer_listenPort(ctx, field)
+			case "firewallMark":
+				return ec.fieldContext_ForeignServer_firewallMark(ctx, field)
+			case "peers":
+				return ec.fieldContext_ForeignServer_peers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ForeignServer", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_createUser(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_createUser,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Backend().CreateUser(ctx, obj)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.User
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_createUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "servers":
+				return ec.fieldContext_User_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_User_peers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_updateUser(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_updateUser,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Backend().UpdateUser(ctx, obj)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.User
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_updateUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "servers":
+				return ec.fieldContext_User_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_User_peers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_deleteUser(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_deleteUser,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Backend().DeleteUser(ctx, obj)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.User
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_deleteUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "servers":
+				return ec.fieldContext_User_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_User_peers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNDateTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DateTime does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNDateTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DateTime does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Backend_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Backend_deletedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.DeletedAt, nil
+		},
+		nil,
+		ec.marshalODateTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Backend_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Backend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DateTime does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BackendChangedEvent_action(ctx context.Context, field graphql.CollectedField, obj *model.BackendChangedEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BackendChangedEvent_action,
+		func(ctx context.Context) (any, error) {
+			return obj.Action, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BackendChangedEvent_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BackendChangedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BackendChangedEvent_backend(ctx context.Context, field graphql.CollectedField, obj *model.BackendChangedEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_BackendChangedEvent_backend,
+		func(ctx context.Context) (any, error) {
+			return obj.Backend, nil
+		},
+		nil,
+		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_BackendChangedEvent_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BackendChangedEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Backend_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Backend_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Backend_description(ctx, field)
+			case "url":
+				return ec.fieldContext_Backend_url(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Backend_enabled(ctx, field)
+			case "supported":
+				return ec.fieldContext_Backend_supported(ctx, field)
+			case "servers":
+				return ec.fieldContext_Backend_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_Backend_peers(ctx, field)
+			case "foreignServers":
+				return ec.fieldContext_Backend_foreignServers(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Backend_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Backend_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Backend_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Backend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Backend_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Backend_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CreateBackendPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.CreateBackendPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_CreateBackendPayload_clientMutationId,
+		func(ctx context.Context) (any, error) {
+			return obj.ClientMutationID, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_CreateBackendPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CreateBackendPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CreateBackendPayload_backend(ctx context.Context, field graphql.CollectedField, obj *model.CreateBackendPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_CreateBackendPayload_backend,
+		func(ctx context.Context) (any, error) {
+			return obj.Backend, nil
+		},
+		nil,
+		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_CreateBackendPayload_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CreateBackendPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Backend_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Backend_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Backend_description(ctx, field)
+			case "url":
+				return ec.fieldContext_Backend_url(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Backend_enabled(ctx, field)
+			case "supported":
+				return ec.fieldContext_Backend_supported(ctx, field)
+			case "servers":
+				return ec.fieldContext_Backend_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_Backend_peers(ctx, field)
+			case "foreignServers":
+				return ec.fieldContext_Backend_foreignServers(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Backend_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Backend_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Backend_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Backend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Backend_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Backend_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _CreatePeerPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.CreatePeerPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
@@ -2431,6 +3757,8 @@ func (ec *executionContext) fieldContext_CreatePeerPayload_peer(_ context.Contex
 				return ec.fieldContext_Peer_id(ctx, field)
 			case "server":
 				return ec.fieldContext_Peer_server(ctx, field)
+			case "backend":
+				return ec.fieldContext_Peer_backend(ctx, field)
 			case "name":
 				return ec.fieldContext_Peer_name(ctx, field)
 			case "description":
@@ -2527,6 +3855,8 @@ func (ec *executionContext) fieldContext_CreateServerPayload_server(_ context.Co
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -2640,6 +3970,96 @@ func (ec *executionContext) fieldContext_CreateUserPayload_user(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _DeleteBackendPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.DeleteBackendPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DeleteBackendPayload_clientMutationId,
+		func(ctx context.Context) (any, error) {
+			return obj.ClientMutationID, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DeleteBackendPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeleteBackendPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeleteBackendPayload_backend(ctx context.Context, field graphql.CollectedField, obj *model.DeleteBackendPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DeleteBackendPayload_backend,
+		func(ctx context.Context) (any, error) {
+			return obj.Backend, nil
+		},
+		nil,
+		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DeleteBackendPayload_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeleteBackendPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Backend_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Backend_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Backend_description(ctx, field)
+			case "url":
+				return ec.fieldContext_Backend_url(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Backend_enabled(ctx, field)
+			case "supported":
+				return ec.fieldContext_Backend_supported(ctx, field)
+			case "servers":
+				return ec.fieldContext_Backend_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_Backend_peers(ctx, field)
+			case "foreignServers":
+				return ec.fieldContext_Backend_foreignServers(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Backend_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Backend_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Backend_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Backend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Backend_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Backend_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeletePeerPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.DeletePeerPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2697,6 +4117,8 @@ func (ec *executionContext) fieldContext_DeletePeerPayload_peer(_ context.Contex
 				return ec.fieldContext_Peer_id(ctx, field)
 			case "server":
 				return ec.fieldContext_Peer_server(ctx, field)
+			case "backend":
+				return ec.fieldContext_Peer_backend(ctx, field)
 			case "name":
 				return ec.fieldContext_Peer_name(ctx, field)
 			case "description":
@@ -2793,6 +4215,8 @@ func (ec *executionContext) fieldContext_DeleteServerPayload_server(_ context.Co
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -3600,6 +5024,8 @@ func (ec *executionContext) fieldContext_ImportForeignServerPayload_server(_ con
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -4474,6 +5900,186 @@ func (ec *executionContext) fieldContext_Mutation_importForeignServer(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createBackend(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createBackend,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateBackend(ctx, fc.Args["input"].(model.CreateBackendInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.CreateBackendPayload
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNCreateBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createBackend(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "clientMutationId":
+				return ec.fieldContext_CreateBackendPayload_clientMutationId(ctx, field)
+			case "backend":
+				return ec.fieldContext_CreateBackendPayload_backend(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CreateBackendPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createBackend_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateBackend(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateBackend,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateBackend(ctx, fc.Args["input"].(model.UpdateBackendInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.UpdateBackendPayload
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNUpdateBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateBackend(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "clientMutationId":
+				return ec.fieldContext_UpdateBackendPayload_clientMutationId(ctx, field)
+			case "backend":
+				return ec.fieldContext_UpdateBackendPayload_backend(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpdateBackendPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateBackend_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteBackend(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteBackend,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeleteBackend(ctx, fc.Args["input"].(model.DeleteBackendInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.DeleteBackendPayload
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNDeleteBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteBackend(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "clientMutationId":
+				return ec.fieldContext_DeleteBackendPayload_clientMutationId(ctx, field)
+			case "backend":
+				return ec.fieldContext_DeleteBackendPayload_backend(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeleteBackendPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteBackend_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Peer_id(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -4546,6 +6152,8 @@ func (ec *executionContext) fieldContext_Peer_server(_ context.Context, field gr
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -4582,6 +6190,80 @@ func (ec *executionContext) fieldContext_Peer_server(_ context.Context, field gr
 				return ec.fieldContext_Server_deletedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Peer_backend(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Peer_backend,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Peer().Backend(ctx, obj)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.Backend
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Peer_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Peer",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Backend_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Backend_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Backend_description(ctx, field)
+			case "url":
+				return ec.fieldContext_Backend_url(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Backend_enabled(ctx, field)
+			case "supported":
+				return ec.fieldContext_Backend_supported(ctx, field)
+			case "servers":
+				return ec.fieldContext_Backend_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_Backend_peers(ctx, field)
+			case "foreignServers":
+				return ec.fieldContext_Backend_foreignServers(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Backend_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Backend_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Backend_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Backend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Backend_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Backend_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
 		},
 	}
 	return fc, nil
@@ -5164,6 +6846,8 @@ func (ec *executionContext) fieldContext_PeerChangedEvent_node(_ context.Context
 				return ec.fieldContext_Peer_id(ctx, field)
 			case "server":
 				return ec.fieldContext_Peer_server(ctx, field)
+			case "backend":
+				return ec.fieldContext_Peer_backend(ctx, field)
 			case "name":
 				return ec.fieldContext_Peer_name(ctx, field)
 			case "description":
@@ -5694,6 +7378,92 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_backends(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_backends,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Backends(ctx, fc.Args["type"].(*string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal []*model.Backend
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_backends(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Backend_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Backend_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Backend_description(ctx, field)
+			case "url":
+				return ec.fieldContext_Backend_url(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Backend_enabled(ctx, field)
+			case "supported":
+				return ec.fieldContext_Backend_supported(ctx, field)
+			case "servers":
+				return ec.fieldContext_Backend_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_Backend_peers(ctx, field)
+			case "foreignServers":
+				return ec.fieldContext_Backend_foreignServers(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Backend_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Backend_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Backend_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Backend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Backend_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Backend_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_backends_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_servers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -5738,6 +7508,8 @@ func (ec *executionContext) fieldContext_Query_servers(ctx context.Context, fiel
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -5832,6 +7604,8 @@ func (ec *executionContext) fieldContext_Query_peers(ctx context.Context, field 
 				return ec.fieldContext_Peer_id(ctx, field)
 			case "server":
 				return ec.fieldContext_Peer_server(ctx, field)
+			case "backend":
+				return ec.fieldContext_Peer_backend(ctx, field)
 			case "name":
 				return ec.fieldContext_Peer_name(ctx, field)
 			case "description":
@@ -6128,6 +7902,80 @@ func (ec *executionContext) fieldContext_Server_description(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Server_backend(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Server_backend,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Server().Backend(ctx, obj)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.Backend
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Server_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Server",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Backend_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Backend_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Backend_description(ctx, field)
+			case "url":
+				return ec.fieldContext_Backend_url(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Backend_enabled(ctx, field)
+			case "supported":
+				return ec.fieldContext_Backend_supported(ctx, field)
+			case "servers":
+				return ec.fieldContext_Backend_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_Backend_peers(ctx, field)
+			case "foreignServers":
+				return ec.fieldContext_Backend_foreignServers(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Backend_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Backend_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Backend_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Backend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Backend_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Backend_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
 		},
 	}
 	return fc, nil
@@ -6449,6 +8297,8 @@ func (ec *executionContext) fieldContext_Server_peers(_ context.Context, field g
 				return ec.fieldContext_Peer_id(ctx, field)
 			case "server":
 				return ec.fieldContext_Peer_server(ctx, field)
+			case "backend":
+				return ec.fieldContext_Peer_backend(ctx, field)
 			case "name":
 				return ec.fieldContext_Peer_name(ctx, field)
 			case "description":
@@ -6861,6 +8711,8 @@ func (ec *executionContext) fieldContext_ServerChangedEvent_node(_ context.Conte
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -7947,6 +9799,8 @@ func (ec *executionContext) fieldContext_StartServerPayload_server(_ context.Con
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -8047,6 +9901,8 @@ func (ec *executionContext) fieldContext_StopServerPayload_server(_ context.Cont
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -8084,6 +9940,66 @@ func (ec *executionContext) fieldContext_StopServerPayload_server(_ context.Cont
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_backendChanged(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	return graphql.ResolveFieldStream(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Subscription_backendChanged,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Subscription().BackendChanged(ctx, fc.Args["id"].(*model.ID))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.BackendChangedEvent
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNBackendChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendChangedEvent,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Subscription_backendChanged(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "action":
+				return ec.fieldContext_BackendChangedEvent_action(ctx, field)
+			case "backend":
+				return ec.fieldContext_BackendChangedEvent_backend(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BackendChangedEvent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_backendChanged_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -8274,6 +10190,96 @@ func (ec *executionContext) fieldContext_Subscription_nodeChanged(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _UpdateBackendPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.UpdateBackendPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpdateBackendPayload_clientMutationId,
+		func(ctx context.Context) (any, error) {
+			return obj.ClientMutationID, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpdateBackendPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdateBackendPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpdateBackendPayload_backend(ctx context.Context, field graphql.CollectedField, obj *model.UpdateBackendPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UpdateBackendPayload_backend,
+		func(ctx context.Context) (any, error) {
+			return obj.Backend, nil
+		},
+		nil,
+		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UpdateBackendPayload_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdateBackendPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Backend_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Backend_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Backend_description(ctx, field)
+			case "url":
+				return ec.fieldContext_Backend_url(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Backend_enabled(ctx, field)
+			case "supported":
+				return ec.fieldContext_Backend_supported(ctx, field)
+			case "servers":
+				return ec.fieldContext_Backend_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_Backend_peers(ctx, field)
+			case "foreignServers":
+				return ec.fieldContext_Backend_foreignServers(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Backend_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Backend_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Backend_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Backend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Backend_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Backend_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UpdatePeerPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.UpdatePeerPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8331,6 +10337,8 @@ func (ec *executionContext) fieldContext_UpdatePeerPayload_peer(_ context.Contex
 				return ec.fieldContext_Peer_id(ctx, field)
 			case "server":
 				return ec.fieldContext_Peer_server(ctx, field)
+			case "backend":
+				return ec.fieldContext_Peer_backend(ctx, field)
 			case "name":
 				return ec.fieldContext_Peer_name(ctx, field)
 			case "description":
@@ -8427,6 +10435,8 @@ func (ec *executionContext) fieldContext_UpdateServerPayload_server(_ context.Co
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -8641,6 +10651,8 @@ func (ec *executionContext) fieldContext_User_servers(_ context.Context, field g
 				return ec.fieldContext_Server_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Server_description(ctx, field)
+			case "backend":
+				return ec.fieldContext_Server_backend(ctx, field)
 			case "enabled":
 				return ec.fieldContext_Server_enabled(ctx, field)
 			case "running":
@@ -8723,6 +10735,8 @@ func (ec *executionContext) fieldContext_User_peers(_ context.Context, field gra
 				return ec.fieldContext_Peer_id(ctx, field)
 			case "server":
 				return ec.fieldContext_Peer_server(ctx, field)
+			case "backend":
+				return ec.fieldContext_Peer_backend(ctx, field)
 			case "name":
 				return ec.fieldContext_Peer_name(ctx, field)
 			case "description":
@@ -10336,6 +12350,61 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCreateBackendInput(ctx context.Context, obj any) (model.CreateBackendInput, error) {
+	var it model.CreateBackendInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"clientMutationId", "name", "description", "url", "enabled"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "clientMutationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientMutationID = graphql.OmittableOf(data)
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = graphql.OmittableOf(data)
+		case "url":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.URL = data
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = graphql.OmittableOf(data)
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, obj any) (model.CreatePeerInput, error) {
 	var it model.CreatePeerInput
 	asMap := map[string]any{}
@@ -10433,7 +12502,7 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"clientMutationId", "name", "description", "enabled", "privateKey", "publicKey", "listenPort", "firewallMark", "address", "dns", "mtu", "hooks"}
+	fieldsInOrder := [...]string{"clientMutationId", "name", "description", "backendId", "enabled", "privateKey", "publicKey", "listenPort", "firewallMark", "address", "dns", "mtu", "hooks"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10461,6 +12530,13 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 				return it, err
 			}
 			it.Description = graphql.OmittableOf(data)
+		case "backendId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backendId"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BackendID = data
 		case "enabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -10565,6 +12641,40 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.Password = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeleteBackendInput(ctx context.Context, obj any) (model.DeleteBackendInput, error) {
+	var it model.DeleteBackendInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"clientMutationId", "id"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "clientMutationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientMutationID = graphql.OmittableOf(data)
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
 		}
 	}
 
@@ -10707,7 +12817,7 @@ func (ec *executionContext) unmarshalInputImportForeignServerInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"clientMutationId", "name"}
+	fieldsInOrder := [...]string{"clientMutationId", "backendId", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10721,6 +12831,13 @@ func (ec *executionContext) unmarshalInputImportForeignServerInput(ctx context.C
 				return it, err
 			}
 			it.ClientMutationID = graphql.OmittableOf(data)
+		case "backendId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backendId"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BackendID = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -10953,6 +13070,68 @@ func (ec *executionContext) unmarshalInputStopServerInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateBackendInput(ctx context.Context, obj any) (model.UpdateBackendInput, error) {
+	var it model.UpdateBackendInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"clientMutationId", "id", "name", "description", "url", "enabled"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "clientMutationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientMutationId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientMutationID = graphql.OmittableOf(data)
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = graphql.OmittableOf(data)
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = graphql.OmittableOf(data)
+		case "url":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.URL = graphql.OmittableOf(data)
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = graphql.OmittableOf(data)
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, obj any) (model.UpdatePeerInput, error) {
 	var it model.UpdatePeerInput
 	asMap := map[string]any{}
@@ -11050,7 +13229,7 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"clientMutationId", "id", "description", "enabled", "publicKey", "privateKey", "listenPort", "firewallMark", "address", "dns", "mtu", "hooks"}
+	fieldsInOrder := [...]string{"clientMutationId", "id", "description", "backendId", "enabled", "publicKey", "privateKey", "listenPort", "firewallMark", "address", "dns", "mtu", "hooks"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11078,6 +13257,13 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 				return it, err
 			}
 			it.Description = graphql.OmittableOf(data)
+		case "backendId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backendId"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BackendID = graphql.OmittableOf(data)
 		case "enabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -11224,6 +13410,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Peer(ctx, sel, obj)
+	case model.Backend:
+		return ec._Backend(ctx, sel, &obj)
+	case *model.Backend:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Backend(ctx, sel, obj)
 	default:
 		if obj, ok := obj.(graphql.Marshaler); ok {
 			return obj
@@ -11270,6 +13463,405 @@ func (ec *executionContext) _NodeChangedEvent(ctx context.Context, sel ast.Selec
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var backendImplementors = []string{"Backend", "Node"}
+
+func (ec *executionContext) _Backend(ctx context.Context, sel ast.SelectionSet, obj *model.Backend) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, backendImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Backend")
+		case "id":
+			out.Values[i] = ec._Backend_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._Backend_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "description":
+			out.Values[i] = ec._Backend_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "url":
+			out.Values[i] = ec._Backend_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "enabled":
+			out.Values[i] = ec._Backend_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "supported":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Backend_supported(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "servers":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Backend_servers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "peers":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Backend_peers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "foreignServers":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Backend_foreignServers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Backend_createUser(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "updateUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Backend_updateUser(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "deleteUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Backend_deleteUser(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._Backend_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Backend_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "deletedAt":
+			out.Values[i] = ec._Backend_deletedAt(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var backendChangedEventImplementors = []string{"BackendChangedEvent"}
+
+func (ec *executionContext) _BackendChangedEvent(ctx context.Context, sel ast.SelectionSet, obj *model.BackendChangedEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, backendChangedEventImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BackendChangedEvent")
+		case "action":
+			out.Values[i] = ec._BackendChangedEvent_action(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "backend":
+			out.Values[i] = ec._BackendChangedEvent_backend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var createBackendPayloadImplementors = []string{"CreateBackendPayload"}
+
+func (ec *executionContext) _CreateBackendPayload(ctx context.Context, sel ast.SelectionSet, obj *model.CreateBackendPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, createBackendPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CreateBackendPayload")
+		case "clientMutationId":
+			out.Values[i] = ec._CreateBackendPayload_clientMutationId(ctx, field, obj)
+		case "backend":
+			out.Values[i] = ec._CreateBackendPayload_backend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var createPeerPayloadImplementors = []string{"CreatePeerPayload"}
 
@@ -11362,6 +13954,47 @@ func (ec *executionContext) _CreateUserPayload(ctx context.Context, sel ast.Sele
 			out.Values[i] = ec._CreateUserPayload_clientMutationId(ctx, field, obj)
 		case "user":
 			out.Values[i] = ec._CreateUserPayload_user(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var deleteBackendPayloadImplementors = []string{"DeleteBackendPayload"}
+
+func (ec *executionContext) _DeleteBackendPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteBackendPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deleteBackendPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeleteBackendPayload")
+		case "clientMutationId":
+			out.Values[i] = ec._DeleteBackendPayload_clientMutationId(ctx, field, obj)
+		case "backend":
+			out.Values[i] = ec._DeleteBackendPayload_backend(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -11883,6 +14516,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createBackend":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createBackend(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateBackend":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateBackend(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteBackend":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteBackend(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11932,6 +14586,42 @@ func (ec *executionContext) _Peer(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._Peer_server(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "backend":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Peer_backend(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -12409,6 +15099,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "backends":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_backends(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "servers":
 			field := field
 
@@ -12532,6 +15244,42 @@ func (ec *executionContext) _Server(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "backend":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Server_backend(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "enabled":
 			out.Values[i] = ec._Server_enabled(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13134,6 +15882,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 
 	switch fields[0].Name {
+	case "backendChanged":
+		return ec._Subscription_backendChanged(ctx, fields[0])
 	case "userChanged":
 		return ec._Subscription_userChanged(ctx, fields[0])
 	case "serverChanged":
@@ -13145,6 +15895,47 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
+}
+
+var updateBackendPayloadImplementors = []string{"UpdateBackendPayload"}
+
+func (ec *executionContext) _UpdateBackendPayload(ctx context.Context, sel ast.SelectionSet, obj *model.UpdateBackendPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, updateBackendPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpdateBackendPayload")
+		case "clientMutationId":
+			out.Values[i] = ec._UpdateBackendPayload_clientMutationId(ctx, field, obj)
+		case "backend":
+			out.Values[i] = ec._UpdateBackendPayload_backend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
 }
 
 var updatePeerPayloadImplementors = []string{"UpdatePeerPayload"}
@@ -13763,6 +16554,78 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNBackend2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx context.Context, sel ast.SelectionSet, v model.Backend) graphql.Marshaler {
+	return ec._Backend(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Backend) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx context.Context, sel ast.SelectionSet, v *model.Backend) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Backend(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBackendChangedEvent2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendChangedEvent(ctx context.Context, sel ast.SelectionSet, v model.BackendChangedEvent) graphql.Marshaler {
+	return ec._BackendChangedEvent(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBackendChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendChangedEvent(ctx context.Context, sel ast.SelectionSet, v *model.BackendChangedEvent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BackendChangedEvent(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -13777,6 +16640,25 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNCreateBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendInput(ctx context.Context, v any) (model.CreateBackendInput, error) {
+	res, err := ec.unmarshalInputCreateBackendInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCreateBackendPayload2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendPayload(ctx context.Context, sel ast.SelectionSet, v model.CreateBackendPayload) graphql.Marshaler {
+	return ec._CreateBackendPayload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCreateBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendPayload(ctx context.Context, sel ast.SelectionSet, v *model.CreateBackendPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CreateBackendPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNCreatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreatePeerInput(ctx context.Context, v any) (model.CreatePeerInput, error) {
@@ -13850,6 +16732,25 @@ func (ec *executionContext) marshalNDateTime2timeᚐTime(ctx context.Context, se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNDeleteBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendInput(ctx context.Context, v any) (model.DeleteBackendInput, error) {
+	res, err := ec.unmarshalInputDeleteBackendInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDeleteBackendPayload2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendPayload(ctx context.Context, sel ast.SelectionSet, v model.DeleteBackendPayload) graphql.Marshaler {
+	return ec._DeleteBackendPayload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDeleteBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendPayload(ctx context.Context, sel ast.SelectionSet, v *model.DeleteBackendPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeleteBackendPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNDeletePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeletePeerInput(ctx context.Context, v any) (model.DeletePeerInput, error) {
@@ -14460,6 +17361,25 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
+func (ec *executionContext) unmarshalNUpdateBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendInput(ctx context.Context, v any) (model.UpdateBackendInput, error) {
+	res, err := ec.unmarshalInputUpdateBackendInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpdateBackendPayload2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendPayload(ctx context.Context, sel ast.SelectionSet, v model.UpdateBackendPayload) graphql.Marshaler {
+	return ec._UpdateBackendPayload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUpdateBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendPayload(ctx context.Context, sel ast.SelectionSet, v *model.UpdateBackendPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UpdateBackendPayload(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNUpdatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdatePeerInput(ctx context.Context, v any) (model.UpdatePeerInput, error) {
 	res, err := ec.unmarshalInputUpdatePeerInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14888,6 +17808,22 @@ func (ec *executionContext) marshalODateTime2ᚖtimeᚐTime(ctx context.Context,
 	_ = ctx
 	res := model.MarshalDateTime(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx context.Context, v any) (*model.ID, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ID)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx context.Context, sel ast.SelectionSet, v *model.ID) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v any) (*int, error) {

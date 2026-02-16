@@ -1,0 +1,4 @@
+input DeleteBackendInput {
+    clientMutationId: String
+    id: ID!
+}

@@ -37,6 +37,24 @@ func (r *serverResolver) Peers(ctx context.Context, svc *model.Server) ([]*model
 	return adapt.Array(peers, model.ToPeer), nil
 }
 
+func (r *serverResolver) Backend(ctx context.Context, srv *model.Server) (*model.Backend, error) {
+	if srv.Backend == nil {
+		return nil, nil
+	}
+
+	backendId, err := srv.Backend.ID.String(model.IdKindBackend)
+	if err != nil {
+		return nil, err
+	}
+
+	backendLoader, err := handler.BackendLoaderFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return backendLoader.Load(ctx, backendId)()
+}
+
 func (r *serverResolver) CreateUser(ctx context.Context, srv *model.Server) (*model.User, error) {
 	if srv.CreateUser == nil {
 		return nil, nil

@@ -2,6 +2,7 @@ type Server implements Node {
     id: ID!
     name: String!
     description: String!
+    backend: Backend! @goField(forceResolver: true) @authenticated
     enabled: Boolean!
     running: Boolean!
     publicKey: String!

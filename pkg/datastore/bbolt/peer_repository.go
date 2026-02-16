@@ -92,6 +92,14 @@ func (r *peerRepository) FindAll(ctx context.Context, options *peer.FindOptions)
 				}
 			}
 
+			if len(options.ServerIds) != 0 {
+				optionsLen++
+				if slices.Contains(options.ServerIds, p.ServerId) {
+					peers = append(peers, p)
+					continue
+				}
+			}
+
 			if options.CreateUserId != nil {
 				optionsLen++
 				if p.CreateUserId == *options.CreateUserId {

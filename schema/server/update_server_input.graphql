@@ -2,6 +2,7 @@ input UpdateServerInput {
     clientMutationId: String
     id: ID!
     description: String
+    backendId: ID
     enabled: Boolean
     publicKey: String @deprecated(reason: "No longer supported, the public key will be derived from private key")
     privateKey: String

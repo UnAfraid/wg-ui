@@ -1,0 +1,4 @@
+type BackendChangedEvent {
+    action: String!
+    backend: Backend!
+}

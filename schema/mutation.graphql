@@ -69,4 +69,19 @@ type Mutation {
     Use this mutation to import a foreign server
     """
     importForeignServer(input: ImportForeignServerInput!): ImportForeignServerPayload! @authenticated
+
+    """
+    Use this mutation to create a backend
+    """
+    createBackend(input: CreateBackendInput!): CreateBackendPayload! @authenticated
+
+    """
+    Use this mutation to update a backend
+    """
+    updateBackend(input: UpdateBackendInput!): UpdateBackendPayload! @authenticated
+
+    """
+    Use this mutation to delete a backend
+    """
+    deleteBackend(input: DeleteBackendInput!): DeleteBackendPayload! @authenticated
 }

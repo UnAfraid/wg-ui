@@ -1,6 +1,7 @@
 type Peer implements Node {
     id: ID!
     server: Server! @goField(forceResolver: true) @authenticated
+    backend: Backend! @goField(forceResolver: true) @authenticated
     name: String!
     description: String!
     publicKey: String!
