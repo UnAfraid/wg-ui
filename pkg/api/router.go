@@ -49,6 +49,7 @@ func NewRouter(
 		AllowedHeaders:      []string{"*"},
 		AllowCredentials:    conf.CorsAllowCredentials,
 		AllowPrivateNetwork: conf.CorsAllowPrivateNetwork,
+		Debug:               true,
 	})
 
 	executableSchemaConfig := newConfig(
@@ -92,7 +93,6 @@ func NewRouter(
 	}
 
 	router := chi.NewRouter()
-	router.Use(corsMiddleware.Handler)
 
 	router.Group(func(r chi.Router) {
 		if conf.HttpServer.PlaygroundEnabled {
@@ -122,11 +122,12 @@ func NewRouter(
 		if conf.HttpServer.VoyagerEnabled {
 			r.Handle(conf.HttpServer.VoyagerEndpoint, voyager.Handler("Voyager", "/query"))
 		}
-
-		r.HandleFunc("/health", func(writer http.ResponseWriter, request *http.Request) {})
 	})
 
+	router.HandleFunc("/health", func(writer http.ResponseWriter, request *http.Request) {})
+
 	router.Group(func(r chi.Router) {
+		r.Use(corsMiddleware.Handler)
 		r.Use(authHandler.AuthenticationMiddleware())
 		r.Use(handler.NewDataLoaderMiddleware(
 			dataLoaderWait,
