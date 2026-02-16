@@ -122,7 +122,11 @@ func (r *backendResolver) ForeignServers(ctx context.Context, b *model.Backend) 
 		return nil, err
 	}
 
-	return adapt.Array(foreignServers, model.ToForeignServer), nil
+	result := make([]*model.ForeignServer, len(foreignServers))
+	for i, fs := range foreignServers {
+		result[i] = model.ToForeignServer(fs, backendId)
+	}
+	return result, nil
 }
 
 func (r *backendResolver) CreateUser(ctx context.Context, b *model.Backend) (*model.User, error) {

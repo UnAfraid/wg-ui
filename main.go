@@ -27,7 +27,8 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 	"github.com/UnAfraid/wg-ui/pkg/user"
 	"github.com/UnAfraid/wg-ui/pkg/wireguard"
-	_ "github.com/UnAfraid/wg-ui/pkg/wireguard/linux" // Register linux backend
+	_ "github.com/UnAfraid/wg-ui/pkg/wireguard/linux"          // Register linux backend
+	_ "github.com/UnAfraid/wg-ui/pkg/wireguard/networkmanager" // Register networkmanager backend
 )
 
 const (

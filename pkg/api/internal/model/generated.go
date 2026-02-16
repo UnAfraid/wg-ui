@@ -174,6 +174,7 @@ type ForeignServer struct {
 	ListenPort       int               `json:"listenPort"`
 	FirewallMark     int               `json:"firewallMark"`
 	Peers            []*ForeignPeer    `json:"peers"`
+	Backend          *Backend          `json:"backend"`
 }
 
 type GenerateWireguardKeyInput struct {

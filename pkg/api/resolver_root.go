@@ -5,13 +5,14 @@ import (
 )
 
 type resolverRoot struct {
-	queryResolver        resolver.QueryResolver
-	mutationResolver     resolver.MutationResolver
-	subscriptionResolver resolver.SubscriptionResolver
-	userResolver         resolver.UserResolver
-	serverResolver       resolver.ServerResolver
-	peerResolver         resolver.PeerResolver
-	backendResolver      resolver.BackendResolver
+	queryResolver         resolver.QueryResolver
+	mutationResolver      resolver.MutationResolver
+	subscriptionResolver  resolver.SubscriptionResolver
+	userResolver          resolver.UserResolver
+	serverResolver        resolver.ServerResolver
+	peerResolver          resolver.PeerResolver
+	backendResolver       resolver.BackendResolver
+	foreignServerResolver resolver.ForeignServerResolver
 }
 
 func (r *resolverRoot) Query() resolver.QueryResolver {
@@ -40,4 +41,8 @@ func (r *resolverRoot) Peer() resolver.PeerResolver {
 
 func (r *resolverRoot) Backend() resolver.BackendResolver {
 	return r.backendResolver
+}
+
+func (r *resolverRoot) ForeignServer() resolver.ForeignServerResolver {
+	return r.foreignServerResolver
 }

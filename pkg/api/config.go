@@ -3,6 +3,7 @@ package api
 import (
 	backendResolver "github.com/UnAfraid/wg-ui/pkg/api/internal/backend"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/directive"
+	foreignResolver "github.com/UnAfraid/wg-ui/pkg/api/internal/foreign"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/mutation"
 	peerResolver "github.com/UnAfraid/wg-ui/pkg/api/internal/peer"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/query"
@@ -63,6 +64,7 @@ func newConfig(
 				peerService,
 				manageService,
 			),
+			foreignServerResolver: foreignResolver.NewForeignServerResolver(),
 		},
 		Directives: directive.NewDirectiveRoot(),
 	}

@@ -40,6 +40,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Backend() BackendResolver
+	ForeignServer() ForeignServerResolver
 	Mutation() MutationResolver
 	Peer() PeerResolver
 	Query() QueryResolver
@@ -134,6 +135,7 @@ type ComplexityRoot struct {
 	}
 
 	ForeignServer struct {
+		Backend          func(childComplexity int) int
 		FirewallMark     func(childComplexity int) int
 		ForeignInterface func(childComplexity int) int
 		ListenPort       func(childComplexity int) int
@@ -357,6 +359,9 @@ type BackendResolver interface {
 	CreateUser(ctx context.Context, obj *model.Backend) (*model.User, error)
 	UpdateUser(ctx context.Context, obj *model.Backend) (*model.User, error)
 	DeleteUser(ctx context.Context, obj *model.Backend) (*model.User, error)
+}
+type ForeignServerResolver interface {
+	Backend(ctx context.Context, obj *model.ForeignServer) (*model.Backend, error)
 }
 type MutationResolver interface {
 	SignIn(ctx context.Context, input model.SignInInput) (*model.SignInPayload, error)
@@ -722,6 +727,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ForeignPeer.TransmitBytes(childComplexity), true
 
+	case "ForeignServer.backend":
+		if e.complexity.ForeignServer.Backend == nil {
+			break
+		}
+
+		return e.complexity.ForeignServer.Backend(childComplexity), true
 	case "ForeignServer.firewallMark":
 		if e.complexity.ForeignServer.FirewallMark == nil {
 			break
@@ -2019,6 +2030,7 @@ var sources = []*ast.Source{
     listenPort: Int!
     firewallMark: Int!
     peers: [ForeignPeer!]!
+    backend: Backend! @goField(forceResolver: true)
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/foreign/import_foreign_server_input.graphql", Input: `input ImportForeignServerInput {
@@ -3258,6 +3270,8 @@ func (ec *executionContext) fieldContext_Backend_foreignServers(_ context.Contex
 				return ec.fieldContext_ForeignServer_firewallMark(ctx, field)
 			case "peers":
 				return ec.fieldContext_ForeignServer_peers(ctx, field)
+			case "backend":
+				return ec.fieldContext_ForeignServer_backend(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ForeignServer", field.Name)
 		},
@@ -4873,6 +4887,67 @@ func (ec *executionContext) fieldContext_ForeignServer_peers(_ context.Context, 
 				return ec.fieldContext_ForeignPeer_protocolVersion(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ForeignPeer", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ForeignServer_backend(ctx context.Context, field graphql.CollectedField, obj *model.ForeignServer) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ForeignServer_backend,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.ForeignServer().Backend(ctx, obj)
+		},
+		nil,
+		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ForeignServer_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ForeignServer",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Backend_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Backend_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Backend_description(ctx, field)
+			case "url":
+				return ec.fieldContext_Backend_url(ctx, field)
+			case "enabled":
+				return ec.fieldContext_Backend_enabled(ctx, field)
+			case "supported":
+				return ec.fieldContext_Backend_supported(ctx, field)
+			case "servers":
+				return ec.fieldContext_Backend_servers(ctx, field)
+			case "peers":
+				return ec.fieldContext_Backend_peers(ctx, field)
+			case "foreignServers":
+				return ec.fieldContext_Backend_foreignServers(ctx, field)
+			case "createUser":
+				return ec.fieldContext_Backend_createUser(ctx, field)
+			case "updateUser":
+				return ec.fieldContext_Backend_updateUser(ctx, field)
+			case "deleteUser":
+				return ec.fieldContext_Backend_deleteUser(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Backend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Backend_updatedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Backend_deletedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
 		},
 	}
 	return fc, nil
@@ -7705,6 +7780,8 @@ func (ec *executionContext) fieldContext_Query_foreignServers(_ context.Context,
 				return ec.fieldContext_ForeignServer_firewallMark(ctx, field)
 			case "peers":
 				return ec.fieldContext_ForeignServer_peers(ctx, field)
+			case "backend":
+				return ec.fieldContext_ForeignServer_backend(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ForeignServer", field.Name)
 		},
@@ -14263,38 +14340,74 @@ func (ec *executionContext) _ForeignServer(ctx context.Context, sel ast.Selectio
 		case "foreignInterface":
 			out.Values[i] = ec._ForeignServer_foreignInterface(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._ForeignServer_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "type":
 			out.Values[i] = ec._ForeignServer_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "publicKey":
 			out.Values[i] = ec._ForeignServer_publicKey(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "listenPort":
 			out.Values[i] = ec._ForeignServer_listenPort(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "firewallMark":
 			out.Values[i] = ec._ForeignServer_firewallMark(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "peers":
 			out.Values[i] = ec._ForeignServer_peers(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "backend":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ForeignServer_backend(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
