@@ -18,3 +18,14 @@ func TestParseURLExecBackend(t *testing.T) {
 		t.Fatalf("expected sudo=true option, got %q", parsed.Options["sudo"])
 	}
 }
+
+func TestParseURLAllowsUnknownScheme(t *testing.T) {
+	parsed, err := ParseURL("custom:///tmp/path")
+	if err != nil {
+		t.Fatalf("ParseURL returned error: %v", err)
+	}
+
+	if parsed.Type != "custom" {
+		t.Fatalf("expected type custom, got %q", parsed.Type)
+	}
+}

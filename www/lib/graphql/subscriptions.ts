@@ -66,12 +66,6 @@ export const SERVER_DETAIL_CHANGED_SUBSCRIPTION = gql`
         interfaceStats {
           rxBytes
           txBytes
-          rxPackets
-          txPackets
-          rxErrors
-          txErrors
-          rxDropped
-          txDropped
         }
         peers {
           id

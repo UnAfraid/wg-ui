@@ -168,28 +168,7 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 
 func ToServerInterfaceStats(stats server.Stats) *ServerInterfaceStats {
 	return &ServerInterfaceStats{
-		RxPackets:         float64(stats.RxPackets),
-		TxPackets:         float64(stats.TxPackets),
-		RxBytes:           float64(stats.RxBytes),
-		TxBytes:           float64(stats.TxBytes),
-		RxErrors:          float64(stats.RxErrors),
-		TxErrors:          float64(stats.TxErrors),
-		RxDropped:         float64(stats.RxDropped),
-		TxDropped:         float64(stats.TxDropped),
-		Multicast:         float64(stats.Multicast),
-		Collisions:        float64(stats.Collisions),
-		RxLengthErrors:    float64(stats.RxLengthErrors),
-		RxOverErrors:      float64(stats.RxOverErrors),
-		RxCrcErrors:       float64(stats.RxCrcErrors),
-		RxFrameErrors:     float64(stats.RxFrameErrors),
-		RxFifoErrors:      float64(stats.RxFifoErrors),
-		RxMissedErrors:    float64(stats.RxMissedErrors),
-		TxAbortedErrors:   float64(stats.TxAbortedErrors),
-		TxCarrierErrors:   float64(stats.TxCarrierErrors),
-		TxFifoErrors:      float64(stats.TxFifoErrors),
-		TxHeartbeatErrors: float64(stats.TxHeartbeatErrors),
-		TxWindowErrors:    float64(stats.TxWindowErrors),
-		RxCompressed:      float64(stats.RxCompressed),
-		TxCompressed:      float64(stats.TxCompressed),
+		RxBytes: float64(stats.RxBytes),
+		TxBytes: float64(stats.TxBytes),
 	}
 }

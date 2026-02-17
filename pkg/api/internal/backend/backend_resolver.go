@@ -6,23 +6,23 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
-	backendpkg "github.com/UnAfraid/wg-ui/pkg/backend"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/manage"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
-	wireguardbackend "github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
 type backendResolver struct {
-	backendService backendpkg.Service
+	backendService backend.Service
 	serverService  server.Service
 	peerService    peer.Service
 	manageService  manage.Service
 }
 
 func NewBackendResolver(
-	backendService backendpkg.Service,
+	backendService backend.Service,
 	serverService server.Service,
 	peerService peer.Service,
 	manageService manage.Service,
@@ -55,12 +55,12 @@ func (r *backendResolver) Supported(ctx context.Context, b *model.Backend) (bool
 		return false, nil
 	}
 
-	parsedURL, err := backendpkg.ParseURL(backendEntity.URL)
+	parsedURL, err := backend.ParseURL(backendEntity.URL)
 	if err != nil {
 		return false, nil
 	}
 
-	return wireguardbackend.IsSupported(parsedURL.Type), nil
+	return driver.IsSupported(parsedURL.Type), nil
 }
 
 func (r *backendResolver) Servers(ctx context.Context, b *model.Backend, query *string, enabled *bool) ([]*model.Server, error) {

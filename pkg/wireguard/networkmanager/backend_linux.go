@@ -4,6 +4,7 @@ package networkmanager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"slices"
@@ -16,12 +17,14 @@ import (
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
-func init() {
+func Register() {
 	supported := isNetworkManagerAvailable()
-	backend.Register("networkmanager", NewNetworkManagerBackend, supported)
+	driver.Register("networkmanager", func(_ context.Context, rawURL string) (driver.Backend, error) {
+		return NewNetworkManagerBackend(rawURL)
+	}, supported)
 }
 
 func isNetworkManagerAvailable() bool {
@@ -39,7 +42,7 @@ type nmBackend struct {
 	wgClient *wgctrl.Client
 }
 
-func NewNetworkManagerBackend(_ string) (backend.Backend, error) {
+func NewNetworkManagerBackend(_ string) (driver.Backend, error) {
 	nm, err := gonetworkmanager.NewNetworkManager()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to NetworkManager: %w", err)
@@ -62,7 +65,11 @@ func NewNetworkManagerBackend(_ string) (backend.Backend, error) {
 	}, nil
 }
 
-func (b *nmBackend) Device(ctx context.Context, name string) (*backend.Device, error) {
+func (b *nmBackend) Device(ctx context.Context, name string) (deviceResult *driver.Device, err error) {
+	defer func() {
+		err = markConnectionStale(err)
+	}()
+
 	conn, err := b.findConnectionByInterfaceName(name)
 	if err != nil {
 		return nil, err
@@ -71,15 +78,19 @@ func (b *nmBackend) Device(ctx context.Context, name string) (*backend.Device, e
 		return nil, nil
 	}
 
-	device, err := b.wgClient.Device(name)
+	wgDevice, err := b.wgClient.Device(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wireguard device: %w", err)
 	}
 
-	return b.buildDevice(conn, device)
+	return b.buildDevice(conn, wgDevice)
 }
 
-func (b *nmBackend) Up(ctx context.Context, options backend.ConfigureOptions) (*backend.Device, error) {
+func (b *nmBackend) Up(ctx context.Context, options driver.ConfigureOptions) (deviceResult *driver.Device, err error) {
+	defer func() {
+		err = markConnectionStale(err)
+	}()
+
 	if err := options.Validate(); err != nil {
 		return nil, err
 	}
@@ -153,15 +164,19 @@ func (b *nmBackend) Up(ctx context.Context, options backend.ConfigureOptions) (*
 	}
 
 	// Get the wireguard device info
-	device, err := b.wgClient.Device(interfaceOpts.Name)
+	wgDevice, err := b.wgClient.Device(interfaceOpts.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wireguard device: %w", err)
 	}
 
-	return b.buildDevice(conn, device)
+	return b.buildDevice(conn, wgDevice)
 }
 
-func (b *nmBackend) Down(ctx context.Context, name string) error {
+func (b *nmBackend) Down(ctx context.Context, name string) (err error) {
+	defer func() {
+		err = markConnectionStale(err)
+	}()
+
 	conn, err := b.findConnectionByInterfaceName(name)
 	if err != nil {
 		return err
@@ -187,7 +202,11 @@ func (b *nmBackend) Down(ctx context.Context, name string) error {
 	return nil
 }
 
-func (b *nmBackend) Status(ctx context.Context, name string) (bool, error) {
+func (b *nmBackend) Status(ctx context.Context, name string) (status bool, err error) {
+	defer func() {
+		err = markConnectionStale(err)
+	}()
+
 	nmDevice, err := b.nm.GetDeviceByIpIface(name)
 	if err != nil {
 		return false, nil
@@ -201,7 +220,11 @@ func (b *nmBackend) Status(ctx context.Context, name string) (bool, error) {
 	return state == gonetworkmanager.NmDeviceStateActivated, nil
 }
 
-func (b *nmBackend) Stats(ctx context.Context, name string) (*backend.InterfaceStats, error) {
+func (b *nmBackend) Stats(ctx context.Context, name string) (statsResult *driver.InterfaceStats, err error) {
+	defer func() {
+		err = markConnectionStale(err)
+	}()
+
 	nmDevice, err := b.nm.GetDeviceByIpIface(name)
 	if err != nil {
 		return nil, nil
@@ -215,13 +238,17 @@ func (b *nmBackend) Stats(ctx context.Context, name string) (*backend.InterfaceS
 	rxBytes, _ := stats.GetPropertyRxBytes()
 	txBytes, _ := stats.GetPropertyTxBytes()
 
-	return &backend.InterfaceStats{
+	return &driver.InterfaceStats{
 		RxBytes: rxBytes,
 		TxBytes: txBytes,
 	}, nil
 }
 
-func (b *nmBackend) PeerStats(ctx context.Context, name string, peerPublicKey string) (*backend.PeerStats, error) {
+func (b *nmBackend) PeerStats(ctx context.Context, name string, peerPublicKey string) (peerStatsResult *driver.PeerStats, err error) {
+	defer func() {
+		err = markConnectionStale(err)
+	}()
+
 	device, err := b.wgClient.Device(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wireguard device: %w", err)
@@ -234,7 +261,7 @@ func (b *nmBackend) PeerStats(ctx context.Context, name string, peerPublicKey st
 
 	for _, peer := range device.Peers {
 		if peer.PublicKey == publicKey {
-			return &backend.PeerStats{
+			return &driver.PeerStats{
 				LastHandshakeTime: peer.LastHandshakeTime,
 				ReceiveBytes:      peer.ReceiveBytes,
 				TransmitBytes:     peer.TransmitBytes,
@@ -246,13 +273,16 @@ func (b *nmBackend) PeerStats(ctx context.Context, name string, peerPublicKey st
 	return nil, nil
 }
 
-func (b *nmBackend) FindForeignServers(ctx context.Context, knownInterfaces []string) ([]*backend.ForeignServer, error) {
+func (b *nmBackend) FindForeignServers(ctx context.Context, knownInterfaces []string) (foreignServers []*driver.ForeignServer, err error) {
+	defer func() {
+		err = markConnectionStale(err)
+	}()
+
 	devices, err := b.nm.GetAllDevices()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get devices: %w", err)
 	}
 
-	var foreignServers []*backend.ForeignServer
 	for _, nmDevice := range devices {
 		deviceType, err := nmDevice.GetPropertyDeviceType()
 		if err != nil {
@@ -287,8 +317,33 @@ func (b *nmBackend) Close(ctx context.Context) error {
 	return b.wgClient.Close()
 }
 
-func (b *nmBackend) Supported() bool {
-	return true
+func markConnectionStale(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, driver.ErrConnectionStale) {
+		return err
+	}
+
+	lower := strings.ToLower(err.Error())
+	indicators := []string{
+		"dbus: connection closed",
+		"dbus: disconnected",
+		"connection is closed",
+		"transport endpoint is not connected",
+		"broken pipe",
+		"closed network connection",
+		"connection reset by peer",
+		"connection refused",
+	}
+	for _, indicator := range indicators {
+		if strings.Contains(lower, indicator) {
+			return fmt.Errorf("%w: %w", driver.ErrConnectionStale, err)
+		}
+	}
+
+	return err
 }
 
 func (b *nmBackend) findConnectionByInterfaceName(name string) (gonetworkmanager.Connection, error) {
@@ -322,7 +377,7 @@ func (b *nmBackend) findConnectionByInterfaceName(name string) (gonetworkmanager
 	return nil, nil
 }
 
-func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptions, wireguardOpts backend.WireguardOptions, existingUUID string) (gonetworkmanager.ConnectionSettings, error) {
+func (b *nmBackend) buildConnectionSettings(interfaceOpts driver.InterfaceOptions, wireguardOpts driver.WireguardOptions, existingUUID string) (gonetworkmanager.ConnectionSettings, error) {
 	connectionUUID := existingUUID
 	if connectionUUID == "" {
 		connectionUUID = uuid.NewString()
@@ -423,7 +478,7 @@ func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptio
 	return settings, nil
 }
 
-func (b *nmBackend) buildDevice(conn gonetworkmanager.Connection, device *wgtypes.Device) (*backend.Device, error) {
+func (b *nmBackend) buildDevice(conn gonetworkmanager.Connection, device *wgtypes.Device) (*driver.Device, error) {
 	settings, err := conn.GetSettings()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get connection settings: %w", err)
@@ -471,30 +526,30 @@ func (b *nmBackend) buildDevice(conn gonetworkmanager.Connection, device *wgtype
 		}
 	}
 
-	return &backend.Device{
-		Interface: backend.Interface{
+	return &driver.Device{
+		Interface: driver.Interface{
 			Name:      device.Name,
 			Addresses: addresses,
 			Mtu:       mtu,
 		},
-		Wireguard: backend.Wireguard{
+		Wireguard: driver.Wireguard{
 			Name:         device.Name,
 			PublicKey:    device.PublicKey.String(),
 			PrivateKey:   device.PrivateKey.String(),
 			ListenPort:   device.ListenPort,
 			FirewallMark: device.FirewallMark,
-			Peers: adapt.Array(device.Peers, func(peer wgtypes.Peer) *backend.Peer {
+			Peers: adapt.Array(device.Peers, func(peer wgtypes.Peer) *driver.Peer {
 				var endpoint string
 				if peer.Endpoint != nil {
 					endpoint = peer.Endpoint.String()
 				}
-				return &backend.Peer{
+				return &driver.Peer{
 					PublicKey:           peer.PublicKey.String(),
 					Endpoint:            endpoint,
 					AllowedIPs:          peer.AllowedIPs,
 					PresharedKey:        peer.PresharedKey.String(),
 					PersistentKeepalive: peer.PersistentKeepaliveInterval,
-					Stats: backend.PeerStats{
+					Stats: driver.PeerStats{
 						LastHandshakeTime: peer.LastHandshakeTime,
 						ReceiveBytes:      peer.ReceiveBytes,
 						TransmitBytes:     peer.TransmitBytes,
@@ -506,7 +561,7 @@ func (b *nmBackend) buildDevice(conn gonetworkmanager.Connection, device *wgtype
 	}, nil
 }
 
-func (b *nmBackend) buildForeignServer(nmDevice gonetworkmanager.Device) (*backend.ForeignServer, error) {
+func (b *nmBackend) buildForeignServer(nmDevice gonetworkmanager.Device) (*driver.ForeignServer, error) {
 	interfaceName, err := nmDevice.GetPropertyInterface()
 	if err != nil {
 		return nil, err
@@ -541,8 +596,8 @@ func (b *nmBackend) buildForeignServer(nmDevice gonetworkmanager.Device) (*backe
 		}
 	}
 
-	return &backend.ForeignServer{
-		Interface: &backend.ForeignInterface{
+	return &driver.ForeignServer{
+		Interface: &driver.ForeignInterface{
 			Name:      interfaceName,
 			Addresses: addresses,
 			Mtu:       int(mtu),
@@ -554,18 +609,18 @@ func (b *nmBackend) buildForeignServer(nmDevice gonetworkmanager.Device) (*backe
 		PublicKey:    device.PublicKey.String(),
 		ListenPort:   device.ListenPort,
 		FirewallMark: device.FirewallMark,
-		Peers: adapt.Array(device.Peers, func(peer wgtypes.Peer) *backend.Peer {
+		Peers: adapt.Array(device.Peers, func(peer wgtypes.Peer) *driver.Peer {
 			var endpoint string
 			if peer.Endpoint != nil {
 				endpoint = peer.Endpoint.String()
 			}
-			return &backend.Peer{
+			return &driver.Peer{
 				PublicKey:           peer.PublicKey.String(),
 				Endpoint:            endpoint,
 				AllowedIPs:          peer.AllowedIPs,
 				PresharedKey:        peer.PresharedKey.String(),
 				PersistentKeepalive: peer.PersistentKeepaliveInterval,
-				Stats: backend.PeerStats{
+				Stats: driver.PeerStats{
 					LastHandshakeTime: peer.LastHandshakeTime,
 					ReceiveBytes:      peer.ReceiveBytes,
 					TransmitBytes:     peer.TransmitBytes,

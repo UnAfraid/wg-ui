@@ -321,29 +321,8 @@ type ServerHookInput struct {
 }
 
 type ServerInterfaceStats struct {
-	RxPackets         float64 `json:"rxPackets"`
-	TxPackets         float64 `json:"txPackets"`
-	RxBytes           float64 `json:"rxBytes"`
-	TxBytes           float64 `json:"txBytes"`
-	RxErrors          float64 `json:"rxErrors"`
-	TxErrors          float64 `json:"txErrors"`
-	RxDropped         float64 `json:"rxDropped"`
-	TxDropped         float64 `json:"txDropped"`
-	Multicast         float64 `json:"multicast"`
-	Collisions        float64 `json:"collisions"`
-	RxLengthErrors    float64 `json:"rxLengthErrors"`
-	RxOverErrors      float64 `json:"rxOverErrors"`
-	RxCrcErrors       float64 `json:"rxCrcErrors"`
-	RxFrameErrors     float64 `json:"rxFrameErrors"`
-	RxFifoErrors      float64 `json:"rxFifoErrors"`
-	RxMissedErrors    float64 `json:"rxMissedErrors"`
-	TxAbortedErrors   float64 `json:"txAbortedErrors"`
-	TxCarrierErrors   float64 `json:"txCarrierErrors"`
-	TxFifoErrors      float64 `json:"txFifoErrors"`
-	TxHeartbeatErrors float64 `json:"txHeartbeatErrors"`
-	TxWindowErrors    float64 `json:"txWindowErrors"`
-	RxCompressed      float64 `json:"rxCompressed"`
-	TxCompressed      float64 `json:"txCompressed"`
+	RxBytes float64 `json:"rxBytes"`
+	TxBytes float64 `json:"txBytes"`
 }
 
 type SignInInput struct {

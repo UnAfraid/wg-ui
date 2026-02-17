@@ -323,22 +323,6 @@ export default function ServerDetailPage({ id }: { id: string }) {
                   {formatBytes(server.interfaceStats.txBytes)}
                 </p>
               </div>
-              <div>
-                <span className="text-xs text-muted-foreground">
-                  RX Packets
-                </span>
-                <p className="text-sm text-foreground">
-                  {server.interfaceStats.rxPackets.toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <span className="text-xs text-muted-foreground">
-                  TX Packets
-                </span>
-                <p className="text-sm text-foreground">
-                  {server.interfaceStats.txPackets.toLocaleString()}
-                </p>
-              </div>
             </div>
           )}
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

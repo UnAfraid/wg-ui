@@ -14,7 +14,7 @@ import (
 
 	"github.com/UnAfraid/wg-ui/pkg/dbx"
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
-	wgbackend "github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
 var (
@@ -76,7 +76,10 @@ func (s *service) CreateBackend(ctx context.Context, options *CreateOptions, use
 	}
 
 	// Validate that backend type is supported on this platform
-	if !wgbackend.IsSupported(backend.Type()) {
+	if err := validateKnownBackendType(backend.Type()); err != nil {
+		return nil, err
+	}
+	if !driver.IsSupported(backend.Type()) {
 		return nil, ErrBackendNotSupported
 	}
 
@@ -130,6 +133,9 @@ func (s *service) UpdateBackend(ctx context.Context, backendId string, options *
 		// Prevent changing the backend URL scheme (type)
 		if fieldMask.Url {
 			newType := backend.Type()
+			if err := validateKnownBackendType(newType); err != nil {
+				return nil, err
+			}
 			if newType != originalType {
 				return nil, ErrBackendTypeChangeNotAllowed
 			}
@@ -253,6 +259,18 @@ func (s *service) RegisteredTypes(ctx context.Context) ([]string, error) {
 		}
 	}
 	return types, nil
+}
+
+func validateKnownBackendType(backendType string) error {
+	if strings.TrimSpace(backendType) == "" {
+		return ErrUnknownBackendType
+	}
+
+	if _, ok := driver.Get(backendType); !ok {
+		return ErrUnknownBackendType
+	}
+
+	return nil
 }
 
 func newId() (string, error) {

@@ -31,11 +31,11 @@ func (b *Backend) Type() string {
 	return parsed.Type
 }
 
-func (b *Backend) GetId() string {
+func (b *Backend) ID() string {
 	return b.Id
 }
 
-func (b *Backend) GetURL() string {
+func (b *Backend) URL() string {
 	return b.Url
 }
 

@@ -3,9 +3,18 @@
 package networkmanager
 
 import (
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"context"
+	"errors"
+
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
-func init() {
-	backend.Register("networkmanager", nil, false)
+func Register() {
+	driver.Register("networkmanager", func(_ context.Context, rawURL string) (driver.Backend, error) {
+		return NewNetworkManagerBackend(rawURL)
+	}, false)
+}
+
+func NewNetworkManagerBackend(_ string) (driver.Backend, error) {
+	return nil, errors.New("networkmanager backend is only supported on linux")
 }

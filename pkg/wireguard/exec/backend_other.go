@@ -2,8 +2,19 @@
 
 package exec
 
-import "github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+import (
+	"context"
+	"errors"
 
-func init() {
-	backend.Register("exec", nil, false)
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
+)
+
+func Register() {
+	driver.Register("exec", func(_ context.Context, rawURL string) (driver.Backend, error) {
+		return NewExecBackend(rawURL)
+	}, false)
+}
+
+func NewExecBackend(_ string) (driver.Backend, error) {
+	return nil, errors.New("exec backend is only supported on linux and darwin")
 }

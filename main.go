@@ -27,9 +27,7 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 	"github.com/UnAfraid/wg-ui/pkg/user"
 	"github.com/UnAfraid/wg-ui/pkg/wireguard"
-	_ "github.com/UnAfraid/wg-ui/pkg/wireguard/exec"           // Register exec backend
-	_ "github.com/UnAfraid/wg-ui/pkg/wireguard/linux"          // Register linux backend
-	_ "github.com/UnAfraid/wg-ui/pkg/wireguard/networkmanager" // Register networkmanager backend
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/builtin"
 )
 
 const (
@@ -81,6 +79,8 @@ func main() {
 	}
 
 	logrus.Info("initializing database..")
+	builtin.RegisterAll()
+
 	db, err := datastore.NewBBoltDB(conf.BoltDB.Path, conf.BoltDB.Timeout)
 	if err != nil {
 		logrus.

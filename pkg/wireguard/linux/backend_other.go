@@ -3,15 +3,18 @@
 package linux
 
 import (
+	"context"
 	"errors"
 
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
-func init() {
-	backend.Register("linux", nil, false)
+func Register() {
+	driver.Register("linux", func(_ context.Context, rawURL string) (driver.Backend, error) {
+		return NewLinuxBackend(rawURL)
+	}, false)
 }
 
-func NewLinuxBackend(_ string) (backend.Backend, error) {
+func NewLinuxBackend(_ string) (driver.Backend, error) {
 	return nil, errors.New("linux backend is only supported on linux")
 }

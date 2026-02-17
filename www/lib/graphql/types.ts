@@ -43,27 +43,6 @@ export interface ServerHook {
 export interface ServerInterfaceStats {
   rxBytes: number;
   txBytes: number;
-  rxPackets: number;
-  txPackets: number;
-  rxErrors: number;
-  txErrors: number;
-  rxDropped: number;
-  txDropped: number;
-  collisions: number;
-  multicast: number;
-  rxCompressed: number;
-  txCompressed: number;
-  rxCrcErrors: number;
-  rxFrameErrors: number;
-  rxFifoErrors: number;
-  rxMissedErrors: number;
-  rxOverErrors: number;
-  rxLengthErrors: number;
-  txAbortedErrors: number;
-  txCarrierErrors: number;
-  txFifoErrors: number;
-  txHeartbeatErrors: number;
-  txWindowErrors: number;
 }
 
 export interface Server {

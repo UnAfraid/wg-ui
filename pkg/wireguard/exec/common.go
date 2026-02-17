@@ -13,7 +13,7 @@ import (
 
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
 const defaultConfigDir = "/etc/wireguard"
@@ -46,7 +46,7 @@ func writeTempFile(content []byte) (string, error) {
 	return path, nil
 }
 
-func renderConfig(options backend.ConfigureOptions) string {
+func renderConfig(options driver.ConfigureOptions) string {
 	interfaceOptions := options.InterfaceOptions
 	wireguardOptions := options.WireguardOptions
 
@@ -118,11 +118,11 @@ func renderConfig(options backend.ConfigureOptions) string {
 
 func parseConfigDevice(name string, content string) (*parsedConfigDevice, error) {
 	parsed := &parsedConfigDevice{
-		Device: &backend.Device{
-			Interface: backend.Interface{
+		Device: &driver.Device{
+			Interface: driver.Interface{
 				Name: name,
 			},
-			Wireguard: backend.Wireguard{
+			Wireguard: driver.Wireguard{
 				Name: name,
 			},
 		},
@@ -130,7 +130,7 @@ func parseConfigDevice(name string, content string) (*parsedConfigDevice, error)
 
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	section := ""
-	var currentPeer *backend.Peer
+	var currentPeer *driver.Peer
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -159,7 +159,7 @@ func parseConfigDevice(name string, content string) (*parsedConfigDevice, error)
 			continue
 		case "[peer]":
 			section = "peer"
-			currentPeer = &backend.Peer{}
+			currentPeer = &driver.Peer{}
 			parsed.Device.Wireguard.Peers = append(parsed.Device.Wireguard.Peers, currentPeer)
 			continue
 		}
@@ -258,7 +258,7 @@ func parseConfigDevice(name string, content string) (*parsedConfigDevice, error)
 	return parsed, nil
 }
 
-func parseDeviceDump(name string, output string) (*backend.Device, error) {
+func parseDeviceDump(name string, output string) (*driver.Device, error) {
 	trimmed := strings.TrimSpace(output)
 	if trimmed == "" {
 		return nil, errors.New("wireguard dump output is empty")
@@ -279,8 +279,8 @@ func parseDeviceDump(name string, output string) (*backend.Device, error) {
 		return nil, fmt.Errorf("failed to parse firewall mark: %w", err)
 	}
 
-	device := &backend.Device{
-		Wireguard: backend.Wireguard{
+	device := &driver.Device{
+		Wireguard: driver.Wireguard{
 			Name:         name,
 			PrivateKey:   parseDumpString(interfaceFields[0]),
 			PublicKey:    parseDumpString(interfaceFields[1]),
@@ -340,13 +340,13 @@ func parseDeviceDump(name string, output string) (*backend.Device, error) {
 			latestHandshake = time.Unix(latestHandshakeUnix, 0)
 		}
 
-		device.Wireguard.Peers = append(device.Wireguard.Peers, &backend.Peer{
+		device.Wireguard.Peers = append(device.Wireguard.Peers, &driver.Peer{
 			PublicKey:           parseDumpString(peerFields[0]),
 			Endpoint:            endpoint,
 			AllowedIPs:          allowedIPs,
 			PresharedKey:        presharedKey,
 			PersistentKeepalive: time.Duration(persistentKeepalive) * time.Second,
-			Stats: backend.PeerStats{
+			Stats: driver.PeerStats{
 				LastHandshakeTime: latestHandshake,
 				ReceiveBytes:      receiveBytes,
 				TransmitBytes:     transmitBytes,
@@ -429,5 +429,5 @@ func normalizeCIDR(cidr string) (string, error) {
 
 type parsedConfigDevice struct {
 	Description string
-	Device      *backend.Device
+	Device      *driver.Device
 }

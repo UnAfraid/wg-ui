@@ -11,14 +11,14 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
-	backendpkg "github.com/UnAfraid/wg-ui/pkg/backend"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/dbx"
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
 	"github.com/UnAfraid/wg-ui/pkg/wireguard"
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
 type Service interface {
@@ -35,17 +35,17 @@ type Service interface {
 	CreatePeer(ctx context.Context, serverId string, options *peer.CreateOptions, userId string) (*peer.Peer, error)
 	UpdatePeer(ctx context.Context, peerId string, options *peer.UpdateOptions, fieldMask *peer.UpdateFieldMask, userId string) (*peer.Peer, error)
 	DeletePeer(ctx context.Context, peerId string, userId string) (*peer.Peer, error)
-	PeerStats(ctx context.Context, serverId string, peerPublicKey string) (*backend.PeerStats, error)
-	ForeignServers(ctx context.Context, backendId string) ([]*backend.ForeignServer, error)
-	ForeignServersAll(ctx context.Context) ([]*backend.ForeignServer, error)
-	DeleteBackend(ctx context.Context, backendId string, userId string) (*backendpkg.Backend, error)
+	PeerStats(ctx context.Context, serverId string, peerPublicKey string) (*driver.PeerStats, error)
+	ForeignServers(ctx context.Context, backendId string) ([]*driver.ForeignServer, error)
+	ForeignServersAll(ctx context.Context) ([]*driver.ForeignServer, error)
+	DeleteBackend(ctx context.Context, backendId string, userId string) (*backend.Backend, error)
 	Close()
 }
 
 type service struct {
 	transactionScoper dbx.TransactionScoper
 	userService       user.Service
-	backendService    backendpkg.Service
+	backendService    backend.Service
 	serverService     server.Service
 	peerService       peer.Service
 	wireguardService  wireguard.Service
@@ -56,7 +56,7 @@ type service struct {
 func NewService(
 	transactionScoper dbx.TransactionScoper,
 	userService user.Service,
-	backendService backendpkg.Service,
+	backendService backend.Service,
 	serverService server.Service,
 	peerService peer.Service,
 	wireguardService wireguard.Service,
@@ -95,7 +95,7 @@ func (s *service) init() {
 	}
 
 	// Find or create default linux backend for legacy servers
-	var defaultBackend *backendpkg.Backend
+	var defaultBackend *backend.Backend
 	for _, srv := range servers {
 		if srv.BackendId == "" {
 			if defaultBackend == nil {
@@ -163,9 +163,9 @@ func (s *service) init() {
 	}
 }
 
-func (s *service) getOrCreateDefaultBackend(ctx context.Context) (*backendpkg.Backend, error) {
+func (s *service) getOrCreateDefaultBackend(ctx context.Context) (*backend.Backend, error) {
 	// Try to find existing linux backend
-	backends, err := s.backendService.FindBackends(ctx, &backendpkg.FindOptions{})
+	backends, err := s.backendService.FindBackends(ctx, &backend.FindOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find backends: %w", err)
 	}
@@ -178,7 +178,7 @@ func (s *service) getOrCreateDefaultBackend(ctx context.Context) (*backendpkg.Ba
 
 	// Create default linux backend
 	logrus.Info("creating default linux backend for legacy server migration")
-	return s.backendService.CreateBackend(ctx, &backendpkg.CreateOptions{
+	return s.backendService.CreateBackend(ctx, &backend.CreateOptions{
 		Name:        "Linux (Default)",
 		Description: "Default backend created for legacy server migration",
 		Url:         "linux:///etc/wireguard",
@@ -429,7 +429,7 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 			return nil, fmt.Errorf("failed to find foreign interfaces: %w", err)
 		}
 
-		var foreignServer *backend.ForeignServer
+		var foreignServer *driver.ForeignServer
 		for _, fn := range foreignInterfaces {
 			if strings.EqualFold(fn.Name, name) {
 				foreignServer = fn
@@ -528,7 +528,7 @@ func (s *service) DeletePeer(ctx context.Context, peerId string, userId string) 
 	})
 }
 
-func (s *service) PeerStats(ctx context.Context, serverId string, peerPublicKey string) (*backend.PeerStats, error) {
+func (s *service) PeerStats(ctx context.Context, serverId string, peerPublicKey string) (*driver.PeerStats, error) {
 	srv, err := s.findServer(ctx, serverId)
 	if err != nil {
 		return nil, err
@@ -542,7 +542,7 @@ func (s *service) PeerStats(ctx context.Context, serverId string, peerPublicKey 
 	return s.wireguardService.PeerStats(ctx, b, srv.Name, peerPublicKey)
 }
 
-func (s *service) ForeignServers(ctx context.Context, backendId string) ([]*backend.ForeignServer, error) {
+func (s *service) ForeignServers(ctx context.Context, backendId string) ([]*driver.ForeignServer, error) {
 	b, err := s.findBackend(ctx, backendId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find backend: %w", err)
@@ -564,15 +564,15 @@ func (s *service) ForeignServers(ctx context.Context, backendId string) ([]*back
 	return filterForeignServersByPublicKey(foreignServers, managedServersByPublicKey), nil
 }
 
-func (s *service) ForeignServersAll(ctx context.Context) ([]*backend.ForeignServer, error) {
-	backends, err := s.backendService.FindBackends(ctx, &backendpkg.FindOptions{
+func (s *service) ForeignServersAll(ctx context.Context) ([]*driver.ForeignServer, error) {
+	backends, err := s.backendService.FindBackends(ctx, &backend.FindOptions{
 		Enabled: adapt.ToPointer(true),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find backends: %w", err)
 	}
 
-	allForeignServers := make([]*backend.ForeignServer, 0)
+	allForeignServers := make([]*driver.ForeignServer, 0)
 	seenPublicKeys := make(map[string]struct{})
 	var errs []error
 
@@ -606,7 +606,7 @@ func (s *service) ForeignServersAll(ctx context.Context) ([]*backend.ForeignServ
 	return allForeignServers, nil
 }
 
-func (s *service) DeleteBackend(ctx context.Context, backendId string, userId string) (*backendpkg.Backend, error) {
+func (s *service) DeleteBackend(ctx context.Context, backendId string, userId string) (*backend.Backend, error) {
 	// First delete the backend from the database
 	deletedBackend, err := s.backendService.DeleteBackend(ctx, backendId, userId)
 	if err != nil {
@@ -665,7 +665,7 @@ func (s *service) configurePeerDevice(ctx context.Context, p *peer.Peer, userId 
 	return p, nil
 }
 
-func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers []*peer.Peer) (*backend.Device, error) {
+func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers []*peer.Peer) (*driver.Device, error) {
 	b, err := s.findBackend(ctx, srv.BackendId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find backend: %w", err)
@@ -679,19 +679,19 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 		return nil, err
 	}
 
-	return s.wireguardService.Up(ctx, b, backend.ConfigureOptions{
-		InterfaceOptions: backend.InterfaceOptions{
+	return s.wireguardService.Up(ctx, b, driver.ConfigureOptions{
+		InterfaceOptions: driver.InterfaceOptions{
 			Name:        srv.Name,
 			Description: srv.Description,
 			Address:     srv.Address,
 			Mtu:         srv.MTU,
 		},
-		WireguardOptions: backend.WireguardOptions{
+		WireguardOptions: driver.WireguardOptions{
 			PrivateKey:   srv.PrivateKey,
 			ListenPort:   srv.ListenPort,
 			FirewallMark: srv.FirewallMark,
-			Peers: adapt.Array(peers, func(peer *peer.Peer) *backend.PeerOptions {
-				return &backend.PeerOptions{
+			Peers: adapt.Array(peers, func(peer *peer.Peer) *driver.PeerOptions {
+				return &driver.PeerOptions{
 					PublicKey:           peer.PublicKey,
 					Endpoint:            peer.Endpoint,
 					AllowedIPs:          peer.AllowedIPs,
@@ -703,7 +703,7 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 	})
 }
 
-func (s *service) updateServer(ctx context.Context, srv *server.Server, device *backend.Device, userId string) (*server.Server, error) {
+func (s *service) updateServer(ctx context.Context, srv *server.Server, device *driver.Device, userId string) (*server.Server, error) {
 	b, err := s.findBackend(ctx, srv.BackendId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find backend: %w", err)
@@ -764,10 +764,10 @@ func (s *service) serverPublicKeyConflictError(ctx context.Context, srv *server.
 }
 
 func filterForeignServersByPublicKey(
-	foreignServers []*backend.ForeignServer,
+	foreignServers []*driver.ForeignServer,
 	managedServersByPublicKey map[string]*server.Server,
-) []*backend.ForeignServer {
-	filteredServers := make([]*backend.ForeignServer, 0, len(foreignServers))
+) []*driver.ForeignServer {
+	filteredServers := make([]*driver.ForeignServer, 0, len(foreignServers))
 	seenPublicKeys := make(map[string]struct{}, len(foreignServers))
 
 	for _, foreignServer := range foreignServers {
@@ -862,9 +862,9 @@ func (s *service) findServer(ctx context.Context, serverId string) (*server.Serv
 	return svc, nil
 }
 
-func (s *service) findBackend(ctx context.Context, backendId string) (*backendpkg.Backend, error) {
-	b, err := s.backendService.FindBackend(ctx, &backendpkg.FindOneOptions{
-		IdOption: &backendpkg.IdOption{
+func (s *service) findBackend(ctx context.Context, backendId string) (*backend.Backend, error) {
+	b, err := s.backendService.FindBackend(ctx, &backend.FindOneOptions{
+		IdOption: &backend.IdOption{
 			Id: backendId,
 		},
 	})
@@ -872,7 +872,7 @@ func (s *service) findBackend(ctx context.Context, backendId string) (*backendpk
 		return nil, err
 	}
 	if b == nil {
-		return nil, backendpkg.ErrBackendNotFound
+		return nil, backend.ErrBackendNotFound
 	}
 	return b, nil
 }
@@ -1045,31 +1045,13 @@ func (s *service) updateServerStats(ctx context.Context, srv *server.Server) err
 	if err != nil {
 		return fmt.Errorf("failed to get device stats: %w", err)
 	}
+	if stats == nil {
+		stats = &driver.InterfaceStats{}
+	}
 
 	newStats := server.Stats{
-		RxPackets:         stats.RxPackets,
-		TxPackets:         stats.TxPackets,
-		RxBytes:           stats.RxBytes,
-		TxBytes:           stats.TxBytes,
-		RxErrors:          stats.RxErrors,
-		TxErrors:          stats.TxErrors,
-		RxDropped:         stats.RxDropped,
-		TxDropped:         stats.TxDropped,
-		Multicast:         stats.Multicast,
-		Collisions:        stats.Collisions,
-		RxLengthErrors:    stats.RxLengthErrors,
-		RxOverErrors:      stats.RxOverErrors,
-		RxCrcErrors:       stats.RxCrcErrors,
-		RxFrameErrors:     stats.RxFrameErrors,
-		RxFifoErrors:      stats.RxFifoErrors,
-		RxMissedErrors:    stats.RxMissedErrors,
-		TxAbortedErrors:   stats.TxAbortedErrors,
-		TxCarrierErrors:   stats.TxCarrierErrors,
-		TxFifoErrors:      stats.TxFifoErrors,
-		TxHeartbeatErrors: stats.TxHeartbeatErrors,
-		TxWindowErrors:    stats.TxWindowErrors,
-		RxCompressed:      stats.RxCompressed,
-		TxCompressed:      stats.TxCompressed,
+		RxBytes: stats.RxBytes,
+		TxBytes: stats.TxBytes,
 	}
 
 	if newStats != srv.Stats {

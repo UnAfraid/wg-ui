@@ -17,18 +17,20 @@ import (
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
-func init() {
-	backend.Register("linux", NewLinuxBackend, true)
+func Register() {
+	driver.Register("linux", func(_ context.Context, rawURL string) (driver.Backend, error) {
+		return NewLinuxBackend(rawURL)
+	}, true)
 }
 
 type linuxBackend struct {
 	client *wgctrl.Client
 }
 
-func NewLinuxBackend(_ string) (backend.Backend, error) {
+func NewLinuxBackend(_ string) (driver.Backend, error) {
 	client, err := wgctrl.New()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize linux backend: %w", err)
@@ -39,7 +41,7 @@ func NewLinuxBackend(_ string) (backend.Backend, error) {
 	}, nil
 }
 
-func (lb *linuxBackend) Device(_ context.Context, name string) (*backend.Device, error) {
+func (lb *linuxBackend) Device(_ context.Context, name string) (*driver.Device, error) {
 	device, err := lb.client.Device(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find device: %s", err)
@@ -48,7 +50,7 @@ func (lb *linuxBackend) Device(_ context.Context, name string) (*backend.Device,
 	return wgDeviceToBackendDevice(device, name)
 }
 
-func (lb *linuxBackend) Up(_ context.Context, options backend.ConfigureOptions) (*backend.Device, error) {
+func (lb *linuxBackend) Up(_ context.Context, options driver.ConfigureOptions) (*driver.Device, error) {
 	if err := options.Validate(); err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func (lb *linuxBackend) Up(_ context.Context, options backend.ConfigureOptions) 
 	return wgDeviceToBackendDevice(device, interfaceOptions.Name)
 }
 
-func wgDeviceToBackendDevice(device *wgtypes.Device, name string) (*backend.Device, error) {
+func wgDeviceToBackendDevice(device *wgtypes.Device, name string) (*driver.Device, error) {
 	link, err := findInterface(name)
 	if err != nil {
 		return nil, err
@@ -82,32 +84,32 @@ func wgDeviceToBackendDevice(device *wgtypes.Device, name string) (*backend.Devi
 		return nil, fmt.Errorf("failed to get interface: %s address list: %w", name, err)
 	}
 
-	return &backend.Device{
-		Interface: backend.Interface{
+	return &driver.Device{
+		Interface: driver.Interface{
 			Name: link.Attrs().Name,
 			Addresses: adapt.Array(addressList, func(addr netlink.Addr) string {
 				return addr.String()
 			}),
 			Mtu: link.Attrs().MTU,
 		},
-		Wireguard: backend.Wireguard{
+		Wireguard: driver.Wireguard{
 			Name:         device.Name,
 			PublicKey:    device.PublicKey.String(),
 			PrivateKey:   device.PrivateKey.String(),
 			ListenPort:   device.ListenPort,
 			FirewallMark: device.FirewallMark,
-			Peers: adapt.Array(device.Peers, func(peer wgtypes.Peer) *backend.Peer {
+			Peers: adapt.Array(device.Peers, func(peer wgtypes.Peer) *driver.Peer {
 				var endpoint string
 				if peer.Endpoint != nil {
 					endpoint = peer.Endpoint.String()
 				}
-				return &backend.Peer{
+				return &driver.Peer{
 					PublicKey:           peer.PublicKey.String(),
 					Endpoint:            endpoint,
 					AllowedIPs:          peer.AllowedIPs,
 					PresharedKey:        peer.PresharedKey.String(),
 					PersistentKeepalive: peer.PersistentKeepaliveInterval,
-					Stats: backend.PeerStats{
+					Stats: driver.PeerStats{
 						LastHandshakeTime: peer.LastHandshakeTime,
 						ReceiveBytes:      peer.ReceiveBytes,
 						TransmitBytes:     peer.TransmitBytes,
@@ -131,11 +133,11 @@ func (lb *linuxBackend) Status(_ context.Context, name string) (bool, error) {
 	return link != nil, nil
 }
 
-func (lb *linuxBackend) Stats(_ context.Context, name string) (*backend.InterfaceStats, error) {
+func (lb *linuxBackend) Stats(_ context.Context, name string) (*driver.InterfaceStats, error) {
 	return interfaceStats(name)
 }
 
-func (lb *linuxBackend) PeerStats(_ context.Context, name string, peerPublicKey string) (*backend.PeerStats, error) {
+func (lb *linuxBackend) PeerStats(_ context.Context, name string, peerPublicKey string) (*driver.PeerStats, error) {
 	currentDevice, err := lb.client.Device(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open wireguard device: %w", err)
@@ -143,11 +145,11 @@ func (lb *linuxBackend) PeerStats(_ context.Context, name string, peerPublicKey 
 	return peerStats(currentDevice, name, peerPublicKey)
 }
 
-func (lb *linuxBackend) FindForeignServers(_ context.Context, knownInterfaces []string) ([]*backend.ForeignServer, error) {
+func (lb *linuxBackend) FindForeignServers(_ context.Context, knownInterfaces []string) ([]*driver.ForeignServer, error) {
 	return lb.findForeignServers(knownInterfaces)
 }
 
-func (lb *linuxBackend) configureWireguard(name string, privateKey string, listenPort *int, firewallMark *int, peerOptions []*backend.PeerOptions) error {
+func (lb *linuxBackend) configureWireguard(name string, privateKey string, listenPort *int, firewallMark *int, peerOptions []*driver.PeerOptions) error {
 	device, err := lb.client.Device(name)
 	if err != nil {
 		return fmt.Errorf("failed to open wireguard device: %w", err)
@@ -170,11 +172,7 @@ func (lb *linuxBackend) Close(_ context.Context) error {
 	return lb.client.Close()
 }
 
-func (lb *linuxBackend) Supported() bool {
-	return true
-}
-
-func computePeers(device *wgtypes.Device, peerOptions []*backend.PeerOptions) ([]wgtypes.PeerConfig, error) {
+func computePeers(device *wgtypes.Device, peerOptions []*driver.PeerOptions) ([]wgtypes.PeerConfig, error) {
 	var actualPeers []wgtypes.PeerConfig
 	for _, p := range peerOptions {
 		peerConfig, err := wireguardPeerOptionsToPeerConfig(p)
@@ -333,7 +331,7 @@ func deleteInterface(name string) error {
 	return nil
 }
 
-func interfaceStats(name string) (*backend.InterfaceStats, error) {
+func interfaceStats(name string) (*driver.InterfaceStats, error) {
 	link, err := findInterface(name)
 	if err != nil {
 		return nil, err
@@ -344,7 +342,7 @@ func interfaceStats(name string) (*backend.InterfaceStats, error) {
 	return linkStatisticsToBackendInterfaceStats(link.Attrs().Statistics), nil
 }
 
-func peerStats(device *wgtypes.Device, name string, peerPublicKey string) (*backend.PeerStats, error) {
+func peerStats(device *wgtypes.Device, name string, peerPublicKey string) (*driver.PeerStats, error) {
 	publicKey, err := wgtypes.ParseKey(peerPublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("invalid peer: %s public key: %w", name, err)
@@ -352,7 +350,7 @@ func peerStats(device *wgtypes.Device, name string, peerPublicKey string) (*back
 
 	for _, p := range device.Peers {
 		if p.PublicKey == publicKey {
-			return &backend.PeerStats{
+			return &driver.PeerStats{
 				LastHandshakeTime: p.LastHandshakeTime,
 				ReceiveBytes:      p.ReceiveBytes,
 				TransmitBytes:     p.TransmitBytes,
@@ -475,13 +473,13 @@ func computeRoutes(link netlink.Link, existingRoutes []netlink.Route, allowedIPs
 	return routesToAdd, routesToUpdate, routesToRemove
 }
 
-func (lb *linuxBackend) findForeignServers(knownInterfaces []string) ([]*backend.ForeignServer, error) {
+func (lb *linuxBackend) findForeignServers(knownInterfaces []string) ([]*driver.ForeignServer, error) {
 	list, err := netlink.LinkList()
 	if err != nil {
 		return nil, err
 	}
 
-	var foreignServers []*backend.ForeignServer
+	var foreignServers []*driver.ForeignServer
 	for _, link := range list {
 		if !strings.EqualFold(link.Type(), "wireguard") {
 			continue
@@ -501,25 +499,25 @@ func (lb *linuxBackend) findForeignServers(knownInterfaces []string) ([]*backend
 			return nil, err
 		}
 
-		foreignServers = append(foreignServers, &backend.ForeignServer{
+		foreignServers = append(foreignServers, &driver.ForeignServer{
 			Interface:    foreignInterface,
 			Name:         device.Name,
 			Type:         device.Type.String(),
 			PublicKey:    device.PublicKey.String(),
 			ListenPort:   device.ListenPort,
 			FirewallMark: device.FirewallMark,
-			Peers: adapt.Array(device.Peers, func(peer wgtypes.Peer) *backend.Peer {
+			Peers: adapt.Array(device.Peers, func(peer wgtypes.Peer) *driver.Peer {
 				var endpoint string
 				if peer.Endpoint != nil {
 					endpoint = peer.Endpoint.String()
 				}
-				return &backend.Peer{
+				return &driver.Peer{
 					PublicKey:           peer.PublicKey.String(),
 					Endpoint:            endpoint,
 					AllowedIPs:          peer.AllowedIPs,
 					PresharedKey:        peer.PresharedKey.String(),
 					PersistentKeepalive: peer.PersistentKeepaliveInterval,
-					Stats: backend.PeerStats{
+					Stats: driver.PeerStats{
 						LastHandshakeTime: peer.LastHandshakeTime,
 						ReceiveBytes:      peer.ReceiveBytes,
 						TransmitBytes:     peer.TransmitBytes,

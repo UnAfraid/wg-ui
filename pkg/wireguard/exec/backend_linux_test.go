@@ -9,25 +9,25 @@ import (
 	"testing"
 	"time"
 
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
 func TestRenderConfigIncludesInterfaceAndPeerSettings(t *testing.T) {
 	listenPort := 51820
 	firewallMark := 42
-	config := renderConfig(backend.ConfigureOptions{
-		InterfaceOptions: backend.InterfaceOptions{
+	config := renderConfig(driver.ConfigureOptions{
+		InterfaceOptions: driver.InterfaceOptions{
 			Name:        "wg0",
 			Description: "My tunnel",
 			Address:     "10.0.0.1/24",
 			Mtu:         1420,
 		},
-		WireguardOptions: backend.WireguardOptions{
+		WireguardOptions: driver.WireguardOptions{
 			PrivateKey:   "private-key",
 			ListenPort:   &listenPort,
 			FirewallMark: &firewallMark,
-			Peers: []*backend.PeerOptions{
+			Peers: []*driver.PeerOptions{
 				{
 					PublicKey:           "peer-public",
 					Endpoint:            "198.51.100.10:51820",

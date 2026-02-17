@@ -16,7 +16,7 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
-	wgbackend "github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
 type queryResolver struct {
@@ -155,11 +155,11 @@ func (r *queryResolver) AvailableBackends(ctx context.Context) ([]*model.Availab
 		return nil, err
 	}
 
-	allTypes := wgbackend.ListTypes()
+	allTypes := driver.ListTypes()
 	return adapt.Array(allTypes, func(t string) *model.AvailableBackend {
 		return &model.AvailableBackend{
 			Type:       t,
-			Supported:  wgbackend.IsSupported(t),
+			Supported:  driver.IsSupported(t),
 			Registered: slices.Contains(registeredTypes, t),
 		}
 	}), nil

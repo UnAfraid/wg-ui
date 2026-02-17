@@ -19,12 +19,14 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	backendpkg "github.com/UnAfraid/wg-ui/pkg/backend"
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
-func init() {
-	backend.Register("exec", NewExecBackend, isExecBackendAvailable())
+func Register() {
+	driver.Register("exec", func(_ context.Context, rawURL string) (driver.Backend, error) {
+		return NewExecBackend(rawURL)
+	}, isExecBackendAvailable())
 }
 
 func isExecBackendAvailable() bool {
@@ -50,8 +52,8 @@ type execBackend struct {
 	catPath      string
 }
 
-func NewExecBackend(rawURL string) (backend.Backend, error) {
-	parsed, err := backendpkg.ParseURL(rawURL)
+func NewExecBackend(rawURL string) (driver.Backend, error) {
+	parsed, err := backend.ParseURL(rawURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse backend url: %w", err)
 	}
@@ -138,7 +140,7 @@ func NewExecBackend(rawURL string) (backend.Backend, error) {
 	}, nil
 }
 
-func (b *execBackend) Device(ctx context.Context, name string) (*backend.Device, error) {
+func (b *execBackend) Device(ctx context.Context, name string) (*driver.Device, error) {
 	device, err := b.deviceFromDump(ctx, name)
 	if err != nil {
 		exists, existsErr := b.interfaceExists(ctx, name)
@@ -156,7 +158,7 @@ func (b *execBackend) Device(ctx context.Context, name string) (*backend.Device,
 		return nil, err
 	}
 
-	device.Interface = backend.Interface{
+	device.Interface = driver.Interface{
 		Name:      name,
 		Addresses: details.Addresses,
 		Mtu:       details.MTU,
@@ -164,7 +166,7 @@ func (b *execBackend) Device(ctx context.Context, name string) (*backend.Device,
 	return device, nil
 }
 
-func (b *execBackend) Up(ctx context.Context, options backend.ConfigureOptions) (*backend.Device, error) {
+func (b *execBackend) Up(ctx context.Context, options driver.ConfigureOptions) (*driver.Device, error) {
 	if err := options.Validate(); err != nil {
 		return nil, err
 	}
@@ -230,18 +232,18 @@ func (b *execBackend) Status(ctx context.Context, name string) (bool, error) {
 	return b.interfaceExists(ctx, name)
 }
 
-func (b *execBackend) Stats(ctx context.Context, name string) (*backend.InterfaceStats, error) {
+func (b *execBackend) Stats(ctx context.Context, name string) (*driver.InterfaceStats, error) {
 	stats, err := b.interfaceStats(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 	if stats == nil {
-		return &backend.InterfaceStats{}, nil
+		return &driver.InterfaceStats{}, nil
 	}
 	return stats, nil
 }
 
-func (b *execBackend) PeerStats(ctx context.Context, name string, peerPublicKey string) (*backend.PeerStats, error) {
+func (b *execBackend) PeerStats(ctx context.Context, name string, peerPublicKey string) (*driver.PeerStats, error) {
 	device, err := b.deviceFromDump(ctx, name)
 	if err != nil {
 		return nil, err
@@ -255,14 +257,14 @@ func (b *execBackend) PeerStats(ctx context.Context, name string, peerPublicKey 
 	return nil, nil
 }
 
-func (b *execBackend) FindForeignServers(ctx context.Context, knownInterfaces []string) ([]*backend.ForeignServer, error) {
+func (b *execBackend) FindForeignServers(ctx context.Context, knownInterfaces []string) ([]*driver.ForeignServer, error) {
 	knownInterfaceSet := make(map[string]struct{}, len(knownInterfaces))
 	for _, name := range knownInterfaces {
 		knownInterfaceSet[name] = struct{}{}
 	}
 
 	existingForeignNames := make(map[string]struct{})
-	var foreignServers []*backend.ForeignServer
+	var foreignServers []*driver.ForeignServer
 
 	interfacesOutput, err := b.runWG(ctx, "show", "interfaces")
 	if err != nil {
@@ -280,7 +282,7 @@ func (b *execBackend) FindForeignServers(ctx context.Context, knownInterfaces []
 		}
 
 		details, detailsErr := b.getInterfaceDetails(ctx, name)
-		foreignInterface := &backend.ForeignInterface{
+		foreignInterface := &driver.ForeignInterface{
 			Name:  name,
 			State: "up",
 		}
@@ -292,7 +294,7 @@ func (b *execBackend) FindForeignServers(ctx context.Context, knownInterfaces []
 			}
 		}
 
-		foreignServers = append(foreignServers, &backend.ForeignServer{
+		foreignServers = append(foreignServers, &driver.ForeignServer{
 			Interface:    foreignInterface,
 			Name:         device.Wireguard.Name,
 			Type:         "wireguard",
@@ -316,11 +318,7 @@ func (b *execBackend) Close(_ context.Context) error {
 	return nil
 }
 
-func (b *execBackend) Supported() bool {
-	return true
-}
-
-func (b *execBackend) syncWithoutRestart(ctx context.Context, options backend.ConfigureOptions, configPath string) error {
+func (b *execBackend) syncWithoutRestart(ctx context.Context, options driver.ConfigureOptions, configPath string) error {
 	name := options.InterfaceOptions.Name
 
 	strippedConfig, err := b.runWGQuick(ctx, "strip", configPath)
@@ -384,7 +382,7 @@ func (b *execBackend) ensureInterfaceSettings(ctx context.Context, name string, 
 	return nil
 }
 
-func (b *execBackend) reconcileRoutes(ctx context.Context, name string, interfaceAddress string, peers []*backend.PeerOptions) error {
+func (b *execBackend) reconcileRoutes(ctx context.Context, name string, interfaceAddress string, peers []*driver.PeerOptions) error {
 	desiredIPv4, desiredIPv6, err := collectDesiredRoutes(peers)
 	if err != nil {
 		return err
@@ -457,7 +455,7 @@ func (b *execBackend) reconcileRoutes(ctx context.Context, name string, interfac
 	return nil
 }
 
-func collectDesiredRoutes(peers []*backend.PeerOptions) (map[string]struct{}, map[string]struct{}, error) {
+func collectDesiredRoutes(peers []*driver.PeerOptions) (map[string]struct{}, map[string]struct{}, error) {
 	desiredIPv4 := make(map[string]struct{})
 	desiredIPv6 := make(map[string]struct{})
 
@@ -629,7 +627,7 @@ func (b *execBackend) interfaceExists(ctx context.Context, name string) (bool, e
 	return false, err
 }
 
-func (b *execBackend) interfaceStats(ctx context.Context, name string) (*backend.InterfaceStats, error) {
+func (b *execBackend) interfaceStats(ctx context.Context, name string) (*driver.InterfaceStats, error) {
 	output, err := b.runNetstat(ctx, "-bI", name)
 	if err != nil {
 		lower := strings.ToLower(err.Error())
@@ -642,10 +640,10 @@ func (b *execBackend) interfaceStats(ctx context.Context, name string) (*backend
 	return parseNetstatInterfaceStats(name, string(output)), nil
 }
 
-func parseNetstatInterfaceStats(name string, output string) *backend.InterfaceStats {
+func parseNetstatInterfaceStats(name string, output string) *driver.InterfaceStats {
 	lines := strings.Split(output, "\n")
 	if len(lines) == 0 {
-		return &backend.InterfaceStats{}
+		return &driver.InterfaceStats{}
 	}
 
 	headerIndex := -1
@@ -663,7 +661,7 @@ func parseNetstatInterfaceStats(name string, output string) *backend.InterfaceSt
 		}
 	}
 	if headerIndex == -1 {
-		return &backend.InterfaceStats{}
+		return &driver.InterfaceStats{}
 	}
 
 	headerMap := make(map[string]int, len(headerFields))
@@ -685,24 +683,13 @@ func parseNetstatInterfaceStats(name string, output string) *backend.InterfaceSt
 			continue
 		}
 
-		return &backend.InterfaceStats{
-			RxPackets: parseFieldUint64(fields, headerMap, "Ipkts"),
-			TxPackets: parseFieldUint64(fields, headerMap, "Opkts"),
-			RxErrors:  parseFieldUint64(fields, headerMap, "Ierrs"),
-			TxErrors:  parseFieldUint64(fields, headerMap, "Oerrs"),
-			Collisions: func() uint64 {
-				if _, ok := headerMap["Coll"]; ok {
-					return parseFieldUint64(fields, headerMap, "Coll")
-				}
-				return 0
-			}(),
-			RxDropped: parseFieldUint64(fields, headerMap, "Drop"),
-			RxBytes:   parseFieldUint64(fields, headerMap, "Ibytes"),
-			TxBytes:   parseFieldUint64(fields, headerMap, "Obytes"),
+		return &driver.InterfaceStats{
+			RxBytes: parseFieldUint64(fields, headerMap, "Ibytes"),
+			TxBytes: parseFieldUint64(fields, headerMap, "Obytes"),
 		}
 	}
 
-	return &backend.InterfaceStats{}
+	return &driver.InterfaceStats{}
 }
 
 func parseFieldUint64(fields []string, headerMap map[string]int, key string) uint64 {
@@ -859,7 +846,7 @@ func parseIfconfigMaskPrefix(maskValue string) (int, error) {
 	return ones, nil
 }
 
-func (b *execBackend) writeConfig(ctx context.Context, options backend.ConfigureOptions) (string, error) {
+func (b *execBackend) writeConfig(ctx context.Context, options driver.ConfigureOptions) (string, error) {
 	name := options.InterfaceOptions.Name
 	configPath := b.configFilePath(name)
 	configContent := renderConfig(options)
@@ -915,7 +902,7 @@ func (b *execBackend) writeConfig(ctx context.Context, options backend.Configure
 	return configPath, nil
 }
 
-func (b *execBackend) deviceFromConfigFile(ctx context.Context, name string) (*backend.Device, error) {
+func (b *execBackend) deviceFromConfigFile(ctx context.Context, name string) (*driver.Device, error) {
 	configPath := b.configFilePath(name)
 	configContent, err := b.readConfigFile(ctx, configPath)
 	if err != nil {
@@ -934,13 +921,13 @@ func (b *execBackend) findForeignServersFromConfigFiles(
 	ctx context.Context,
 	knownInterfaceSet map[string]struct{},
 	existingForeignNames map[string]struct{},
-) ([]*backend.ForeignServer, error) {
+) ([]*driver.ForeignServer, error) {
 	configFiles, err := b.listConfigFiles(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var foreignServers []*backend.ForeignServer
+	var foreignServers []*driver.ForeignServer
 	for _, configPath := range configFiles {
 		base := filepath.Base(configPath)
 		name := strings.TrimSuffix(base, ".conf")
@@ -966,8 +953,8 @@ func (b *execBackend) findForeignServersFromConfigFiles(
 			continue
 		}
 
-		foreignServers = append(foreignServers, &backend.ForeignServer{
-			Interface: &backend.ForeignInterface{
+		foreignServers = append(foreignServers, &driver.ForeignServer{
+			Interface: &driver.ForeignInterface{
 				Name:      parsedConfig.Device.Interface.Name,
 				Addresses: parsedConfig.Device.Interface.Addresses,
 				Mtu:       parsedConfig.Device.Interface.Mtu,
@@ -1045,7 +1032,7 @@ func (b *execBackend) readConfigFile(ctx context.Context, path string) ([]byte, 
 	return output, nil
 }
 
-func (b *execBackend) deviceFromDump(ctx context.Context, name string) (*backend.Device, error) {
+func (b *execBackend) deviceFromDump(ctx context.Context, name string) (*driver.Device, error) {
 	output, err := b.runWG(ctx, "show", name, "dump")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read device dump for %s: %w", name, err)

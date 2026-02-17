@@ -1,4 +1,4 @@
-package backend
+package driver
 
 type ForeignServer struct {
 	BackendId    string

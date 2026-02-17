@@ -4,10 +4,10 @@ import (
 	"net"
 
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
-func ToForeignInterface(foreignInterface *backend.ForeignInterface) *ForeignInterface {
+func ToForeignInterface(foreignInterface *driver.ForeignInterface) *ForeignInterface {
 	if foreignInterface == nil {
 		return nil
 	}
@@ -19,7 +19,7 @@ func ToForeignInterface(foreignInterface *backend.ForeignInterface) *ForeignInte
 	}
 }
 
-func ToForeignServer(foreignServer *backend.ForeignServer) *ForeignServer {
+func ToForeignServer(foreignServer *driver.ForeignServer) *ForeignServer {
 	if foreignServer == nil {
 		return nil
 	}
@@ -38,7 +38,7 @@ func ToForeignServer(foreignServer *backend.ForeignServer) *ForeignServer {
 	}
 }
 
-func ToForeignPeer(foreignPeer *backend.Peer) *ForeignPeer {
+func ToForeignPeer(foreignPeer *driver.Peer) *ForeignPeer {
 	if foreignPeer == nil {
 		return nil
 	}

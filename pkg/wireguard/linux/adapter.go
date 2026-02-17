@@ -11,10 +11,10 @@ import (
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
+	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
-func wireguardPeerOptionsToPeerConfig(peer *backend.PeerOptions) (wgtypes.PeerConfig, error) {
+func wireguardPeerOptionsToPeerConfig(peer *driver.PeerOptions) (wgtypes.PeerConfig, error) {
 	publicKey, err := wgtypes.ParseKey(peer.PublicKey)
 	if err != nil {
 		return wgtypes.PeerConfig{}, fmt.Errorf("invalid peer: %s public key: %w", peer.PublicKey, err)
@@ -54,38 +54,17 @@ func wireguardPeerOptionsToPeerConfig(peer *backend.PeerOptions) (wgtypes.PeerCo
 	}, nil
 }
 
-func linkStatisticsToBackendInterfaceStats(statistics *netlink.LinkStatistics) *backend.InterfaceStats {
+func linkStatisticsToBackendInterfaceStats(statistics *netlink.LinkStatistics) *driver.InterfaceStats {
 	if statistics == nil {
 		return nil
 	}
-	return &backend.InterfaceStats{
-		RxPackets:         statistics.RxPackets,
-		TxPackets:         statistics.TxPackets,
-		RxBytes:           statistics.RxBytes,
-		TxBytes:           statistics.TxBytes,
-		RxErrors:          statistics.RxErrors,
-		TxErrors:          statistics.TxErrors,
-		RxDropped:         statistics.RxDropped,
-		TxDropped:         statistics.TxDropped,
-		Multicast:         statistics.Multicast,
-		Collisions:        statistics.Collisions,
-		RxLengthErrors:    statistics.RxLengthErrors,
-		RxOverErrors:      statistics.RxOverErrors,
-		RxCrcErrors:       statistics.RxCrcErrors,
-		RxFrameErrors:     statistics.RxFrameErrors,
-		RxFifoErrors:      statistics.RxFifoErrors,
-		RxMissedErrors:    statistics.RxMissedErrors,
-		TxAbortedErrors:   statistics.TxAbortedErrors,
-		TxCarrierErrors:   statistics.TxCarrierErrors,
-		TxFifoErrors:      statistics.TxFifoErrors,
-		TxHeartbeatErrors: statistics.TxHeartbeatErrors,
-		TxWindowErrors:    statistics.TxWindowErrors,
-		RxCompressed:      statistics.RxCompressed,
-		TxCompressed:      statistics.TxCompressed,
+	return &driver.InterfaceStats{
+		RxBytes: statistics.RxBytes,
+		TxBytes: statistics.TxBytes,
 	}
 }
 
-func netlinkInterfaceToForeignInterface(link netlink.Link) (*backend.ForeignInterface, error) {
+func netlinkInterfaceToForeignInterface(link netlink.Link) (*driver.ForeignInterface, error) {
 	attrs := link.Attrs()
 
 	addrList, err := netlink.AddrList(link, netlink.FAMILY_ALL)
@@ -98,7 +77,7 @@ func netlinkInterfaceToForeignInterface(link netlink.Link) (*backend.ForeignInte
 		addresses = append(addresses, addr.IPNet.String())
 	}
 
-	return &backend.ForeignInterface{
+	return &driver.ForeignInterface{
 		Name:      attrs.Name,
 		Addresses: addresses,
 		Mtu:       attrs.MTU,

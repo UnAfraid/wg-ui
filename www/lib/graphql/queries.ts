@@ -73,12 +73,6 @@ export const SERVER_QUERY = gql`
         interfaceStats {
           rxBytes
           txBytes
-          rxPackets
-          txPackets
-          rxErrors
-          txErrors
-          rxDropped
-          txDropped
         }
         peers {
           id

@@ -7,14 +7,6 @@ import (
 	"strings"
 )
 
-// SupportedTypes lists all recognized backend URL schemes
-// Note: Only include types that have actual implementations in pkg/wireguard/
-var SupportedTypes = []string{
-	"exec",
-	"linux",
-	"networkmanager",
-}
-
 // ParsedURL represents a parsed backend URL
 type ParsedURL struct {
 	Type    string            // Backend type (scheme without "://")
@@ -42,9 +34,6 @@ func ParseURL(rawURL string) (*ParsedURL, error) {
 	}
 
 	backendType := strings.ToLower(parsed.Scheme)
-	if !isKnownType(backendType) {
-		return nil, fmt.Errorf("%w: %s", ErrUnknownBackendType, backendType)
-	}
 
 	result := &ParsedURL{
 		Type:    backendType,
@@ -66,15 +55,6 @@ func ParseURL(rawURL string) (*ParsedURL, error) {
 	}
 
 	return result, nil
-}
-
-func isKnownType(backendType string) bool {
-	for _, t := range SupportedTypes {
-		if t == backendType {
-			return true
-		}
-	}
-	return false
 }
 
 // BuildURL constructs a backend URL from components
