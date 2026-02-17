@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"runtime"
 	"strings"
 	"time"
 
@@ -169,19 +170,30 @@ func (s *service) getOrCreateDefaultBackend(ctx context.Context) (*backendpkg.Ba
 	}
 
 	for _, b := range backends {
-		if b.Type() == "linux" {
+		if runtime.GOOS == "linux" && b.Type() == "linux" {
+			return b, nil
+		} else if runtime.GOOS == "darwin" && b.Type() == "darwin" {
 			return b, nil
 		}
 	}
 
-	// Create default linux backend
-	logrus.Info("creating default linux backend for legacy server migration")
-	return s.backendService.CreateBackend(ctx, &backendpkg.CreateOptions{
-		Name:        "Linux (Default)",
+	createOptions := &backendpkg.CreateOptions{
 		Description: "Default backend created for legacy server migration",
-		Url:         "linux:///etc/wireguard",
 		Enabled:     true,
-	}, "")
+	}
+
+	if runtime.GOOS == "linux" {
+		createOptions.Name = "Linux"
+		createOptions.Url = "linux://"
+	} else if runtime.GOOS == "darwin" {
+		createOptions.Name = "macOS"
+		createOptions.Url = "darwin://"
+	}
+
+	// Create default linux backend
+	logrus.Infof("creating default %s backend for legacy server migration", createOptions.Url)
+
+	return s.backendService.CreateBackend(ctx, createOptions, "")
 }
 
 func (s *service) run(interval time.Duration, automaticStatsUpdateOnlyWithSubscribers bool) {

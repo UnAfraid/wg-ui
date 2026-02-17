@@ -3,7 +3,7 @@ Represents a backend type that can be registered
 """
 type AvailableBackend {
     """
-    The backend type identifier (e.g., "linux", "networkmanager", "macos")
+    The backend type identifier (e.g., "linux", "networkmanager", "darwin")
     """
     type: String!
 

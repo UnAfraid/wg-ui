@@ -19,7 +19,7 @@ type NodeChangedEvent interface {
 
 // Represents a backend type that can be registered
 type AvailableBackend struct {
-	// The backend type identifier (e.g., "linux", "networkmanager", "macos")
+	// The backend type identifier (e.g., "linux", "networkmanager", "darwin")
 	Type string `json:"type"`
 	// Whether this backend type is supported on the current platform
 	Supported bool `json:"supported"`

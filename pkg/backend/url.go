@@ -10,6 +10,7 @@ import (
 // SupportedTypes lists all recognized backend URL schemes
 // Note: Only include types that have actual implementations in pkg/wireguard/
 var SupportedTypes = []string{
+	"darwin",
 	"linux",
 	"networkmanager",
 }
