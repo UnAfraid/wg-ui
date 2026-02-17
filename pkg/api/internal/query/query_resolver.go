@@ -176,30 +176,10 @@ func (r *queryResolver) Backends(ctx context.Context, typeArg *string) ([]*model
 }
 
 func (r *queryResolver) ForeignServers(ctx context.Context) ([]*model.ForeignServer, error) {
-	// Get all backends and collect foreign servers from each
-	backends, err := r.backendService.FindBackends(ctx, &backend.FindOptions{
-		Enabled: adapt.ToPointer(true),
-	})
+	foreignServers, err := r.manageService.ForeignServersAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var allForeignServers []*model.ForeignServer
-	var errs []error
-	for _, b := range backends {
-		foreignServers, err := r.manageService.ForeignServers(ctx, b.Id)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("backend %s: %w", b.Name, err))
-			continue
-		}
-		for _, fs := range foreignServers {
-			allForeignServers = append(allForeignServers, model.ToForeignServer(fs))
-		}
-	}
-
-	if len(errs) > 0 && len(allForeignServers) == 0 {
-		return nil, errors.Join(errs...)
-	}
-
-	return allForeignServers, nil
+	return adapt.Array(foreignServers, model.ToForeignServer), nil
 }

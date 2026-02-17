@@ -39,7 +39,7 @@ type nmBackend struct {
 	wgClient *wgctrl.Client
 }
 
-func NewNetworkManagerBackend() (backend.Backend, error) {
+func NewNetworkManagerBackend(_ string) (backend.Backend, error) {
 	nm, err := gonetworkmanager.NewNetworkManager()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to NetworkManager: %w", err)

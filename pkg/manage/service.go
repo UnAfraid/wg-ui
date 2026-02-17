@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
 	backendpkg "github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/dbx"
@@ -36,6 +37,7 @@ type Service interface {
 	DeletePeer(ctx context.Context, peerId string, userId string) (*peer.Peer, error)
 	PeerStats(ctx context.Context, serverId string, peerPublicKey string) (*backend.PeerStats, error)
 	ForeignServers(ctx context.Context, backendId string) ([]*backend.ForeignServer, error)
+	ForeignServersAll(ctx context.Context) ([]*backend.ForeignServer, error)
 	DeleteBackend(ctx context.Context, backendId string, userId string) (*backendpkg.Backend, error)
 	Close()
 }
@@ -416,6 +418,7 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 		if err != nil {
 			return nil, fmt.Errorf("failed to find servers: %w", err)
 		}
+		managedServersByPublicKey := serverByPublicKey(servers, "")
 
 		knownInterfaces := adapt.Array(servers, func(server *server.Server) string {
 			return server.Name
@@ -438,9 +441,18 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 			return nil, fmt.Errorf("foreign interface: %s not found", name)
 		}
 
+		if existingServer := findServerByPublicKey(foreignServer.PublicKey, managedServersByPublicKey); existingServer != nil {
+			return nil, s.serverPublicKeyConflictError(ctx, existingServer)
+		}
+
 		device, err := s.wireguardService.Device(ctx, b, foreignServer.Interface.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open interface: %s", foreignServer.Interface.Name)
+		}
+
+		// Some backends may only discover the public key after reading the interface/config.
+		if existingServer := findServerByPublicKey(device.Wireguard.PublicKey, managedServersByPublicKey); existingServer != nil {
+			return nil, s.serverPublicKeyConflictError(ctx, existingServer)
 		}
 
 		var address string
@@ -540,11 +552,58 @@ func (s *service) ForeignServers(ctx context.Context, backendId string) ([]*back
 	if err != nil {
 		return nil, fmt.Errorf("failed to find servers: %w", err)
 	}
+	managedServersByPublicKey := serverByPublicKey(servers, "")
 
 	knownInterfaces := adapt.Array(servers, func(server *server.Server) string {
 		return server.Name
 	})
-	return s.wireguardService.FindForeignServers(ctx, b, knownInterfaces)
+	foreignServers, err := s.wireguardService.FindForeignServers(ctx, b, knownInterfaces)
+	if err != nil {
+		return nil, err
+	}
+	return filterForeignServersByPublicKey(foreignServers, managedServersByPublicKey), nil
+}
+
+func (s *service) ForeignServersAll(ctx context.Context) ([]*backend.ForeignServer, error) {
+	backends, err := s.backendService.FindBackends(ctx, &backendpkg.FindOptions{
+		Enabled: adapt.ToPointer(true),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to find backends: %w", err)
+	}
+
+	allForeignServers := make([]*backend.ForeignServer, 0)
+	seenPublicKeys := make(map[string]struct{})
+	var errs []error
+
+	for _, b := range backends {
+		foreignServers, err := s.ForeignServers(ctx, b.Id)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("backend %s: %w", b.Name, err))
+			continue
+		}
+
+		for _, foreignServer := range foreignServers {
+			if foreignServer == nil {
+				continue
+			}
+
+			normalizedPublicKey := normalizePublicKey(foreignServer.PublicKey)
+			if normalizedPublicKey != "" {
+				if _, seen := seenPublicKeys[normalizedPublicKey]; seen {
+					continue
+				}
+				seenPublicKeys[normalizedPublicKey] = struct{}{}
+			}
+
+			allForeignServers = append(allForeignServers, foreignServer)
+		}
+	}
+
+	if len(errs) > 0 && len(allForeignServers) == 0 {
+		return nil, errors.Join(errs...)
+	}
+	return allForeignServers, nil
 }
 
 func (s *service) DeleteBackend(ctx context.Context, backendId string, userId string) (*backendpkg.Backend, error) {
@@ -616,6 +675,10 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 		return nil, fmt.Errorf("backend %s is disabled", b.Name)
 	}
 
+	if err := s.ensurePublicKeyUnique(ctx, srv.PublicKey, srv.Id); err != nil {
+		return nil, err
+	}
+
 	return s.wireguardService.Up(ctx, b, backend.ConfigureOptions{
 		InterfaceOptions: backend.InterfaceOptions{
 			Name:        srv.Name,
@@ -666,6 +729,107 @@ func (s *service) updateServer(ctx context.Context, srv *server.Server, device *
 		MTU:          srv.MTU != device.Interface.Mtu,
 	}
 	return s.serverService.UpdateServer(ctx, srv.Id, &updateOptions, &updateFieldMask, userId)
+}
+
+func (s *service) ensurePublicKeyUnique(ctx context.Context, publicKey string, excludeServerId string) error {
+	normalizedPublicKey := normalizePublicKey(publicKey)
+	if normalizedPublicKey == "" {
+		return nil
+	}
+
+	servers, err := s.serverService.FindServers(ctx, &server.FindOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to find servers: %w", err)
+	}
+
+	if existingServer := findServerByPublicKey(normalizedPublicKey, serverByPublicKey(servers, excludeServerId)); existingServer != nil {
+		return s.serverPublicKeyConflictError(ctx, existingServer)
+	}
+	return nil
+}
+
+func (s *service) serverPublicKeyConflictError(ctx context.Context, srv *server.Server) error {
+	backendName := strings.TrimSpace(srv.BackendId)
+	if backendName == "" {
+		backendName = "unknown"
+	} else if b, err := s.findBackend(ctx, srv.BackendId); err == nil && b != nil && strings.TrimSpace(b.Name) != "" {
+		backendName = b.Name
+	}
+
+	return fmt.Errorf(
+		"wireguard interface with public key is already managed by server %q on backend %q",
+		srv.Name,
+		backendName,
+	)
+}
+
+func filterForeignServersByPublicKey(
+	foreignServers []*backend.ForeignServer,
+	managedServersByPublicKey map[string]*server.Server,
+) []*backend.ForeignServer {
+	filteredServers := make([]*backend.ForeignServer, 0, len(foreignServers))
+	seenPublicKeys := make(map[string]struct{}, len(foreignServers))
+
+	for _, foreignServer := range foreignServers {
+		if foreignServer == nil {
+			continue
+		}
+
+		normalizedPublicKey := normalizePublicKey(foreignServer.PublicKey)
+		if normalizedPublicKey != "" {
+			if _, exists := managedServersByPublicKey[normalizedPublicKey]; exists {
+				continue
+			}
+			if _, seen := seenPublicKeys[normalizedPublicKey]; seen {
+				continue
+			}
+			seenPublicKeys[normalizedPublicKey] = struct{}{}
+		}
+
+		filteredServers = append(filteredServers, foreignServer)
+	}
+
+	return filteredServers
+}
+
+func serverByPublicKey(servers []*server.Server, excludeServerId string) map[string]*server.Server {
+	serversByPublicKey := make(map[string]*server.Server, len(servers))
+	for _, srv := range servers {
+		if srv == nil || (excludeServerId != "" && srv.Id == excludeServerId) {
+			continue
+		}
+
+		normalizedPublicKey := normalizePublicKey(srv.PublicKey)
+		if normalizedPublicKey == "" {
+			continue
+		}
+
+		if _, exists := serversByPublicKey[normalizedPublicKey]; !exists {
+			serversByPublicKey[normalizedPublicKey] = srv
+		}
+	}
+	return serversByPublicKey
+}
+
+func findServerByPublicKey(publicKey string, serversByPublicKey map[string]*server.Server) *server.Server {
+	normalizedPublicKey := normalizePublicKey(publicKey)
+	if normalizedPublicKey == "" {
+		return nil
+	}
+	return serversByPublicKey[normalizedPublicKey]
+}
+
+func normalizePublicKey(publicKey string) string {
+	normalizedPublicKey := strings.TrimSpace(publicKey)
+	if normalizedPublicKey == "" {
+		return ""
+	}
+
+	key, err := wgtypes.ParseKey(normalizedPublicKey)
+	if err != nil {
+		return normalizedPublicKey
+	}
+	return key.String()
 }
 
 func (s *service) findUserById(ctx context.Context, userId string) (*user.User, error) {

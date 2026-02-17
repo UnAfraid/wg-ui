@@ -12,6 +12,7 @@ import (
 type BackendRef interface {
 	GetId() string
 	Type() string
+	GetURL() string
 }
 
 type Service interface {
@@ -37,7 +38,7 @@ func NewService(registry *Registry) Service {
 }
 
 func (s *service) getBackend(ctx context.Context, b BackendRef) (backend.Backend, error) {
-	return s.registry.GetOrCreate(ctx, b.GetId(), b.Type())
+	return s.registry.GetOrCreate(ctx, b.GetId(), b.Type(), b.GetURL())
 }
 
 func (s *service) Device(ctx context.Context, ref BackendRef, name string) (*backend.Device, error) {

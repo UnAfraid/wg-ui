@@ -14,13 +14,19 @@ import (
 // Registry manages active backend connections keyed by backend entity ID
 type Registry struct {
 	mu       sync.RWMutex
-	backends map[string]backend.Backend
+	backends map[string]*registryBackend
+}
+
+type registryBackend struct {
+	instance    backend.Backend
+	backendType string
+	rawURL      string
 }
 
 // NewRegistry creates a new connection registry
 func NewRegistry() *Registry {
 	return &Registry{
-		backends: make(map[string]backend.Backend),
+		backends: make(map[string]*registryBackend),
 	}
 }
 
@@ -29,26 +35,55 @@ func (r *Registry) Get(backendId string) backend.Backend {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	return r.backends[backendId]
+	entry, ok := r.backends[backendId]
+	if !ok {
+		return nil
+	}
+
+	return entry.instance
 }
 
 // GetOrCreate retrieves an existing backend connection or creates a new one
-func (r *Registry) GetOrCreate(ctx context.Context, backendId string, backendType string) (backend.Backend, error) {
+func (r *Registry) GetOrCreate(ctx context.Context, backendId string, backendType string, rawURL string) (backend.Backend, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if b, ok := r.backends[backendId]; ok {
-		return b, nil
+	entry, ok := r.backends[backendId]
+	if ok && entry.backendType == backendType && entry.rawURL == rawURL {
+		return entry.instance, nil
 	}
 
-	b, err := backend.Create(backendType)
+	instance, err := backend.Create(backendType, rawURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create backend %s: %w", backendType, err)
 	}
 
-	r.backends[backendId] = b
-	logrus.WithField("backendId", backendId).WithField("type", backendType).Info("created backend connection")
-	return b, nil
+	r.backends[backendId] = &registryBackend{
+		instance:    instance,
+		backendType: backendType,
+		rawURL:      rawURL,
+	}
+
+	if ok {
+		if err := entry.instance.Close(ctx); err != nil {
+			logrus.WithError(err).
+				WithField("backendId", backendId).
+				WithField("type", backendType).
+				Warn("failed to close previous backend connection after url change")
+		}
+
+		logrus.WithField("backendId", backendId).
+			WithField("type", backendType).
+			WithField("url", rawURL).
+			Info("recreated backend connection due to url change")
+		return instance, nil
+	}
+
+	logrus.WithField("backendId", backendId).
+		WithField("type", backendType).
+		WithField("url", rawURL).
+		Info("created backend connection")
+	return instance, nil
 }
 
 // Remove removes and closes a backend connection
@@ -56,14 +91,14 @@ func (r *Registry) Remove(ctx context.Context, backendId string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	b, ok := r.backends[backendId]
+	entry, ok := r.backends[backendId]
 	if !ok {
 		return nil
 	}
 	delete(r.backends, backendId)
 
 	// Close outside lock to avoid blocking
-	if err := b.Close(ctx); err != nil {
+	if err := entry.instance.Close(ctx); err != nil {
 		return fmt.Errorf("failed to close backend %s: %w", backendId, err)
 	}
 
@@ -87,12 +122,12 @@ func (r *Registry) CloseAll(ctx context.Context) error {
 	defer r.mu.Unlock()
 
 	backends := r.backends
-	r.backends = make(map[string]backend.Backend)
+	r.backends = make(map[string]*registryBackend)
 
 	// Close all backends outside lock
 	var errs []error
-	for id, b := range backends {
-		if err := b.Close(ctx); err != nil {
+	for id, entry := range backends {
+		if err := entry.instance.Close(ctx); err != nil {
 			logrus.WithError(err).WithField("backendId", id).Error("failed to close backend")
 			errs = append(errs, fmt.Errorf("backend %s: %w", id, err))
 		}

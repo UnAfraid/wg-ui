@@ -7,7 +7,7 @@ import (
 )
 
 // Factory is a function that creates a new Backend instance
-type Factory func() (Backend, error)
+type Factory func(rawURL string) (Backend, error)
 
 // Registration holds factory and support info for a backend type
 type Registration struct {
@@ -80,8 +80,8 @@ func ListSupportedTypes() []string {
 	return types
 }
 
-// Create creates a new backend instance for the given scheme
-func Create(scheme string) (Backend, error) {
+// Create creates a new backend instance for the given scheme and URL.
+func Create(scheme string, rawURL string) (Backend, error) {
 	registryMu.RLock()
 	defer registryMu.RUnlock()
 	reg, ok := registryMap[scheme]
@@ -98,5 +98,5 @@ func Create(scheme string) (Backend, error) {
 		return nil, fmt.Errorf("backend type %s has no factory registered", scheme)
 	}
 
-	return reg.Factory()
+	return reg.Factory(rawURL)
 }

@@ -28,7 +28,7 @@ type linuxBackend struct {
 	client *wgctrl.Client
 }
 
-func NewLinuxBackend() (backend.Backend, error) {
+func NewLinuxBackend(_ string) (backend.Backend, error) {
 	client, err := wgctrl.New()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize linux backend: %w", err)

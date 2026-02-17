@@ -35,6 +35,10 @@ func (b *Backend) GetId() string {
 	return b.Id
 }
 
+func (b *Backend) GetURL() string {
+	return b.Url
+}
+
 func (b *Backend) validate(fieldMask *UpdateFieldMask) error {
 	if fieldMask == nil || fieldMask.Name {
 		if len(strings.TrimSpace(b.Name)) == 0 {
