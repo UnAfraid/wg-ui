@@ -102,26 +102,7 @@ func backendBatchFn(backendService backend.Service) func(context.Context, []stri
 		backends, err := backendService.FindBackends(ctx, &backend.FindOptions{
 			Ids: ids,
 		})
-		if err != nil {
-			return errorToDataloaderResults[*model.Backend](len(ids), err)
-		}
-
-		// Build map for O(1) lookup
-		backendByID := make(map[string]*model.Backend, len(backends))
-		for _, b := range backends {
-			mb := model.ToBackend(b)
-			if mb != nil {
-				id, _ := mb.ID.String(model.IdKindBackend)
-				backendByID[id] = mb
-			}
-		}
-
-		// Return results in the same order as input ids
-		results := make([]*dataloader.Result[*model.Backend], len(ids))
-		for i, id := range ids {
-			results[i] = &dataloader.Result[*model.Backend]{Data: backendByID[id]}
-		}
-		return results
+		return resultAndErrorToDataloaderResult(len(ids), adapt.Array(backends, model.ToBackend), err)
 	}
 }
 
