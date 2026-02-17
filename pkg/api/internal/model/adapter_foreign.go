@@ -19,7 +19,7 @@ func ToForeignInterface(foreignInterface *backend.ForeignInterface) *ForeignInte
 	}
 }
 
-func ToForeignServer(foreignServer *backend.ForeignServer, backendId string) *ForeignServer {
+func ToForeignServer(foreignServer *backend.ForeignServer) *ForeignServer {
 	if foreignServer == nil {
 		return nil
 	}
@@ -33,7 +33,7 @@ func ToForeignServer(foreignServer *backend.ForeignServer, backendId string) *Fo
 		FirewallMark:     foreignServer.FirewallMark,
 		Peers:            adapt.Array(foreignServer.Peers, ToForeignPeer),
 		Backend: &Backend{
-			ID: StringID(IdKindBackend, backendId),
+			ID: StringID(IdKindBackend, foreignServer.BackendId),
 		},
 	}
 }

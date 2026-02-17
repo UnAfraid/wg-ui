@@ -1,6 +1,7 @@
 package backend
 
 type ForeignServer struct {
+	BackendId    string
 	Interface    *ForeignInterface
 	Name         string
 	Description  string

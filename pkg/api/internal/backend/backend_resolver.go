@@ -125,9 +125,7 @@ func (r *backendResolver) ForeignServers(ctx context.Context, b *model.Backend) 
 		return nil, err
 	}
 
-	return adapt.Array(foreignServers, func(fs *wireguardbackend.ForeignServer) *model.ForeignServer {
-		return model.ToForeignServer(fs, backendId)
-	}), nil
+	return adapt.Array(foreignServers, model.ToForeignServer), nil
 }
 
 func (r *backendResolver) CreateUser(ctx context.Context, b *model.Backend) (*model.User, error) {

@@ -86,7 +86,15 @@ func (s *service) FindForeignServers(ctx context.Context, backendId string, back
 	if err != nil {
 		return nil, fmt.Errorf("failed to get backend: %w", err)
 	}
-	return b.FindForeignServers(ctx, knownInterfaces)
+	servers, err := b.FindForeignServers(ctx, knownInterfaces)
+	if err != nil {
+		return nil, err
+	}
+	// Set BackendId on each foreign server
+	for _, srv := range servers {
+		srv.BackendId = backendId
+	}
+	return servers, nil
 }
 
 func (s *service) RemoveBackend(ctx context.Context, backendId string) error {

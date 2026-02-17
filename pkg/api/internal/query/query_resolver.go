@@ -193,7 +193,7 @@ func (r *queryResolver) ForeignServers(ctx context.Context) ([]*model.ForeignSer
 			continue
 		}
 		for _, fs := range foreignServers {
-			allForeignServers = append(allForeignServers, model.ToForeignServer(fs, b.Id))
+			allForeignServers = append(allForeignServers, model.ToForeignServer(fs))
 		}
 	}
 
