@@ -102,7 +102,26 @@ func backendBatchFn(backendService backend.Service) func(context.Context, []stri
 		backends, err := backendService.FindBackends(ctx, &backend.FindOptions{
 			Ids: ids,
 		})
-		return resultAndErrorToDataloaderResult(len(ids), adapt.Array(backends, model.ToBackend), err)
+		if err != nil {
+			return errorToDataloaderResults[*model.Backend](len(ids), err)
+		}
+
+		// Build map for O(1) lookup
+		backendByID := make(map[string]*model.Backend, len(backends))
+		for _, b := range backends {
+			mb := model.ToBackend(b)
+			if mb != nil {
+				id, _ := mb.ID.String(model.IdKindBackend)
+				backendByID[id] = mb
+			}
+		}
+
+		// Return results in the same order as input ids
+		results := make([]*dataloader.Result[*model.Backend], len(ids))
+		for i, id := range ids {
+			results[i] = &dataloader.Result[*model.Backend]{Data: backendByID[id]}
+		}
+		return results
 	}
 }
 
@@ -110,15 +129,19 @@ func newBatchedLoader[K comparable, V any](batchFn func(context.Context, []K) []
 	return dataloader.NewBatchedLoader(batchFn, dataloader.WithWait[K, V](wait), dataloader.WithInputCapacity[K, V](maxBatch))
 }
 
+func errorToDataloaderResults[T any](length int, err error) []*dataloader.Result[T] {
+	result := make([]*dataloader.Result[T], length)
+	for i := 0; i < length; i++ {
+		result[i] = &dataloader.Result[T]{
+			Error: err,
+		}
+	}
+	return result
+}
+
 func resultAndErrorToDataloaderResult[T any](length int, values []T, err error) []*dataloader.Result[T] {
 	if err != nil {
-		result := make([]*dataloader.Result[T], length)
-		for i := 0; i < length; i++ {
-			result[i] = &dataloader.Result[T]{
-				Error: err,
-			}
-		}
-		return result
+		return errorToDataloaderResults[T](length, err)
 	}
 
 	return adapt.Array(values, func(value T) *dataloader.Result[T] {
