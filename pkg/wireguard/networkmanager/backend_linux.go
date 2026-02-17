@@ -92,7 +92,20 @@ func (b *nmBackend) Up(ctx context.Context, options backend.ConfigureOptions) (*
 		return nil, err
 	}
 
-	connectionSettings := b.buildConnectionSettings(interfaceOpts, wireguardOpts)
+	// Get existing UUID if updating, or generate new one
+	var existingUUID string
+	if conn != nil {
+		connSettings, err := conn.GetSettings()
+		if err == nil {
+			if connSection, ok := connSettings["connection"]; ok {
+				if uuidVal, ok := connSection["uuid"].(string); ok {
+					existingUUID = uuidVal
+				}
+			}
+		}
+	}
+
+	connectionSettings := b.buildConnectionSettings(interfaceOpts, wireguardOpts, existingUUID)
 
 	if conn == nil {
 		conn, err = b.settings.AddConnection(connectionSettings)
@@ -306,8 +319,11 @@ func (b *nmBackend) findConnectionByInterfaceName(name string) (gonetworkmanager
 	return nil, nil
 }
 
-func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptions, wireguardOpts backend.WireguardOptions) gonetworkmanager.ConnectionSettings {
-	connectionUUID := uuid.New().String()
+func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptions, wireguardOpts backend.WireguardOptions, existingUUID string) gonetworkmanager.ConnectionSettings {
+	connectionUUID := existingUUID
+	if connectionUUID == "" {
+		connectionUUID = uuid.NewString()
+	}
 
 	connectionName := interfaceOpts.Description
 	if connectionName == "" {

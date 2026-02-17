@@ -91,10 +91,12 @@ func (s *service) init() {
 		return
 	}
 
+	var initialized, failed int
 	for _, srv := range servers {
 		// Skip servers without a backend (legacy data)
 		if srv.BackendId == "" {
 			logrus.WithField("name", srv.Name).Warn("server has no backend, skipping initialization")
+			failed++
 			continue
 		}
 
@@ -102,6 +104,7 @@ func (s *service) init() {
 		b, err := s.findBackend(ctx, srv.BackendId)
 		if err != nil {
 			logrus.WithError(err).WithField("name", srv.Name).Warn("failed to find backend for server, skipping initialization")
+			failed++
 			continue
 		}
 
@@ -115,13 +118,23 @@ func (s *service) init() {
 		})
 		if err != nil {
 			logrus.WithError(err).WithField("name", srv.Name).Error("failed to find peers for server")
+			failed++
 			continue
 		}
 
 		if _, err = s.configureDevice(ctx, srv, peers); err != nil {
 			logrus.WithError(err).WithField("name", srv.Name).Error("failed to configure wireguard device")
+			failed++
 			continue
 		}
+
+		initialized++
+	}
+
+	if failed > 0 {
+		logrus.WithField("initialized", initialized).WithField("failed", failed).Warn("server initialization completed with errors")
+	} else if initialized > 0 {
+		logrus.WithField("initialized", initialized).Info("server initialization completed")
 	}
 }
 
