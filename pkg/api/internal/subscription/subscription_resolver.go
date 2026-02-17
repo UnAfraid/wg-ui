@@ -34,20 +34,8 @@ func NewSubscriptionResolver(
 	}
 }
 
-func (r *subscriptionResolver) BackendChanged(ctx context.Context, id *model.ID) (<-chan *model.BackendChangedEvent, error) {
-	var backendId string
-	if id != nil {
-		var err error
-		backendId, err = id.String(model.IdKindBackend)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+func (r *subscriptionResolver) BackendChanged(ctx context.Context) (<-chan *model.BackendChangedEvent, error) {
 	return domainEventToApiEvent[*backend.ChangedEvent, *model.BackendChangedEvent](ctx, r.backendService, func(event *backend.ChangedEvent) *model.BackendChangedEvent {
-		if backendId != "" && event.Backend.Id != backendId {
-			return nil // Filter out events for other backends
-		}
 		return &model.BackendChangedEvent{
 			Node:   model.ToBackend(event.Backend),
 			Action: event.Action,
@@ -162,12 +150,7 @@ func domainEventToApiEvent[FromType, ToType any](
 		defer close(apiEvents)
 
 		for event := range domainEvents {
-			apiEvent := fromToAdaptFn(event)
-			// Skip nil events (filtered out by the adapter function)
-			if any(apiEvent) == nil {
-				continue
-			}
-			apiEvents <- apiEvent
+			apiEvents <- fromToAdaptFn(event)
 		}
 	}()
 

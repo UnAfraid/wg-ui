@@ -1,5 +1,5 @@
 type Subscription {
-    backendChanged(id: ID): BackendChangedEvent! @authenticated
+    backendChanged: BackendChangedEvent! @authenticated
     userChanged: UserChangedEvent! @authenticated
     serverChanged: ServerChangedEvent! @authenticated
     peerChanged: PeerChangedEvent! @authenticated

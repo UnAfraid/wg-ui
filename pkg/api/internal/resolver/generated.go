@@ -316,7 +316,7 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		BackendChanged func(childComplexity int, id *model.ID) int
+		BackendChanged func(childComplexity int) int
 		NodeChanged    func(childComplexity int) int
 		PeerChanged    func(childComplexity int) int
 		ServerChanged  func(childComplexity int) int
@@ -419,7 +419,7 @@ type ServerResolver interface {
 	DeleteUser(ctx context.Context, obj *model.Server) (*model.User, error)
 }
 type SubscriptionResolver interface {
-	BackendChanged(ctx context.Context, id *model.ID) (<-chan *model.BackendChangedEvent, error)
+	BackendChanged(ctx context.Context) (<-chan *model.BackendChangedEvent, error)
 	UserChanged(ctx context.Context) (<-chan *model.UserChangedEvent, error)
 	ServerChanged(ctx context.Context) (<-chan *model.ServerChangedEvent, error)
 	PeerChanged(ctx context.Context) (<-chan *model.PeerChangedEvent, error)
@@ -1652,12 +1652,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			break
 		}
 
-		args, err := ec.field_Subscription_backendChanged_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Subscription.BackendChanged(childComplexity, args["id"].(*model.ID)), true
+		return e.complexity.Subscription.BackendChanged(childComplexity), true
 	case "Subscription.nodeChanged":
 		if e.complexity.Subscription.NodeChanged == nil {
 			break
@@ -2487,7 +2482,7 @@ type AvailableBackend {
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/subscription.graphql", Input: `type Subscription {
-    backendChanged(id: ID): BackendChangedEvent! @authenticated
+    backendChanged: BackendChangedEvent! @authenticated
     userChanged: UserChangedEvent! @authenticated
     serverChanged: ServerChangedEvent! @authenticated
     peerChanged: PeerChangedEvent! @authenticated
@@ -2846,17 +2841,6 @@ func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs 
 		return nil, err
 	}
 	args["query"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Subscription_backendChanged_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalOID2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
 	return args, nil
 }
 
@@ -10235,8 +10219,7 @@ func (ec *executionContext) _Subscription_backendChanged(ctx context.Context, fi
 		field,
 		ec.fieldContext_Subscription_backendChanged,
 		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Subscription().BackendChanged(ctx, fc.Args["id"].(*model.ID))
+			return ec.resolvers.Subscription().BackendChanged(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
@@ -10258,7 +10241,7 @@ func (ec *executionContext) _Subscription_backendChanged(ctx context.Context, fi
 	)
 }
 
-func (ec *executionContext) fieldContext_Subscription_backendChanged(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_backendChanged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
@@ -10273,17 +10256,6 @@ func (ec *executionContext) fieldContext_Subscription_backendChanged(ctx context
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BackendChangedEvent", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Subscription_backendChanged_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -18246,22 +18218,6 @@ func (ec *executionContext) marshalODateTime2ᚖtimeᚐTime(ctx context.Context,
 	_ = ctx
 	res := model.MarshalDateTime(*v)
 	return res
-}
-
-func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx context.Context, v any) (*model.ID, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.ID)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx context.Context, sel ast.SelectionSet, v *model.ID) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v any) (*int, error) {
