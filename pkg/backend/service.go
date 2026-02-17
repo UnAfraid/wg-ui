@@ -35,6 +35,7 @@ type Service interface {
 // ServerCounter checks if a backend has servers (to avoid circular dependency with server package)
 type ServerCounter interface {
 	CountServersByBackendId(ctx context.Context, backendId string) (int, error)
+	CountEnabledServersByBackendId(ctx context.Context, backendId string) (int, error)
 }
 
 type service struct {
@@ -131,6 +132,17 @@ func (s *service) UpdateBackend(ctx context.Context, backendId string, options *
 			newType := backend.Type()
 			if newType != originalType {
 				return nil, ErrBackendTypeChangeNotAllowed
+			}
+		}
+
+		// Prevent disabling a backend that has enabled servers
+		if fieldMask.Enabled && !backend.Enabled {
+			enabledCount, err := s.serverCounter.CountEnabledServersByBackendId(ctx, backendId)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check enabled servers for backend: %w", err)
+			}
+			if enabledCount > 0 {
+				return nil, ErrBackendHasEnabledServers
 			}
 		}
 

@@ -11,4 +11,5 @@ type Repository interface {
 	Update(ctx context.Context, server *Server, fieldMask *UpdateFieldMask) (*Server, error)
 	Delete(ctx context.Context, serverId string, deleteUserId string) (*Server, error)
 	CountByBackendId(ctx context.Context, backendId string) (int, error)
+	CountEnabledByBackendId(ctx context.Context, backendId string) (int, error)
 }

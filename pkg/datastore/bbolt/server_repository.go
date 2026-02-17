@@ -279,3 +279,20 @@ func (r *serverRepository) CountByBackendId(ctx context.Context, backendId strin
 		return count, nil
 	})
 }
+
+func (r *serverRepository) CountEnabledByBackendId(ctx context.Context, backendId string) (int, error) {
+	return dbTx(ctx, r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (int, error) {
+		var count int
+		c := bucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var s *server.Server
+			if err := json.Unmarshal(v, &s); err != nil {
+				return 0, fmt.Errorf("failed to unmarshal server: %w", err)
+			}
+			if s.BackendId == backendId && s.Enabled {
+				count++
+			}
+		}
+		return count, nil
+	})
+}

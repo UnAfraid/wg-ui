@@ -21,3 +21,7 @@ func NewServerCounter(serverRepository server.Repository) ServerCounter {
 func (a *serverCounterAdapter) CountServersByBackendId(ctx context.Context, backendId string) (int, error) {
 	return a.serverRepository.CountByBackendId(ctx, backendId)
 }
+
+func (a *serverCounterAdapter) CountEnabledServersByBackendId(ctx context.Context, backendId string) (int, error) {
+	return a.serverRepository.CountEnabledByBackendId(ctx, backendId)
+}
