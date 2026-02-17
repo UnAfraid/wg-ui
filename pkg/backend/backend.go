@@ -38,7 +38,7 @@ func (b *Backend) GetId() string {
 func (b *Backend) validate(fieldMask *UpdateFieldMask) error {
 	if fieldMask == nil || fieldMask.Name {
 		if len(strings.TrimSpace(b.Name)) == 0 {
-			return fmt.Errorf("name is required")
+			return ErrBackendNameRequired
 		}
 
 		if !namePattern.MatchString(b.Name) {
@@ -48,13 +48,13 @@ func (b *Backend) validate(fieldMask *UpdateFieldMask) error {
 
 	if fieldMask == nil || fieldMask.Description {
 		if len(b.Description) > 255 {
-			return fmt.Errorf("description must not be longer than 255 characters")
+			return ErrBackendDescriptionTooLong
 		}
 	}
 
 	if fieldMask == nil || fieldMask.Url {
 		if len(strings.TrimSpace(b.Url)) == 0 {
-			return fmt.Errorf("url is required")
+			return ErrBackendURLRequired
 		}
 
 		if _, err := ParseURL(b.Url); err != nil {

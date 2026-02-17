@@ -16,4 +16,7 @@ var (
 	ErrCreateBackendOptionsRequired   = errors.New("create backend options required")
 	ErrUpdateBackendOptionsRequired   = errors.New("update backend options required")
 	ErrUpdateBackendFieldMaskRequired = errors.New("update backend field mask required")
+	ErrBackendNameRequired            = errors.New("name is required")
+	ErrBackendDescriptionTooLong      = errors.New("description must not be longer than 255 characters")
+	ErrBackendURLRequired             = errors.New("url is required")
 )
