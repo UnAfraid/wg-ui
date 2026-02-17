@@ -17,7 +17,6 @@ import (
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
-	"github.com/UnAfraid/wg-ui/pkg/api/internal/tools/frontend"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/tools/graphiqlsse"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/tools/playground"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/tools/voyager"
@@ -28,6 +27,7 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
+	"github.com/UnAfraid/wg-ui/www"
 )
 
 const (
