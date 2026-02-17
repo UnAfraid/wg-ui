@@ -19,4 +19,8 @@ var (
 	ErrBackendNameRequired            = errors.New("name is required")
 	ErrBackendDescriptionTooLong      = errors.New("description must not be longer than 255 characters")
 	ErrBackendURLRequired             = errors.New("url is required")
+	ErrOneOptionRequired              = errors.New("one option is required")
+	ErrOnlyOneOptionAllowed           = errors.New("only one option is allowed")
+	ErrIdRequired                     = errors.New("id is required")
+	ErrNameRequired                   = errors.New("name is required")
 )
