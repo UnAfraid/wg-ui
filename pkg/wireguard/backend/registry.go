@@ -5,35 +5,37 @@ import (
 	"sync"
 )
 
-// BackendFactory is a function that creates a new Backend instance
-type BackendFactory func() (Backend, error)
+// Factory is a function that creates a new Backend instance
+type Factory func() (Backend, error)
 
-// BackendRegistration holds factory and support info for a backend type
-type BackendRegistration struct {
-	Factory   BackendFactory
+// Registration holds factory and support info for a backend type
+type Registration struct {
+	Factory   Factory
 	Supported bool
 }
 
 var (
 	registryMu  sync.RWMutex
-	registryMap = make(map[string]*BackendRegistration)
+	registryMap = make(map[string]*Registration)
 )
 
 // Register registers a backend type with its factory and platform support status.
 // This should be called from init() functions in backend implementations.
-func Register(scheme string, factory BackendFactory, supported bool) {
+func Register(scheme string, factory Factory, supported bool) {
 	registryMu.Lock()
 	defer registryMu.Unlock()
-	registryMap[scheme] = &BackendRegistration{
+
+	registryMap[scheme] = &Registration{
 		Factory:   factory,
 		Supported: supported,
 	}
 }
 
 // Get returns the registration for a backend type
-func Get(scheme string) (*BackendRegistration, bool) {
+func Get(scheme string) (*Registration, bool) {
 	registryMu.RLock()
 	defer registryMu.RUnlock()
+
 	reg, ok := registryMap[scheme]
 	return reg, ok
 }
@@ -42,6 +44,7 @@ func Get(scheme string) (*BackendRegistration, bool) {
 func IsSupported(scheme string) bool {
 	registryMu.RLock()
 	defer registryMu.RUnlock()
+
 	reg, ok := registryMap[scheme]
 	if !ok {
 		return false
@@ -53,6 +56,7 @@ func IsSupported(scheme string) bool {
 func ListTypes() []string {
 	registryMu.RLock()
 	defer registryMu.RUnlock()
+
 	types := make([]string, 0, len(registryMap))
 	for t := range registryMap {
 		types = append(types, t)
@@ -76,8 +80,8 @@ func ListSupportedTypes() []string {
 // Create creates a new backend instance for the given scheme
 func Create(scheme string) (Backend, error) {
 	registryMu.RLock()
+	defer registryMu.RUnlock()
 	reg, ok := registryMap[scheme]
-	registryMu.RUnlock()
 
 	if !ok {
 		return nil, fmt.Errorf("unknown backend type: %s", scheme)

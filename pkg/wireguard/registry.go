@@ -28,6 +28,7 @@ func NewRegistry() *Registry {
 func (r *Registry) Get(backendId string) backend.Backend {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	return r.backends[backendId]
 }
 
@@ -52,15 +53,14 @@ func (r *Registry) GetOrCreate(ctx context.Context, backendId string, backendTyp
 
 // Remove removes and closes a backend connection
 func (r *Registry) Remove(ctx context.Context, backendId string) error {
-	// Remove from map under lock
 	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	b, ok := r.backends[backendId]
 	if !ok {
-		r.mu.Unlock()
 		return nil
 	}
 	delete(r.backends, backendId)
-	r.mu.Unlock()
 
 	// Close outside lock to avoid blocking
 	if err := b.Close(ctx); err != nil {
@@ -75,6 +75,7 @@ func (r *Registry) Remove(ctx context.Context, backendId string) error {
 func (r *Registry) Has(backendId string) bool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	_, ok := r.backends[backendId]
 	return ok
 }
@@ -83,9 +84,10 @@ func (r *Registry) Has(backendId string) bool {
 func (r *Registry) CloseAll(ctx context.Context) error {
 	// Copy backends and clear map under lock
 	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	backends := r.backends
 	r.backends = make(map[string]backend.Backend)
-	r.mu.Unlock()
 
 	// Close all backends outside lock
 	var errs []error
@@ -103,6 +105,7 @@ func (r *Registry) CloseAll(ctx context.Context) error {
 func (r *Registry) List() []string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	ids := make([]string, 0, len(r.backends))
 	for id := range r.backends {
 		ids = append(ids, id)
