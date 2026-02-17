@@ -10,6 +10,7 @@ var (
 	ErrBackendTypeChangeNotAllowed    = errors.New("backend type cannot be changed")
 	ErrBackendNotSupported            = errors.New("backend type not supported on this platform")
 	ErrBackendHasServers              = errors.New("backend has servers and cannot be deleted")
+	ErrBackendHasEnabledServers       = errors.New("backend has enabled servers and cannot be disabled")
 	ErrInvalidBackendURL              = errors.New("invalid backend URL")
 	ErrUnknownBackendType             = errors.New("unknown backend type")
 	ErrCreateBackendOptionsRequired   = errors.New("create backend options required")

@@ -92,15 +92,33 @@ func (s *service) init() {
 		return
 	}
 
-	var initialized, failed, skipped int
+	// Find or create default linux backend for legacy servers
+	var defaultBackend *backendpkg.Backend
 	for _, srv := range servers {
-		// Skip servers without a backend (invalid/legacy data)
 		if srv.BackendId == "" {
-			logrus.WithField("name", srv.Name).Error("server has no backend ID - this server was created before multi-backend support and must be manually deleted or migrated")
-			skipped++
-			continue
+			if defaultBackend == nil {
+				defaultBackend, err = s.getOrCreateDefaultBackend(ctx)
+				if err != nil {
+					logrus.WithError(err).Error("failed to get or create default backend for legacy servers")
+					return
+				}
+			}
+			// Update server to use default backend
+			logrus.WithField("name", srv.Name).WithField("backend", defaultBackend.Name).Info("migrating legacy server to default backend")
+			if _, err := s.serverService.UpdateServer(ctx, srv.Id, &server.UpdateOptions{
+				BackendId: defaultBackend.Id,
+			}, &server.UpdateFieldMask{
+				BackendId: true,
+			}, ""); err != nil {
+				logrus.WithError(err).WithField("name", srv.Name).Error("failed to migrate legacy server to default backend")
+				continue
+			}
+			srv.BackendId = defaultBackend.Id
 		}
+	}
 
+	var initialized, failed int
+	for _, srv := range servers {
 		// Check if backend exists and is enabled
 		b, err := s.findBackend(ctx, srv.BackendId)
 		if err != nil {
@@ -132,9 +150,6 @@ func (s *service) init() {
 		initialized++
 	}
 
-	if skipped > 0 {
-		logrus.WithField("skipped", skipped).Error("some servers have no backend ID and were skipped - these must be manually deleted or migrated")
-	}
 	if failed > 0 {
 		if initialized == 0 {
 			logrus.WithField("failed", failed).Error("server initialization failed: no servers could be configured")
@@ -144,6 +159,29 @@ func (s *service) init() {
 	} else if initialized > 0 {
 		logrus.WithField("initialized", initialized).Info("server initialization completed")
 	}
+}
+
+func (s *service) getOrCreateDefaultBackend(ctx context.Context) (*backendpkg.Backend, error) {
+	// Try to find existing linux backend
+	backends, err := s.backendService.FindBackends(ctx, &backendpkg.FindOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to find backends: %w", err)
+	}
+
+	for _, b := range backends {
+		if b.Type() == "linux" {
+			return b, nil
+		}
+	}
+
+	// Create default linux backend
+	logrus.Info("creating default linux backend for legacy server migration")
+	return s.backendService.CreateBackend(ctx, &backendpkg.CreateOptions{
+		Name:        "Linux (Default)",
+		Description: "Default backend created for legacy server migration",
+		Url:         "linux:///etc/wireguard",
+		Enabled:     true,
+	}, "")
 }
 
 func (s *service) run(interval time.Duration, automaticStatsUpdateOnlyWithSubscribers bool) {
