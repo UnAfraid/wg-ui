@@ -36,6 +36,7 @@ type Service interface {
 	DeletePeer(ctx context.Context, peerId string, userId string) (*peer.Peer, error)
 	PeerStats(ctx context.Context, serverId string, peerPublicKey string) (*backend.PeerStats, error)
 	ForeignServers(ctx context.Context, backendId string) ([]*backend.ForeignServer, error)
+	DeleteBackend(ctx context.Context, backendId string, userId string) (*backendpkg.Backend, error)
 	Close()
 }
 
@@ -511,6 +512,21 @@ func (s *service) ForeignServers(ctx context.Context, backendId string) ([]*back
 		return server.Name
 	})
 	return s.wireguardService.FindForeignServers(ctx, b.Id, b.Type(), knownInterfaces)
+}
+
+func (s *service) DeleteBackend(ctx context.Context, backendId string, userId string) (*backendpkg.Backend, error) {
+	// First delete the backend from the database
+	deletedBackend, err := s.backendService.DeleteBackend(ctx, backendId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Then remove it from the wireguard registry
+	if err := s.wireguardService.RemoveBackend(ctx, backendId); err != nil {
+		logrus.WithError(err).WithField("backendId", backendId).Warn("failed to remove backend from registry")
+	}
+
+	return deletedBackend, nil
 }
 
 func (s *service) Close() {

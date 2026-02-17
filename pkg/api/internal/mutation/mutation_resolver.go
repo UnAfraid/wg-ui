@@ -432,7 +432,7 @@ func (r *mutationResolver) DeleteBackend(ctx context.Context, input model.Delete
 		return nil, err
 	}
 
-	deletedBackend, err := r.backendService.DeleteBackend(ctx, backendId, userId)
+	deletedBackend, err := r.manageService.DeleteBackend(ctx, backendId, userId)
 	if err != nil {
 		return nil, err
 	}
