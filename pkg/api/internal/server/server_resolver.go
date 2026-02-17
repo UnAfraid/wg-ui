@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
@@ -40,7 +40,7 @@ func (r *serverResolver) Peers(ctx context.Context, svc *model.Server) ([]*model
 
 func (r *serverResolver) Backend(ctx context.Context, srv *model.Server) (*model.Backend, error) {
 	if srv.Backend == nil {
-		return nil, fmt.Errorf("server has no backend")
+		return nil, errors.New("server has no backend")
 	}
 
 	backendId, err := srv.Backend.ID.String(model.IdKindBackend)
