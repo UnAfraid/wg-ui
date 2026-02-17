@@ -2470,7 +2470,6 @@ type AvailableBackend {
     clientMutationId: String
     id: ID!
     description: String
-    backendId: ID
     enabled: Boolean
     publicKey: String @deprecated(reason: "No longer supported, the public key will be derived from private key")
     privateKey: String
@@ -13514,7 +13513,7 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"clientMutationId", "id", "description", "backendId", "enabled", "publicKey", "privateKey", "listenPort", "firewallMark", "address", "dns", "mtu", "hooks"}
+	fieldsInOrder := [...]string{"clientMutationId", "id", "description", "enabled", "publicKey", "privateKey", "listenPort", "firewallMark", "address", "dns", "mtu", "hooks"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -13542,13 +13541,6 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 				return it, err
 			}
 			it.Description = graphql.OmittableOf(data)
-		case "backendId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backendId"))
-			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BackendID = graphql.OmittableOf(data)
 		case "enabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)

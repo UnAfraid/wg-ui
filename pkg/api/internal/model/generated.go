@@ -421,7 +421,6 @@ type UpdateServerInput struct {
 	ClientMutationID graphql.Omittable[*string]            `json:"clientMutationId,omitempty"`
 	ID               ID                                    `json:"id"`
 	Description      graphql.Omittable[*string]            `json:"description,omitempty"`
-	BackendID        graphql.Omittable[*ID]                `json:"backendId,omitempty"`
 	Enabled          graphql.Omittable[*bool]              `json:"enabled,omitempty"`
 	PublicKey        graphql.Omittable[*string]            `json:"publicKey,omitempty"`
 	PrivateKey       graphql.Omittable[*string]            `json:"privateKey,omitempty"`
