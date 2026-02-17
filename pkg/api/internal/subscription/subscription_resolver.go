@@ -49,8 +49,8 @@ func (r *subscriptionResolver) BackendChanged(ctx context.Context, id *model.ID)
 			return nil // Filter out events for other backends
 		}
 		return &model.BackendChangedEvent{
-			Backend: model.ToBackend(event.Backend),
-			Action:  event.Action,
+			Node:   model.ToBackend(event.Backend),
+			Action: event.Action,
 		}
 	})
 }

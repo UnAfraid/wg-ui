@@ -79,8 +79,8 @@ type ComplexityRoot struct {
 	}
 
 	BackendChangedEvent struct {
-		Action  func(childComplexity int) int
-		Backend func(childComplexity int) int
+		Action func(childComplexity int) int
+		Node   func(childComplexity int) int
 	}
 
 	CreateBackendPayload struct {
@@ -575,12 +575,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.BackendChangedEvent.Action(childComplexity), true
-	case "BackendChangedEvent.backend":
-		if e.complexity.BackendChangedEvent.Backend == nil {
+	case "BackendChangedEvent.node":
+		if e.complexity.BackendChangedEvent.Node == nil {
 			break
 		}
 
-		return e.complexity.BackendChangedEvent.Backend(childComplexity), true
+		return e.complexity.BackendChangedEvent.Node(childComplexity), true
 
 	case "CreateBackendPayload.backend":
 		if e.complexity.CreateBackendPayload.Backend == nil {
@@ -2000,7 +2000,7 @@ type AvailableBackend {
 `, BuiltIn: false},
 	{Name: "../../../../schema/backend/backend_changed_event.graphql", Input: `type BackendChangedEvent {
     action: String!
-    backend: Backend!
+    node: Backend!
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/backend/create_backend_input.graphql", Input: `input CreateBackendInput {
@@ -3708,14 +3708,14 @@ func (ec *executionContext) fieldContext_BackendChangedEvent_action(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _BackendChangedEvent_backend(ctx context.Context, field graphql.CollectedField, obj *model.BackendChangedEvent) (ret graphql.Marshaler) {
+func (ec *executionContext) _BackendChangedEvent_node(ctx context.Context, field graphql.CollectedField, obj *model.BackendChangedEvent) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_BackendChangedEvent_backend,
+		ec.fieldContext_BackendChangedEvent_node,
 		func(ctx context.Context) (any, error) {
-			return obj.Backend, nil
+			return obj.Node, nil
 		},
 		nil,
 		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
@@ -3724,7 +3724,7 @@ func (ec *executionContext) _BackendChangedEvent_backend(ctx context.Context, fi
 	)
 }
 
-func (ec *executionContext) fieldContext_BackendChangedEvent_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_BackendChangedEvent_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BackendChangedEvent",
 		Field:      field,
@@ -10269,8 +10269,8 @@ func (ec *executionContext) fieldContext_Subscription_backendChanged(ctx context
 			switch field.Name {
 			case "action":
 				return ec.fieldContext_BackendChangedEvent_action(ctx, field)
-			case "backend":
-				return ec.fieldContext_BackendChangedEvent_backend(ctx, field)
+			case "node":
+				return ec.fieldContext_BackendChangedEvent_node(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BackendChangedEvent", field.Name)
 		},
@@ -14128,8 +14128,8 @@ func (ec *executionContext) _BackendChangedEvent(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "backend":
-			out.Values[i] = ec._BackendChangedEvent_backend(ctx, field, obj)
+		case "node":
+			out.Values[i] = ec._BackendChangedEvent_node(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

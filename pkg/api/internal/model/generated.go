@@ -52,8 +52,8 @@ func (Backend) IsNode()        {}
 func (this Backend) GetID() ID { return this.ID }
 
 type BackendChangedEvent struct {
-	Action  string   `json:"action"`
-	Backend *Backend `json:"backend"`
+	Action string   `json:"action"`
+	Node   *Backend `json:"node"`
 }
 
 type CreateBackendInput struct {

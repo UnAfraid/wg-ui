@@ -266,6 +266,12 @@ func (s *service) CreateServer(ctx context.Context, options *server.CreateOption
 
 func (s *service) UpdateServer(ctx context.Context, serverId string, options *server.UpdateOptions, fieldMask *server.UpdateFieldMask, userId string) (*server.Server, error) {
 	return dbx.InTransactionScopeWithResult(ctx, s.transactionScoper, func(ctx context.Context) (*server.Server, error) {
+		// Get the old server state before update
+		oldServer, err := s.findServer(ctx, serverId)
+		if err != nil {
+			return nil, err
+		}
+
 		updatedServer, err := s.serverService.UpdateServer(ctx, serverId, options, fieldMask, userId)
 		if err != nil {
 			return nil, err
@@ -274,6 +280,36 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *se
 		b, err := s.findBackend(ctx, updatedServer.BackendId)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find backend: %w", err)
+		}
+
+		// Handle backend change for running servers
+		if fieldMask.BackendId && oldServer.BackendId != updatedServer.BackendId && oldServer.Running {
+			// Bring down the device on the old backend
+			oldBackend, err := s.findBackend(ctx, oldServer.BackendId)
+			if err != nil {
+				logrus.WithError(err).WithField("backendId", oldServer.BackendId).Warn("failed to find old backend")
+			} else {
+				if err := s.wireguardService.Down(ctx, oldBackend, oldServer.Name); err != nil {
+					logrus.WithError(err).WithField("name", oldServer.Name).Warn("failed to stop server on old backend")
+				}
+			}
+
+			// Bring up the device on the new backend
+			peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
+				ServerId: &updatedServer.Id,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to find peers: %w", err)
+			}
+
+			if _, err := s.configureDevice(ctx, updatedServer, peers); err != nil {
+				// Failed to configure on new backend, mark as not running
+				logrus.WithError(err).WithField("name", updatedServer.Name).Error("failed to configure device on new backend")
+				updateOptions := server.UpdateOptions{Running: false}
+				updateFieldMask := server.UpdateFieldMask{Running: true}
+				return s.serverService.UpdateServer(ctx, updatedServer.Id, &updateOptions, &updateFieldMask, userId)
+			}
+			return updatedServer, nil
 		}
 
 		if !updatedServer.Enabled {
@@ -610,6 +646,10 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 	b, err := s.findBackend(ctx, srv.BackendId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find backend: %w", err)
+	}
+
+	if !b.Enabled {
+		return nil, fmt.Errorf("backend %s is disabled", b.Name)
 	}
 
 	return s.wireguardService.Up(ctx, b, backend.ConfigureOptions{

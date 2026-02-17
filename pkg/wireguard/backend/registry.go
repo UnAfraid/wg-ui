@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 )
 
@@ -52,7 +53,7 @@ func IsSupported(scheme string) bool {
 	return reg.Supported
 }
 
-// ListTypes returns all registered backend type names
+// ListTypes returns all registered backend type names in sorted order
 func ListTypes() []string {
 	registryMu.RLock()
 	defer registryMu.RUnlock()
@@ -61,10 +62,11 @@ func ListTypes() []string {
 	for t := range registryMap {
 		types = append(types, t)
 	}
+	sort.Strings(types)
 	return types
 }
 
-// ListSupportedTypes returns backend types supported on the current platform
+// ListSupportedTypes returns backend types supported on the current platform in sorted order
 func ListSupportedTypes() []string {
 	registryMu.RLock()
 	defer registryMu.RUnlock()
@@ -74,6 +76,7 @@ func ListSupportedTypes() []string {
 			types = append(types, t)
 		}
 	}
+	sort.Strings(types)
 	return types
 }
 

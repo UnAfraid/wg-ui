@@ -9,7 +9,6 @@ import (
 )
 
 type Config struct {
-	Backend                                 string        `required:"true" default:"linux"`
 	BoltDB                                  *BoltDB       `split_words:"true"`
 	HttpServer                              *HttpServer   `split_words:"true"`
 	DebugServer                             *DebugServer  `split_words:"true"`

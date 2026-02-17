@@ -1,6 +1,8 @@
 package model
 
 import (
+	"errors"
+
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 )
@@ -123,11 +125,12 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 
 	if fieldMask.BackendId {
 		backendIdPtr := input.BackendID.Value()
-		if backendIdPtr != nil {
-			backendId, err = backendIdPtr.String(IdKindBackend)
-			if err != nil {
-				return nil, nil, err
-			}
+		if backendIdPtr == nil {
+			return nil, nil, errors.New("backendId cannot be set to null")
+		}
+		backendId, err = backendIdPtr.String(IdKindBackend)
+		if err != nil {
+			return nil, nil, err
 		}
 	}
 
