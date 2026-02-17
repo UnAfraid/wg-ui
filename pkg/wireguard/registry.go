@@ -33,16 +33,28 @@ func (r *Registry) Get(backendId string) backend.Backend {
 
 // GetOrCreate retrieves an existing backend connection or creates a new one
 func (r *Registry) GetOrCreate(backendId string, backendType string) (backend.Backend, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
+	// First check with read lock
+	r.mu.RLock()
 	if b, ok := r.backends[backendId]; ok {
+		r.mu.RUnlock()
 		return b, nil
 	}
+	r.mu.RUnlock()
 
+	// Create backend outside lock to avoid blocking
 	b, err := backend.Create(backendType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create backend %s: %w", backendType, err)
+	}
+
+	// Acquire write lock and check again (double-check pattern)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if existing, ok := r.backends[backendId]; ok {
+		// Another goroutine created it, close ours and return existing
+		_ = b.Close(context.Background())
+		return existing, nil
 	}
 
 	r.backends[backendId] = b
@@ -52,15 +64,17 @@ func (r *Registry) GetOrCreate(backendId string, backendType string) (backend.Ba
 
 // Remove removes and closes a backend connection
 func (r *Registry) Remove(ctx context.Context, backendId string) error {
+	// Remove from map under lock
 	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	b, ok := r.backends[backendId]
 	if !ok {
+		r.mu.Unlock()
 		return nil
 	}
-
 	delete(r.backends, backendId)
+	r.mu.Unlock()
+
+	// Close outside lock to avoid blocking
 	if err := b.Close(ctx); err != nil {
 		return fmt.Errorf("failed to close backend %s: %w", backendId, err)
 	}
@@ -79,17 +93,20 @@ func (r *Registry) Has(backendId string) bool {
 
 // CloseAll closes all backend connections
 func (r *Registry) CloseAll(ctx context.Context) error {
+	// Copy backends and clear map under lock
 	r.mu.Lock()
-	defer r.mu.Unlock()
+	backends := r.backends
+	r.backends = make(map[string]backend.Backend)
+	r.mu.Unlock()
 
+	// Close all backends outside lock
 	var errs []error
-	for id, b := range r.backends {
+	for id, b := range backends {
 		if err := b.Close(ctx); err != nil {
 			logrus.WithError(err).WithField("backendId", id).Error("failed to close backend")
 			errs = append(errs, fmt.Errorf("backend %s: %w", id, err))
 		}
 	}
-	r.backends = make(map[string]backend.Backend)
 
 	return errors.Join(errs...)
 }
