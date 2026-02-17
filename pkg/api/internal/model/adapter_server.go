@@ -93,6 +93,7 @@ func ServerHookInputToServerHook(hook *ServerHookInput) *server.Hook {
 func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput) (options *server.UpdateOptions, fieldMask *server.UpdateFieldMask, err error) {
 	fieldMask = &server.UpdateFieldMask{
 		Description:  input.Description.IsSet(),
+		BackendId:    input.BackendID.IsSet(),
 		Enabled:      input.Enabled.IsSet(),
 		PrivateKey:   input.PrivateKey.IsSet(),
 		ListenPort:   input.ListenPort.IsSet(),
@@ -105,6 +106,7 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 
 	var (
 		description  string
+		backendId    string
 		enabled      bool
 		privateKey   string
 		listenPort   *int
@@ -117,6 +119,16 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 
 	if fieldMask.Description {
 		description = adapt.Dereference(input.Description.Value())
+	}
+
+	if fieldMask.BackendId {
+		backendIdPtr := input.BackendID.Value()
+		if backendIdPtr != nil {
+			backendId, err = backendIdPtr.String(IdKindBackend)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
 	}
 
 	if fieldMask.Enabled {
@@ -153,6 +165,7 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 
 	options = &server.UpdateOptions{
 		Description:  description,
+		BackendId:    backendId,
 		Enabled:      enabled,
 		PrivateKey:   privateKey,
 		ListenPort:   listenPort,
