@@ -2,7 +2,6 @@ package backend
 
 import (
 	"context"
-	"strings"
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
@@ -56,8 +55,12 @@ func (r *backendResolver) Supported(ctx context.Context, b *model.Backend) (bool
 		return false, nil
 	}
 
-	backendType := getBackendTypeFromURL(backendEntity.URL)
-	return wireguardbackend.IsSupported(backendType), nil
+	parsedURL, err := backendpkg.ParseURL(backendEntity.URL)
+	if err != nil {
+		return false, nil
+	}
+
+	return wireguardbackend.IsSupported(parsedURL.Type), nil
 }
 
 func (r *backendResolver) Servers(ctx context.Context, b *model.Backend, query *string, enabled *bool) ([]*model.Server, error) {
@@ -179,11 +182,4 @@ func (r *backendResolver) DeleteUser(ctx context.Context, b *model.Backend) (*mo
 	}
 
 	return userLoader.Load(ctx, userId)()
-}
-
-func getBackendTypeFromURL(url string) string {
-	if idx := strings.Index(url, "://"); idx != -1 {
-		return url[:idx]
-	}
-	return ""
 }
