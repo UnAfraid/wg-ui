@@ -33,28 +33,16 @@ func (r *Registry) Get(backendId string) backend.Backend {
 
 // GetOrCreate retrieves an existing backend connection or creates a new one
 func (r *Registry) GetOrCreate(ctx context.Context, backendId string, backendType string) (backend.Backend, error) {
-	// First check with read lock
-	r.mu.RLock()
-	if b, ok := r.backends[backendId]; ok {
-		r.mu.RUnlock()
-		return b, nil
-	}
-	r.mu.RUnlock()
-
-	// Create backend outside lock to avoid blocking
-	b, err := backend.Create(backendType)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create backend %s: %w", backendType, err)
-	}
-
-	// Acquire write lock and check again (double-check pattern)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if existing, ok := r.backends[backendId]; ok {
-		// Another goroutine created it, close ours and return existing
-		_ = b.Close(ctx)
-		return existing, nil
+	if b, ok := r.backends[backendId]; ok {
+		return b, nil
+	}
+
+	b, err := backend.Create(backendType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create backend %s: %w", backendType, err)
 	}
 
 	r.backends[backendId] = b
