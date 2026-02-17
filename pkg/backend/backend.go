@@ -31,6 +31,10 @@ func (b *Backend) Type() string {
 	return parsed.Type
 }
 
+func (b *Backend) GetId() string {
+	return b.Id
+}
+
 func (b *Backend) validate(fieldMask *UpdateFieldMask) error {
 	if fieldMask == nil || fieldMask.Name {
 		if len(strings.TrimSpace(b.Name)) == 0 {

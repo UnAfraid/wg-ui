@@ -7,14 +7,21 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
 )
 
+// BackendRef is an interface for referencing a backend entity.
+// This is implemented by pkg/backend.Backend to avoid circular imports.
+type BackendRef interface {
+	GetId() string
+	Type() string
+}
+
 type Service interface {
-	Device(ctx context.Context, backendId string, backendType string, name string) (*backend.Device, error)
-	Up(ctx context.Context, backendId string, backendType string, options backend.ConfigureOptions) (*backend.Device, error)
-	Down(ctx context.Context, backendId string, backendType string, name string) error
-	Status(ctx context.Context, backendId string, backendType string, name string) (bool, error)
-	Stats(ctx context.Context, backendId string, backendType string, name string) (*backend.InterfaceStats, error)
-	PeerStats(ctx context.Context, backendId string, backendType string, name string, peerPublicKey string) (*backend.PeerStats, error)
-	FindForeignServers(ctx context.Context, backendId string, backendType string, knownInterfaces []string) ([]*backend.ForeignServer, error)
+	Device(ctx context.Context, b BackendRef, name string) (*backend.Device, error)
+	Up(ctx context.Context, b BackendRef, options backend.ConfigureOptions) (*backend.Device, error)
+	Down(ctx context.Context, b BackendRef, name string) error
+	Status(ctx context.Context, b BackendRef, name string) (bool, error)
+	Stats(ctx context.Context, b BackendRef, name string) (*backend.InterfaceStats, error)
+	PeerStats(ctx context.Context, b BackendRef, name string, peerPublicKey string) (*backend.PeerStats, error)
+	FindForeignServers(ctx context.Context, b BackendRef, knownInterfaces []string) ([]*backend.ForeignServer, error)
 	RemoveBackend(ctx context.Context, backendId string) error
 	Close(ctx context.Context) error
 }
@@ -29,60 +36,60 @@ func NewService(registry *Registry) Service {
 	}
 }
 
-func (s *service) getBackend(ctx context.Context, backendId string, backendType string) (backend.Backend, error) {
-	return s.registry.GetOrCreate(ctx, backendId, backendType)
+func (s *service) getBackend(ctx context.Context, b BackendRef) (backend.Backend, error) {
+	return s.registry.GetOrCreate(ctx, b.GetId(), b.Type())
 }
 
-func (s *service) Device(ctx context.Context, backendId string, backendType string, name string) (*backend.Device, error) {
-	b, err := s.getBackend(ctx, backendId, backendType)
+func (s *service) Device(ctx context.Context, ref BackendRef, name string) (*backend.Device, error) {
+	b, err := s.getBackend(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
 	return b.Device(ctx, name)
 }
 
-func (s *service) Up(ctx context.Context, backendId string, backendType string, options backend.ConfigureOptions) (*backend.Device, error) {
-	b, err := s.getBackend(ctx, backendId, backendType)
+func (s *service) Up(ctx context.Context, ref BackendRef, options backend.ConfigureOptions) (*backend.Device, error) {
+	b, err := s.getBackend(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
 	return b.Up(ctx, options)
 }
 
-func (s *service) Down(ctx context.Context, backendId string, backendType string, name string) error {
-	b, err := s.getBackend(ctx, backendId, backendType)
+func (s *service) Down(ctx context.Context, ref BackendRef, name string) error {
+	b, err := s.getBackend(ctx, ref)
 	if err != nil {
 		return err
 	}
 	return b.Down(ctx, name)
 }
 
-func (s *service) Status(ctx context.Context, backendId string, backendType string, name string) (bool, error) {
-	b, err := s.getBackend(ctx, backendId, backendType)
+func (s *service) Status(ctx context.Context, ref BackendRef, name string) (bool, error) {
+	b, err := s.getBackend(ctx, ref)
 	if err != nil {
 		return false, err
 	}
 	return b.Status(ctx, name)
 }
 
-func (s *service) Stats(ctx context.Context, backendId string, backendType string, name string) (*backend.InterfaceStats, error) {
-	b, err := s.getBackend(ctx, backendId, backendType)
+func (s *service) Stats(ctx context.Context, ref BackendRef, name string) (*backend.InterfaceStats, error) {
+	b, err := s.getBackend(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
 	return b.Stats(ctx, name)
 }
 
-func (s *service) PeerStats(ctx context.Context, backendId string, backendType string, name string, peerPublicKey string) (*backend.PeerStats, error) {
-	b, err := s.getBackend(ctx, backendId, backendType)
+func (s *service) PeerStats(ctx context.Context, ref BackendRef, name string, peerPublicKey string) (*backend.PeerStats, error) {
+	b, err := s.getBackend(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
 	return b.PeerStats(ctx, name, peerPublicKey)
 }
 
-func (s *service) FindForeignServers(ctx context.Context, backendId string, backendType string, knownInterfaces []string) ([]*backend.ForeignServer, error) {
-	b, err := s.getBackend(ctx, backendId, backendType)
+func (s *service) FindForeignServers(ctx context.Context, ref BackendRef, knownInterfaces []string) ([]*backend.ForeignServer, error) {
+	b, err := s.getBackend(ctx, ref)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get backend: %w", err)
 	}
@@ -92,7 +99,7 @@ func (s *service) FindForeignServers(ctx context.Context, backendId string, back
 	}
 	// Set BackendId on each foreign server
 	for _, srv := range servers {
-		srv.BackendId = backendId
+		srv.BackendId = ref.GetId()
 	}
 	return servers, nil
 }

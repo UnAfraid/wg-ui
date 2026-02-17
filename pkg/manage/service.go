@@ -277,13 +277,13 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *se
 		}
 
 		if !updatedServer.Enabled {
-			status, err := s.wireguardService.Status(ctx, b.Id, b.Type(), updatedServer.Name)
+			status, err := s.wireguardService.Status(ctx, b, updatedServer.Name)
 			if err != nil {
 				return nil, err
 			}
 
 			if status {
-				if err := s.wireguardService.Down(ctx, b.Id, b.Type(), updatedServer.Name); err != nil {
+				if err := s.wireguardService.Down(ctx, b, updatedServer.Name); err != nil {
 					return nil, err
 				}
 				updateOptions := server.UpdateOptions{
@@ -325,7 +325,7 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 		if err != nil {
 			logrus.WithError(err).WithField("backendId", svc.BackendId).Warn("failed to find backend")
 		} else {
-			if err = s.wireguardService.Down(ctx, b.Id, b.Type(), svc.Name); err != nil {
+			if err = s.wireguardService.Down(ctx, b, svc.Name); err != nil {
 				logrus.
 					WithError(err).
 					WithField("serverId", svc.Id).
@@ -391,7 +391,7 @@ func (s *service) StopServer(ctx context.Context, serverId string, userId string
 			return nil, fmt.Errorf("failed to find backend: %w", err)
 		}
 
-		if err := s.wireguardService.Down(ctx, b.Id, b.Type(), srv.Name); err != nil {
+		if err := s.wireguardService.Down(ctx, b, srv.Name); err != nil {
 			return nil, err
 		}
 
@@ -421,7 +421,7 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 			return server.Name
 		})
 
-		foreignInterfaces, err := s.wireguardService.FindForeignServers(ctx, b.Id, b.Type(), knownInterfaces)
+		foreignInterfaces, err := s.wireguardService.FindForeignServers(ctx, b, knownInterfaces)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find foreign interfaces: %w", err)
 		}
@@ -438,7 +438,7 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 			return nil, fmt.Errorf("foreign interface: %s not found", name)
 		}
 
-		device, err := s.wireguardService.Device(ctx, b.Id, b.Type(), foreignServer.Interface.Name)
+		device, err := s.wireguardService.Device(ctx, b, foreignServer.Interface.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open interface: %s", foreignServer.Interface.Name)
 		}
@@ -527,7 +527,7 @@ func (s *service) PeerStats(ctx context.Context, serverId string, peerPublicKey 
 		return nil, fmt.Errorf("failed to find backend: %w", err)
 	}
 
-	return s.wireguardService.PeerStats(ctx, b.Id, b.Type(), srv.Name, peerPublicKey)
+	return s.wireguardService.PeerStats(ctx, b, srv.Name, peerPublicKey)
 }
 
 func (s *service) ForeignServers(ctx context.Context, backendId string) ([]*backend.ForeignServer, error) {
@@ -544,7 +544,7 @@ func (s *service) ForeignServers(ctx context.Context, backendId string) ([]*back
 	knownInterfaces := adapt.Array(servers, func(server *server.Server) string {
 		return server.Name
 	})
-	return s.wireguardService.FindForeignServers(ctx, b.Id, b.Type(), knownInterfaces)
+	return s.wireguardService.FindForeignServers(ctx, b, knownInterfaces)
 }
 
 func (s *service) DeleteBackend(ctx context.Context, backendId string, userId string) (*backendpkg.Backend, error) {
@@ -578,7 +578,7 @@ func (s *service) configurePeerDevice(ctx context.Context, p *peer.Peer, userId 
 		return nil, fmt.Errorf("failed to find backend: %w", err)
 	}
 
-	status, err := s.wireguardService.Status(ctx, b.Id, b.Type(), srv.Name)
+	status, err := s.wireguardService.Status(ctx, b, srv.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -612,7 +612,7 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 		return nil, fmt.Errorf("failed to find backend: %w", err)
 	}
 
-	return s.wireguardService.Up(ctx, b.Id, b.Type(), backend.ConfigureOptions{
+	return s.wireguardService.Up(ctx, b, backend.ConfigureOptions{
 		InterfaceOptions: backend.InterfaceOptions{
 			Name:        srv.Name,
 			Description: srv.Description,
@@ -642,7 +642,7 @@ func (s *service) updateServer(ctx context.Context, srv *server.Server, device *
 		return nil, fmt.Errorf("failed to find backend: %w", err)
 	}
 
-	status, err := s.wireguardService.Status(ctx, b.Id, b.Type(), srv.Name)
+	status, err := s.wireguardService.Status(ctx, b, srv.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -873,7 +873,7 @@ func (s *service) updateServerStats(ctx context.Context, srv *server.Server) err
 		return fmt.Errorf("failed to find backend: %w", err)
 	}
 
-	stats, err := s.wireguardService.Stats(ctx, b.Id, b.Type(), srv.Name)
+	stats, err := s.wireguardService.Stats(ctx, b, srv.Name)
 	if err != nil {
 		return fmt.Errorf("failed to get device stats: %w", err)
 	}
