@@ -2,6 +2,7 @@ package wireguard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -81,15 +82,16 @@ func (r *Registry) CloseAll(ctx context.Context) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	var lastErr error
+	var errs []error
 	for id, b := range r.backends {
 		if err := b.Close(ctx); err != nil {
 			logrus.WithError(err).WithField("backendId", id).Error("failed to close backend")
-			lastErr = err
+			errs = append(errs, fmt.Errorf("backend %s: %w", id, err))
 		}
 	}
 	r.backends = make(map[string]backend.Backend)
-	return lastErr
+
+	return errors.Join(errs...)
 }
 
 // List returns all backend IDs
