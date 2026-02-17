@@ -105,7 +105,10 @@ func (b *nmBackend) Up(ctx context.Context, options backend.ConfigureOptions) (*
 		}
 	}
 
-	connectionSettings := b.buildConnectionSettings(interfaceOpts, wireguardOpts, existingUUID)
+	connectionSettings, err := b.buildConnectionSettings(interfaceOpts, wireguardOpts, existingUUID)
+	if err != nil {
+		return nil, err
+	}
 
 	if conn == nil {
 		conn, err = b.settings.AddConnection(connectionSettings)
@@ -319,7 +322,7 @@ func (b *nmBackend) findConnectionByInterfaceName(name string) (gonetworkmanager
 	return nil, nil
 }
 
-func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptions, wireguardOpts backend.WireguardOptions, existingUUID string) gonetworkmanager.ConnectionSettings {
+func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptions, wireguardOpts backend.WireguardOptions, existingUUID string) (gonetworkmanager.ConnectionSettings, error) {
 	connectionUUID := existingUUID
 	if connectionUUID == "" {
 		connectionUUID = uuid.NewString()
@@ -361,23 +364,24 @@ func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptio
 	addr := interfaceOpts.Address
 	if strings.Contains(addr, "/") {
 		ip, ipNet, err := net.ParseCIDR(addr)
-		if err == nil {
-			prefixLen, _ := ipNet.Mask.Size()
-			if ip.To4() != nil {
-				settings["ipv4"]["address-data"] = []map[string]interface{}{
-					{
-						"address": ip.String(),
-						"prefix":  uint32(prefixLen),
-					},
-				}
-			} else {
-				settings["ipv6"]["method"] = "manual"
-				settings["ipv6"]["address-data"] = []map[string]interface{}{
-					{
-						"address": ip.String(),
-						"prefix":  uint32(prefixLen),
-					},
-				}
+		if err != nil {
+			return nil, fmt.Errorf("invalid CIDR address %q: %w", addr, err)
+		}
+		prefixLen, _ := ipNet.Mask.Size()
+		if ip.To4() != nil {
+			settings["ipv4"]["address-data"] = []map[string]interface{}{
+				{
+					"address": ip.String(),
+					"prefix":  uint32(prefixLen),
+				},
+			}
+		} else {
+			settings["ipv6"]["method"] = "manual"
+			settings["ipv6"]["address-data"] = []map[string]interface{}{
+				{
+					"address": ip.String(),
+					"prefix":  uint32(prefixLen),
+				},
 			}
 		}
 	}
@@ -416,7 +420,7 @@ func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptio
 		settings["wireguard"]["peers"] = peers
 	}
 
-	return settings
+	return settings, nil
 }
 
 func (b *nmBackend) buildDevice(conn gonetworkmanager.Connection, device *wgtypes.Device) (*backend.Device, error) {
