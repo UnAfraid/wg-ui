@@ -5,10 +5,10 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/server"
 )
 
-func CreateServerInputToCreateServerOptions(input CreateServerInput) (_ *server.CreateOptions, backendId string, err error) {
-	backendId, err = input.BackendID.String(IdKindBackend)
+func CreateServerInputToCreateServerOptions(input CreateServerInput) (*server.CreateOptions, error) {
+	backendId, err := input.BackendID.String(IdKindBackend)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	return &server.CreateOptions{
@@ -23,7 +23,7 @@ func CreateServerInputToCreateServerOptions(input CreateServerInput) (_ *server.
 		DNS:          input.DNS.Value(),
 		MTU:          adapt.Dereference(input.Mtu.Value()),
 		Hooks:        adapt.Array(input.Hooks.Value(), ServerHookInputToServerHook),
-	}, backendId, nil
+	}, nil
 }
 
 func ToServer(server *server.Server) *Server {

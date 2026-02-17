@@ -125,7 +125,7 @@ func (r *mutationResolver) CreateServer(ctx context.Context, input model.CreateS
 		return nil, err
 	}
 
-	createOptions, _, err := model.CreateServerInputToCreateServerOptions(input)
+	createOptions, err := model.CreateServerInputToCreateServerOptions(input)
 	if err != nil {
 		return nil, err
 	}

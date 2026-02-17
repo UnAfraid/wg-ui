@@ -237,6 +237,20 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *se
 			}
 		}
 
+		// If description changed and server is running, reconfigure the device
+		if fieldMask.Description && updatedServer.Running {
+			peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
+				ServerId: &updatedServer.Id,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to find peers: %w", err)
+			}
+
+			if _, err := s.configureDevice(ctx, updatedServer, peers); err != nil {
+				return nil, fmt.Errorf("failed to reconfigure device: %w", err)
+			}
+		}
+
 		return updatedServer, nil
 	})
 }
