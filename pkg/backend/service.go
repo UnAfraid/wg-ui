@@ -110,6 +110,7 @@ func (s *service) UpdateBackend(ctx context.Context, backendId string, options *
 		}
 
 		originalType := backend.Type()
+		originalName := backend.Name
 
 		if err := processUpdateBackend(backend, options, fieldMask, userId); err != nil {
 			return nil, err
@@ -119,8 +120,8 @@ func (s *service) UpdateBackend(ctx context.Context, backendId string, options *
 			return nil, err
 		}
 
-		if fieldMask.Name && backend.Name != options.Name {
-			if err := s.validateBackendName(ctx, options.Name); err != nil {
+		if fieldMask.Name && backend.Name != originalName {
+			if err := s.validateBackendName(ctx, backend.Name); err != nil {
 				return nil, err
 			}
 		}
@@ -335,7 +336,7 @@ func (s *service) Subscribe(ctx context.Context) (<-chan *ChangedEvent, error) {
 			var changedEvent *ChangedEvent
 			if err := json.Unmarshal(bytes, &changedEvent); err != nil {
 				logrus.WithError(err).Warn("failed to decode backend changed event")
-				return
+				continue
 			}
 			observerChan <- changedEvent
 		}
