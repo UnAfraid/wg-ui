@@ -4,36 +4,42 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/manage"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
+	wgbackend "github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
 )
 
 type queryResolver struct {
-	peerService   peer.Service
-	serverService server.Service
-	userService   user.Service
-	manageService manage.Service
+	peerService    peer.Service
+	serverService  server.Service
+	userService    user.Service
+	backendService backend.Service
+	manageService  manage.Service
 }
 
 func NewQueryResolver(
 	peerService peer.Service,
 	serverService server.Service,
 	userService user.Service,
+	backendService backend.Service,
 	manageService manage.Service,
 ) resolver.QueryResolver {
 	return &queryResolver{
-		peerService:   peerService,
-		serverService: serverService,
-		userService:   userService,
-		manageService: manageService,
+		peerService:    peerService,
+		serverService:  serverService,
+		userService:    userService,
+		backendService: backendService,
+		manageService:  manageService,
 	}
 }
 
@@ -61,6 +67,12 @@ func (r *queryResolver) Node(ctx context.Context, id model.ID) (model.Node, erro
 			return nil, err
 		}
 		return peerLoader.Load(ctx, id.Value)()
+	case model.IdKindBackend:
+		backendLoader, err := handler.BackendLoaderFromContext(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return backendLoader.Load(ctx, id.Value)()
 	default:
 		return nil, fmt.Errorf("node type %s is %w", id.Kind, resolver.ErrNotImplemented)
 	}
@@ -137,10 +149,57 @@ func (r *queryResolver) Peers(ctx context.Context, query *string) ([]*model.Peer
 	return adapt.Array(servers, model.ToPeer), nil
 }
 
-func (r *queryResolver) ForeignServers(ctx context.Context) ([]*model.ForeignServer, error) {
-	foreignServers, err := r.manageService.ForeignServers(ctx)
+func (r *queryResolver) AvailableBackends(ctx context.Context) ([]*model.AvailableBackend, error) {
+	registeredTypes, err := r.backendService.RegisteredTypes(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return adapt.Array(foreignServers, model.ToForeignServer), nil
+
+	allTypes := wgbackend.ListTypes()
+	return adapt.Array(allTypes, func(t string) *model.AvailableBackend {
+		return &model.AvailableBackend{
+			Type:       t,
+			Supported:  wgbackend.IsSupported(t),
+			Registered: slices.Contains(registeredTypes, t),
+		}
+	}), nil
+}
+
+func (r *queryResolver) Backends(ctx context.Context, typeArg *string) ([]*model.Backend, error) {
+	backends, err := r.backendService.FindBackends(ctx, &backend.FindOptions{
+		Type: typeArg,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return adapt.Array(backends, model.ToBackend), nil
+}
+
+func (r *queryResolver) ForeignServers(ctx context.Context) ([]*model.ForeignServer, error) {
+	// Get all backends and collect foreign servers from each
+	backends, err := r.backendService.FindBackends(ctx, &backend.FindOptions{
+		Enabled: adapt.ToPointer(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var allForeignServers []*model.ForeignServer
+	var errs []error
+	for _, b := range backends {
+		foreignServers, err := r.manageService.ForeignServers(ctx, b.Id)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("backend %s: %w", b.Name, err))
+			continue
+		}
+		for _, fs := range foreignServers {
+			allForeignServers = append(allForeignServers, model.ToForeignServer(fs))
+		}
+	}
+
+	if len(errs) > 0 && len(allForeignServers) == 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	return allForeignServers, nil
 }

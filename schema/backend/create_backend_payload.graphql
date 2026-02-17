@@ -1,0 +1,4 @@
+type CreateBackendPayload {
+    clientMutationId: String
+    backend: Backend!
+}

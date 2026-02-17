@@ -1,0 +1,19 @@
+"""
+Represents a backend type that can be registered
+"""
+type AvailableBackend {
+    """
+    The backend type identifier (e.g., "linux", "networkmanager", "macos")
+    """
+    type: String!
+
+    """
+    Whether this backend type is supported on the current platform
+    """
+    supported: Boolean!
+
+    """
+    Whether a backend of this type has already been created (only one per type allowed)
+    """
+    registered: Boolean!
+}

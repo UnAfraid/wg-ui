@@ -3,6 +3,7 @@ package server
 type CreateOptions struct {
 	Name         string
 	Description  string
+	BackendId    string
 	Enabled      bool
 	Running      bool
 	PrivateKey   string

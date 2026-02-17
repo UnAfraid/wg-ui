@@ -5,6 +5,7 @@ go 1.25
 require (
 	github.com/99designs/gqlgen v0.17.85
 	github.com/UnAfraid/searchindex v0.0.0-20230707222905-bbf56d7105a6
+	github.com/Wifx/gonetworkmanager/v3 v3.2.0
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
@@ -25,6 +26,7 @@ require (
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/goccy/go-yaml v1.19.1 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect

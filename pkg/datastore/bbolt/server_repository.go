@@ -83,6 +83,14 @@ func (r *serverRepository) FindAll(ctx context.Context, options *server.FindOpti
 				}
 			}
 
+			if options.BackendId != nil {
+				optionsLen++
+				if s.BackendId == *options.BackendId {
+					servers = append(servers, s)
+					continue
+				}
+			}
+
 			if options.Enabled != nil {
 				optionsLen++
 				if s.Enabled == *options.Enabled {
@@ -171,6 +179,10 @@ func (r *serverRepository) Update(ctx context.Context, s *server.Server, fieldMa
 			updatedServer.Description = s.Description
 		}
 
+		if fieldMask.BackendId {
+			updatedServer.BackendId = s.BackendId
+		}
+
 		if fieldMask.Enabled {
 			updatedServer.Enabled = s.Enabled
 		}
@@ -248,5 +260,39 @@ func (r *serverRepository) Delete(ctx context.Context, serverId string, deleteUs
 		deletedServer.DeletedAt = adapt.ToPointer(time.Now())
 
 		return deletedServer, bucket.Delete(id)
+	})
+}
+
+func (r *serverRepository) CountByBackendId(ctx context.Context, backendId string) (int, error) {
+	return dbTx(ctx, r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (int, error) {
+		var count int
+		c := bucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var s *server.Server
+			if err := json.Unmarshal(v, &s); err != nil {
+				return 0, fmt.Errorf("failed to unmarshal server: %w", err)
+			}
+			if s.BackendId == backendId {
+				count++
+			}
+		}
+		return count, nil
+	})
+}
+
+func (r *serverRepository) CountEnabledByBackendId(ctx context.Context, backendId string) (int, error) {
+	return dbTx(ctx, r.db, serverBucket, false, func(tx *bbolt.Tx, bucket *bbolt.Bucket) (int, error) {
+		var count int
+		c := bucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var s *server.Server
+			if err := json.Unmarshal(v, &s); err != nil {
+				return 0, fmt.Errorf("failed to unmarshal server: %w", err)
+			}
+			if s.BackendId == backendId && s.Enabled {
+				count++
+			}
+		}
+		return count, nil
 	})
 }

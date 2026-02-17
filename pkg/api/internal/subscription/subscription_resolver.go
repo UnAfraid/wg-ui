@@ -5,6 +5,7 @@ import (
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
@@ -13,21 +14,33 @@ import (
 const totalSubscriptionNodeSources = 3
 
 type subscriptionResolver struct {
-	userService   user.Service
-	serverService server.Service
-	peerService   peer.Service
+	userService    user.Service
+	serverService  server.Service
+	peerService    peer.Service
+	backendService backend.Service
 }
 
 func NewSubscriptionResolver(
 	userService user.Service,
 	serverService server.Service,
 	peerService peer.Service,
+	backendService backend.Service,
 ) resolver.SubscriptionResolver {
 	return &subscriptionResolver{
-		userService:   userService,
-		serverService: serverService,
-		peerService:   peerService,
+		userService:    userService,
+		serverService:  serverService,
+		peerService:    peerService,
+		backendService: backendService,
 	}
+}
+
+func (r *subscriptionResolver) BackendChanged(ctx context.Context) (<-chan *model.BackendChangedEvent, error) {
+	return domainEventToApiEvent[*backend.ChangedEvent, *model.BackendChangedEvent](ctx, r.backendService, func(event *backend.ChangedEvent) *model.BackendChangedEvent {
+		return &model.BackendChangedEvent{
+			Node:   model.ToBackend(event.Backend),
+			Action: event.Action,
+		}
+	})
 }
 
 func (r *subscriptionResolver) UserChanged(ctx context.Context) (<-chan *model.UserChangedEvent, error) {

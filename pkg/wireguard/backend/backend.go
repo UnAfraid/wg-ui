@@ -11,4 +11,5 @@ type Backend interface {
 	PeerStats(ctx context.Context, name string, peerPublicKey string) (*PeerStats, error)
 	FindForeignServers(ctx context.Context, knownInterfaces []string) ([]*ForeignServer, error)
 	Close(ctx context.Context) error
+	Supported() bool
 }

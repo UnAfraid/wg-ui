@@ -8,21 +8,25 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/pkg/auth"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/manage"
 )
 
 type mutationResolver struct {
-	authService   auth.Service
-	manageService manage.Service
+	authService    auth.Service
+	backendService backend.Service
+	manageService  manage.Service
 }
 
 func NewMutationResolver(
 	authService auth.Service,
+	backendService backend.Service,
 	manageService manage.Service,
 ) resolver.MutationResolver {
 	return &mutationResolver{
-		authService:   authService,
-		manageService: manageService,
+		authService:    authService,
+		backendService: backendService,
+		manageService:  manageService,
 	}
 }
 
@@ -343,7 +347,12 @@ func (r *mutationResolver) ImportForeignServer(ctx context.Context, input model.
 		return nil, err
 	}
 
-	server, err := r.manageService.ImportForeignServer(ctx, input.Name, userId)
+	backendId, err := input.BackendID.String(model.IdKindBackend)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := r.manageService.ImportForeignServer(ctx, backendId, input.Name, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -351,5 +360,85 @@ func (r *mutationResolver) ImportForeignServer(ctx context.Context, input model.
 	return &model.ImportForeignServerPayload{
 		ClientMutationID: input.ClientMutationID.Value(),
 		Server:           model.ToServer(server),
+	}, nil
+}
+
+func (r *mutationResolver) CreateBackend(ctx context.Context, input model.CreateBackendInput) (*model.CreateBackendPayload, error) {
+	user, err := model.ContextToUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, err := user.ID.String(model.IdKindUser)
+	if err != nil {
+		return nil, err
+	}
+
+	createOptions := model.CreateBackendInputToCreateOptions(input)
+
+	createdBackend, err := r.backendService.CreateBackend(ctx, createOptions, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.CreateBackendPayload{
+		ClientMutationID: input.ClientMutationID.Value(),
+		Backend:          model.ToBackend(createdBackend),
+	}, nil
+}
+
+func (r *mutationResolver) UpdateBackend(ctx context.Context, input model.UpdateBackendInput) (*model.UpdateBackendPayload, error) {
+	user, err := model.ContextToUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, err := user.ID.String(model.IdKindUser)
+	if err != nil {
+		return nil, err
+	}
+
+	backendId, err := input.ID.String(model.IdKindBackend)
+	if err != nil {
+		return nil, err
+	}
+
+	updateOptions, updateFieldMask := model.UpdateBackendInputToUpdateOptionsAndFieldMask(input)
+
+	updatedBackend, err := r.backendService.UpdateBackend(ctx, backendId, updateOptions, updateFieldMask, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.UpdateBackendPayload{
+		ClientMutationID: input.ClientMutationID.Value(),
+		Backend:          model.ToBackend(updatedBackend),
+	}, nil
+}
+
+func (r *mutationResolver) DeleteBackend(ctx context.Context, input model.DeleteBackendInput) (*model.DeleteBackendPayload, error) {
+	user, err := model.ContextToUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, err := user.ID.String(model.IdKindUser)
+	if err != nil {
+		return nil, err
+	}
+
+	backendId, err := input.ID.String(model.IdKindBackend)
+	if err != nil {
+		return nil, err
+	}
+
+	deletedBackend, err := r.manageService.DeleteBackend(ctx, backendId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.DeleteBackendPayload{
+		ClientMutationID: input.ClientMutationID.Value(),
+		Backend:          model.ToBackend(deletedBackend),
 	}, nil
 }

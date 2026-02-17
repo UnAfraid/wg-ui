@@ -32,6 +32,9 @@ func ToForeignServer(foreignServer *backend.ForeignServer) *ForeignServer {
 		ListenPort:       foreignServer.ListenPort,
 		FirewallMark:     foreignServer.FirewallMark,
 		Peers:            adapt.Array(foreignServer.Peers, ToForeignPeer),
+		Backend: &Backend{
+			ID: StringID(IdKindBackend, foreignServer.BackendId),
+		},
 	}
 }
 

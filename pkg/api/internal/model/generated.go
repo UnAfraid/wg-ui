@@ -17,6 +17,58 @@ type NodeChangedEvent interface {
 	IsNodeChangedEvent()
 }
 
+// Represents a backend type that can be registered
+type AvailableBackend struct {
+	// The backend type identifier (e.g., "linux", "networkmanager", "macos")
+	Type string `json:"type"`
+	// Whether this backend type is supported on the current platform
+	Supported bool `json:"supported"`
+	// Whether a backend of this type has already been created (only one per type allowed)
+	Registered bool `json:"registered"`
+}
+
+type Backend struct {
+	ID          ID     `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+	Enabled     bool   `json:"enabled"`
+	Supported   bool   `json:"supported"`
+	// Use this query to find servers on this backend
+	Servers []*Server `json:"servers"`
+	// Use this query to find peers on this backend
+	Peers []*Peer `json:"peers"`
+	// Use this query to find foreign servers on this backend
+	ForeignServers []*ForeignServer `json:"foreignServers"`
+	CreateUser     *User            `json:"createUser,omitempty"`
+	UpdateUser     *User            `json:"updateUser,omitempty"`
+	DeleteUser     *User            `json:"deleteUser,omitempty"`
+	CreatedAt      time.Time        `json:"createdAt"`
+	UpdatedAt      time.Time        `json:"updatedAt"`
+	DeletedAt      *time.Time       `json:"deletedAt,omitempty"`
+}
+
+func (Backend) IsNode()        {}
+func (this Backend) GetID() ID { return this.ID }
+
+type BackendChangedEvent struct {
+	Action string   `json:"action"`
+	Node   *Backend `json:"node"`
+}
+
+type CreateBackendInput struct {
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	Name             string                     `json:"name"`
+	Description      graphql.Omittable[*string] `json:"description,omitempty"`
+	URL              string                     `json:"url"`
+	Enabled          graphql.Omittable[*bool]   `json:"enabled,omitempty"`
+}
+
+type CreateBackendPayload struct {
+	ClientMutationID *string  `json:"clientMutationId,omitempty"`
+	Backend          *Backend `json:"backend"`
+}
+
 type CreatePeerInput struct {
 	ClientMutationID    graphql.Omittable[*string]          `json:"clientMutationId,omitempty"`
 	ServerID            ID                                  `json:"serverId"`
@@ -39,6 +91,7 @@ type CreateServerInput struct {
 	ClientMutationID graphql.Omittable[*string]            `json:"clientMutationId,omitempty"`
 	Name             string                                `json:"name"`
 	Description      graphql.Omittable[*string]            `json:"description,omitempty"`
+	BackendID        ID                                    `json:"backendId"`
 	Enabled          graphql.Omittable[*bool]              `json:"enabled,omitempty"`
 	PrivateKey       graphql.Omittable[*string]            `json:"privateKey,omitempty"`
 	PublicKey        graphql.Omittable[*string]            `json:"publicKey,omitempty"`
@@ -64,6 +117,16 @@ type CreateUserInput struct {
 type CreateUserPayload struct {
 	ClientMutationID *string `json:"clientMutationId,omitempty"`
 	User             *User   `json:"user"`
+}
+
+type DeleteBackendInput struct {
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	ID               ID                         `json:"id"`
+}
+
+type DeleteBackendPayload struct {
+	ClientMutationID *string  `json:"clientMutationId,omitempty"`
+	Backend          *Backend `json:"backend"`
 }
 
 type DeletePeerInput struct {
@@ -121,6 +184,7 @@ type ForeignServer struct {
 	ListenPort       int               `json:"listenPort"`
 	FirewallMark     int               `json:"firewallMark"`
 	Peers            []*ForeignPeer    `json:"peers"`
+	Backend          *Backend          `json:"backend"`
 }
 
 type GenerateWireguardKeyInput struct {
@@ -135,7 +199,10 @@ type GenerateWireguardKeyPayload struct {
 
 type ImportForeignServerInput struct {
 	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
-	Name             string                     `json:"name"`
+	// The ID of the backend to import the foreign server from
+	BackendID ID `json:"backendId"`
+	// The name of the foreign server interface to import
+	Name string `json:"name"`
 }
 
 type ImportForeignServerPayload struct {
@@ -149,6 +216,7 @@ type Mutation struct {
 type Peer struct {
 	ID                  ID          `json:"id"`
 	Server              *Server     `json:"server"`
+	Backend             *Backend    `json:"backend"`
 	Name                string      `json:"name"`
 	Description         string      `json:"description"`
 	PublicKey           string      `json:"publicKey"`
@@ -204,6 +272,7 @@ type Server struct {
 	ID             ID                    `json:"id"`
 	Name           string                `json:"name"`
 	Description    string                `json:"description"`
+	Backend        *Backend              `json:"backend"`
 	Enabled        bool                  `json:"enabled"`
 	Running        bool                  `json:"running"`
 	PublicKey      string                `json:"publicKey"`
@@ -314,6 +383,20 @@ type StopServerPayload struct {
 }
 
 type Subscription struct {
+}
+
+type UpdateBackendInput struct {
+	ClientMutationID graphql.Omittable[*string] `json:"clientMutationId,omitempty"`
+	ID               ID                         `json:"id"`
+	Name             graphql.Omittable[*string] `json:"name,omitempty"`
+	Description      graphql.Omittable[*string] `json:"description,omitempty"`
+	URL              graphql.Omittable[*string] `json:"url,omitempty"`
+	Enabled          graphql.Omittable[*bool]   `json:"enabled,omitempty"`
+}
+
+type UpdateBackendPayload struct {
+	ClientMutationID *string  `json:"clientMutationId,omitempty"`
+	Backend          *Backend `json:"backend"`
 }
 
 type UpdatePeerInput struct {

@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 
 	"github.com/UnAfraid/wg-ui/pkg/api"
 	"github.com/UnAfraid/wg-ui/pkg/auth"
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/config"
 	"github.com/UnAfraid/wg-ui/pkg/datastore"
 	"github.com/UnAfraid/wg-ui/pkg/datastore/bbolt"
@@ -27,8 +27,8 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
 	"github.com/UnAfraid/wg-ui/pkg/user"
 	"github.com/UnAfraid/wg-ui/pkg/wireguard"
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
-	"github.com/UnAfraid/wg-ui/pkg/wireguard/linux"
+	_ "github.com/UnAfraid/wg-ui/pkg/wireguard/linux"          // Register linux backend
+	_ "github.com/UnAfraid/wg-ui/pkg/wireguard/networkmanager" // Register networkmanager backend
 )
 
 const (
@@ -114,24 +114,12 @@ func main() {
 		return
 	}
 
-	var wireguardBackend backend.Backend
-	switch strings.ToLower(conf.Backend) {
-	case "linux":
-		wireguardBackend, err = linux.NewLinuxBackend()
-		if err != nil {
-			logrus.
-				WithError(err).
-				Fatal("failed to initialize linux backend for wireguard")
-			return
-		}
-	default:
-		logrus.
-			WithError(err).
-			Fatal("unsupported wireguard backend")
-		return
-	}
+	backendRepository := bbolt.NewBackendRepository(db)
+	serverCounter := backend.NewServerCounter(serverRepository)
+	backendService := backend.NewService(backendRepository, serverCounter, transactionScoper, subscriptionImpl)
 
-	wireguardService := wireguard.NewService(wireguardBackend)
+	wireguardRegistry := wireguard.NewRegistry()
+	wireguardService := wireguard.NewService(wireguardRegistry)
 	defer func() {
 		if err := wireguardService.Close(context.Background()); err != nil {
 			logrus.
@@ -145,6 +133,7 @@ func main() {
 	manageService := manage.NewService(
 		transactionScoper,
 		userService,
+		backendService,
 		serverService,
 		peerService,
 		wireguardService,
@@ -159,6 +148,7 @@ func main() {
 		userService,
 		serverService,
 		peerService,
+		backendService,
 		manageService,
 	)
 

@@ -1,0 +1,7 @@
+input CreateBackendInput {
+    clientMutationId: String
+    name: String!
+    description: String
+    url: String!
+    enabled: Boolean
+}

@@ -2,6 +2,7 @@ package server
 
 type UpdateFieldMask struct {
 	Description  bool
+	BackendId    bool
 	Enabled      bool
 	Running      bool
 	PrivateKey   bool

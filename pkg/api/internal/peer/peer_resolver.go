@@ -2,6 +2,7 @@ package peer
 
 import (
 	"context"
+	"errors"
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
@@ -38,6 +39,48 @@ func (r *peerResolver) Server(ctx context.Context, p *model.Peer) (*model.Server
 	return serverLoader.Load(ctx, serverId)()
 }
 
+func (r *peerResolver) Backend(ctx context.Context, p *model.Peer) (*model.Backend, error) {
+	// Backend is resolved through the server
+	if p.Server == nil {
+		return nil, nil
+	}
+
+	serverId, err := p.Server.ID.String(model.IdKindServer)
+	if err != nil {
+		return nil, err
+	}
+
+	serverLoader, err := handler.ServerLoaderFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	srv, err := serverLoader.Load(ctx, serverId)()
+	if err != nil {
+		return nil, err
+	}
+
+	if srv == nil {
+		return nil, errors.New("server not found")
+	}
+
+	if srv.Backend == nil {
+		return nil, errors.New("server has no backend")
+	}
+
+	backendId, err := srv.Backend.ID.String(model.IdKindBackend)
+	if err != nil {
+		return nil, err
+	}
+
+	backendLoader, err := handler.BackendLoaderFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return backendLoader.Load(ctx, backendId)()
+}
+
 func (r *peerResolver) Stats(ctx context.Context, p *model.Peer) (*model.PeerStats, error) {
 	if p.Server == nil {
 		return nil, nil
@@ -62,7 +105,7 @@ func (r *peerResolver) Stats(ctx context.Context, p *model.Peer) (*model.PeerSta
 		return nil, nil
 	}
 
-	stats, err := r.manageService.PeerStats(ctx, server.Name, p.PublicKey)
+	stats, err := r.manageService.PeerStats(ctx, serverId, p.PublicKey)
 	if err != nil {
 		return nil, err
 	}
