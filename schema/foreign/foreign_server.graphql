@@ -6,5 +6,5 @@ type ForeignServer {
     listenPort: Int!
     firewallMark: Int!
     peers: [ForeignPeer!]!
-    backend: Backend! @goField(forceResolver: true)
+    backend: Backend! @goField(forceResolver: true) @authenticated
 }

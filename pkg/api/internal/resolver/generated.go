@@ -2083,7 +2083,7 @@ type AvailableBackend {
     listenPort: Int!
     firewallMark: Int!
     peers: [ForeignPeer!]!
-    backend: Backend! @goField(forceResolver: true)
+    backend: Backend! @goField(forceResolver: true) @authenticated
 }
 `, BuiltIn: false},
 	{Name: "../../../../schema/foreign/import_foreign_server_input.graphql", Input: `input ImportForeignServerInput {
@@ -5046,7 +5046,20 @@ func (ec *executionContext) _ForeignServer_backend(ctx context.Context, field gr
 		func(ctx context.Context) (any, error) {
 			return ec.resolvers.ForeignServer().Backend(ctx, obj)
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal *model.Backend
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, obj, directive0)
+			}
+
+			next = directive1
+			return next
+		},
 		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
 		true,
 		true,
