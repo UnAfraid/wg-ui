@@ -29,12 +29,12 @@ func NewService(registry *Registry) Service {
 	}
 }
 
-func (s *service) getBackend(backendId string, backendType string) (backend.Backend, error) {
-	return s.registry.GetOrCreate(backendId, backendType)
+func (s *service) getBackend(ctx context.Context, backendId string, backendType string) (backend.Backend, error) {
+	return s.registry.GetOrCreate(ctx, backendId, backendType)
 }
 
 func (s *service) Device(ctx context.Context, backendId string, backendType string, name string) (*backend.Device, error) {
-	b, err := s.getBackend(backendId, backendType)
+	b, err := s.getBackend(ctx, backendId, backendType)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (s *service) Device(ctx context.Context, backendId string, backendType stri
 }
 
 func (s *service) Up(ctx context.Context, backendId string, backendType string, options backend.ConfigureOptions) (*backend.Device, error) {
-	b, err := s.getBackend(backendId, backendType)
+	b, err := s.getBackend(ctx, backendId, backendType)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (s *service) Up(ctx context.Context, backendId string, backendType string, 
 }
 
 func (s *service) Down(ctx context.Context, backendId string, backendType string, name string) error {
-	b, err := s.getBackend(backendId, backendType)
+	b, err := s.getBackend(ctx, backendId, backendType)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (s *service) Down(ctx context.Context, backendId string, backendType string
 }
 
 func (s *service) Status(ctx context.Context, backendId string, backendType string, name string) (bool, error) {
-	b, err := s.getBackend(backendId, backendType)
+	b, err := s.getBackend(ctx, backendId, backendType)
 	if err != nil {
 		return false, err
 	}
@@ -66,7 +66,7 @@ func (s *service) Status(ctx context.Context, backendId string, backendType stri
 }
 
 func (s *service) Stats(ctx context.Context, backendId string, backendType string, name string) (*backend.InterfaceStats, error) {
-	b, err := s.getBackend(backendId, backendType)
+	b, err := s.getBackend(ctx, backendId, backendType)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (s *service) Stats(ctx context.Context, backendId string, backendType strin
 }
 
 func (s *service) PeerStats(ctx context.Context, backendId string, backendType string, name string, peerPublicKey string) (*backend.PeerStats, error) {
-	b, err := s.getBackend(backendId, backendType)
+	b, err := s.getBackend(ctx, backendId, backendType)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (s *service) PeerStats(ctx context.Context, backendId string, backendType s
 }
 
 func (s *service) FindForeignServers(ctx context.Context, backendId string, backendType string, knownInterfaces []string) ([]*backend.ForeignServer, error) {
-	b, err := s.getBackend(backendId, backendType)
+	b, err := s.getBackend(ctx, backendId, backendType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get backend: %w", err)
 	}

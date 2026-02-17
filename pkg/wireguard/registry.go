@@ -32,7 +32,7 @@ func (r *Registry) Get(backendId string) backend.Backend {
 }
 
 // GetOrCreate retrieves an existing backend connection or creates a new one
-func (r *Registry) GetOrCreate(backendId string, backendType string) (backend.Backend, error) {
+func (r *Registry) GetOrCreate(ctx context.Context, backendId string, backendType string) (backend.Backend, error) {
 	// First check with read lock
 	r.mu.RLock()
 	if b, ok := r.backends[backendId]; ok {
@@ -53,7 +53,7 @@ func (r *Registry) GetOrCreate(backendId string, backendType string) (backend.Ba
 
 	if existing, ok := r.backends[backendId]; ok {
 		// Another goroutine created it, close ours and return existing
-		_ = b.Close(context.Background())
+		_ = b.Close(ctx)
 		return existing, nil
 	}
 
