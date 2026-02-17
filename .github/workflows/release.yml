@@ -53,15 +53,17 @@ jobs:
         with:
           go-version: 1.25.0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/Jod
+          cache-dependency-path: 'www/pnpm-lock.yaml'
+          cache: 'pnpm'
 
       - name: Discover latest frontend release
         run: |
@@ -75,14 +77,12 @@ jobs:
           path: pkg/api/internal/tools/frontend/wireguard-manager
 
       - name: Build Frontend
+        working-directory: www
         run: |
-          cd pkg/api/internal/tools/frontend/wireguard-manager
+          GITIGNORE_CONTENTS=$(cat out/.gitignore)
           pnpm install
-          npm run generate
-          rm -rf ../app
-          mv .output/public ../app
-          cd ..
-          rm -rf wireguard-manager
+          pnpm run build
+          echo "$GITIGNORE_CONTENTS" > out/.gitignore
 
       - name: Download dependencies
         run: go mod download
@@ -119,26 +119,17 @@ jobs:
         with:
           go-version: 1.25.0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 10
 
-      - name: Discover latest frontend release
-        run: |
-          LATEST_FRONTEND_RELEASE=$(curl -sS "https://api.github.com/repos/${FRONTEND_REPOSITORY}/releases/latest" | jq -r ".tag_name")
-          echo 'latest_frontend_release=${LATEST_FRONTEND_RELEASE}' >> $GITHUB_OUTPUT
-
-      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          repository: ${{ env.FRONTEND_REPOSITORY }}
-          ref: ${{ steps.variables.outputs.latest_frontend_release }}
-          path: pkg/api/internal/tools/frontend/wireguard-manager
+          node-version: lts/Jod
+          cache-dependency-path: 'www/pnpm-lock.yaml'
+          cache: 'pnpm'
 
       - name: Setup Docker Buildx
         id: buildx
@@ -173,14 +164,12 @@ jobs:
             org.opencontainers.image.description=Self-contained WireGuard management service with a web UI and GraphQL API written in pure Go.
 
       - name: Build Frontend
+        working-directory: www
         run: |
-          cd pkg/api/internal/tools/frontend/wireguard-manager
+          GITIGNORE_CONTENTS=$(cat out/.gitignore)
           pnpm install
-          npm run generate
-          rm -rf ../app
-          mv .output/public ../app
-          cd ..
-          rm -rf wireguard-manager
+          pnpm run build
+          echo "$GITIGNORE_CONTENTS" > out/.gitignore
 
       - name: Build and push image to GHCR
         uses: docker/build-push-action@v6

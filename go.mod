@@ -46,3 +46,5 @@ require (
 )
 
 tool github.com/99designs/gqlgen
+
+ignore ./www
