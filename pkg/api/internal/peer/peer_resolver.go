@@ -2,6 +2,7 @@ package peer
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
@@ -59,8 +60,12 @@ func (r *peerResolver) Backend(ctx context.Context, p *model.Peer) (*model.Backe
 		return nil, err
 	}
 
-	if srv == nil || srv.Backend == nil {
-		return nil, nil
+	if srv == nil {
+		return nil, fmt.Errorf("server not found")
+	}
+
+	if srv.Backend == nil {
+		return nil, fmt.Errorf("server has no backend")
 	}
 
 	backendId, err := srv.Backend.ID.String(model.IdKindBackend)
