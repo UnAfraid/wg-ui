@@ -3,6 +3,7 @@ package backend
 import (
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -103,14 +104,20 @@ func BuildURL(backendType string, host string, port string, user string, path st
 
 	if len(options) > 0 {
 		sb.WriteString("?")
+		// Sort keys for deterministic output
+		keys := make([]string, 0, len(options))
+		for k := range options {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
 		first := true
-		for k, v := range options {
+		for _, k := range keys {
 			if !first {
 				sb.WriteString("&")
 			}
 			sb.WriteString(url.QueryEscape(k))
 			sb.WriteString("=")
-			sb.WriteString(url.QueryEscape(v))
+			sb.WriteString(url.QueryEscape(options[k]))
 			first = false
 		}
 	}
