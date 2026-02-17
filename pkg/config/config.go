@@ -19,6 +19,7 @@ type Config struct {
 	CorsAllowedOrigins                      []string      `split_words:"true" default:"*"`
 	CorsAllowCredentials                    bool          `split_words:"true" default:"true"`
 	CorsAllowPrivateNetwork                 bool          `split_words:"true" default:"false"`
+	CorsDebug                               bool          `split_words:"true" default:"false"`
 	SubscriptionAllowedOrigins              []string      `split_words:"true" default:"*"`
 	JwtSecret                               string        `required:"true" split_words:"true"`
 	JwtDuration                             time.Duration `split_words:"true" default:"8h"`

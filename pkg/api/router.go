@@ -51,7 +51,7 @@ func NewRouter(
 		AllowedHeaders:      []string{"*"},
 		AllowCredentials:    conf.CorsAllowCredentials,
 		AllowPrivateNetwork: conf.CorsAllowPrivateNetwork,
-		Debug:               true,
+		Debug:               conf.CorsDebug,
 	})
 
 	executableSchemaConfig := newConfig(
