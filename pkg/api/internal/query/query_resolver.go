@@ -185,14 +185,21 @@ func (r *queryResolver) ForeignServers(ctx context.Context) ([]*model.ForeignSer
 	}
 
 	var allForeignServers []*model.ForeignServer
+	var errs []error
 	for _, b := range backends {
 		foreignServers, err := r.manageService.ForeignServers(ctx, b.Id)
 		if err != nil {
-			continue // Skip backends that fail
+			errs = append(errs, fmt.Errorf("backend %s: %w", b.Name, err))
+			continue
 		}
 		for _, fs := range foreignServers {
 			allForeignServers = append(allForeignServers, model.ToForeignServer(fs, b.Id))
 		}
 	}
+
+	if len(errs) > 0 && len(allForeignServers) == 0 {
+		return nil, errors.Join(errs...)
+	}
+
 	return allForeignServers, nil
 }
