@@ -92,17 +92,12 @@ func (s *service) init() {
 		return
 	}
 
-	var initialized, failed, deleted int
+	var initialized, failed, skipped int
 	for _, srv := range servers {
-		// Delete servers without a backend (invalid/legacy data)
+		// Skip servers without a backend (invalid/legacy data)
 		if srv.BackendId == "" {
-			logrus.WithField("name", srv.Name).Warn("server has no backend, deleting invalid server")
-			if _, err := s.serverService.DeleteServer(ctx, srv.Id, ""); err != nil {
-				logrus.WithError(err).WithField("name", srv.Name).Error("failed to delete invalid server")
-				failed++
-			} else {
-				deleted++
-			}
+			logrus.WithField("name", srv.Name).Error("server has no backend ID - this server was created before multi-backend support and must be manually deleted or migrated")
+			skipped++
 			continue
 		}
 
@@ -137,8 +132,8 @@ func (s *service) init() {
 		initialized++
 	}
 
-	if deleted > 0 {
-		logrus.WithField("deleted", deleted).Warn("deleted invalid servers without backend")
+	if skipped > 0 {
+		logrus.WithField("skipped", skipped).Error("some servers have no backend ID and were skipped - these must be manually deleted or migrated")
 	}
 	if failed > 0 {
 		if initialized == 0 {
