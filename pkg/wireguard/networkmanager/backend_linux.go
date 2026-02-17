@@ -309,9 +309,14 @@ func (b *nmBackend) findConnectionByInterfaceName(name string) (gonetworkmanager
 func (b *nmBackend) buildConnectionSettings(interfaceOpts backend.InterfaceOptions, wireguardOpts backend.WireguardOptions) gonetworkmanager.ConnectionSettings {
 	connectionUUID := uuid.New().String()
 
+	connectionName := interfaceOpts.Description
+	if connectionName == "" {
+		connectionName = interfaceOpts.Name
+	}
+
 	settings := gonetworkmanager.ConnectionSettings{
 		"connection": {
-			"id":             interfaceOpts.Name,
+			"id":             connectionName,
 			"uuid":           connectionUUID,
 			"type":           "wireguard",
 			"interface-name": interfaceOpts.Name,
@@ -495,6 +500,16 @@ func (b *nmBackend) buildForeignServer(nmDevice gonetworkmanager.Device) (*backe
 	mtu, _ := nmDevice.GetPropertyMtu()
 	state, _ := nmDevice.GetPropertyState()
 
+	// Get connection ID (name) from active connection
+	var description string
+	activeConn, err := nmDevice.GetPropertyActiveConnection()
+	if err == nil && activeConn != nil {
+		connId, err := activeConn.GetPropertyID()
+		if err == nil && connId != interfaceName {
+			description = connId
+		}
+	}
+
 	var addresses []string
 	ip4Config, err := nmDevice.GetPropertyIP4Config()
 	if err == nil && ip4Config != nil {
@@ -514,6 +529,7 @@ func (b *nmBackend) buildForeignServer(nmDevice gonetworkmanager.Device) (*backe
 			State:     state.String(),
 		},
 		Name:         device.Name,
+		Description:  description,
 		Type:         device.Type.String(),
 		PublicKey:    device.PublicKey.String(),
 		ListenPort:   device.ListenPort,

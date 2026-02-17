@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/handler"
@@ -15,6 +16,7 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/peer"
 	"github.com/UnAfraid/wg-ui/pkg/server"
 	"github.com/UnAfraid/wg-ui/pkg/user"
+	wgbackend "github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
 )
 
 type queryResolver struct {
@@ -145,6 +147,22 @@ func (r *queryResolver) Peers(ctx context.Context, query *string) ([]*model.Peer
 		return nil, err
 	}
 	return adapt.Array(servers, model.ToPeer), nil
+}
+
+func (r *queryResolver) AvailableBackends(ctx context.Context) ([]*model.AvailableBackend, error) {
+	registeredTypes, err := r.backendService.RegisteredTypes(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	allTypes := wgbackend.ListTypes()
+	return adapt.Array(allTypes, func(t string) *model.AvailableBackend {
+		return &model.AvailableBackend{
+			Type:       t,
+			Supported:  wgbackend.IsSupported(t),
+			Registered: slices.Contains(registeredTypes, t),
+		}
+	}), nil
 }
 
 func (r *queryResolver) Backends(ctx context.Context, typeArg *string) ([]*model.Backend, error) {

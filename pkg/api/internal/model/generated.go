@@ -17,6 +17,16 @@ type NodeChangedEvent interface {
 	IsNodeChangedEvent()
 }
 
+// Represents a backend type that can be registered
+type AvailableBackend struct {
+	// The backend type identifier (e.g., "linux", "networkmanager", "macos")
+	Type string `json:"type"`
+	// Whether this backend type is supported on the current platform
+	Supported bool `json:"supported"`
+	// Whether a backend of this type has already been created (only one per type allowed)
+	Registered bool `json:"registered"`
+}
+
 type Backend struct {
 	ID          ID     `json:"id"`
 	Name        string `json:"name"`

@@ -353,31 +353,31 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 			return nil, fmt.Errorf("failed to find foreign interfaces: %w", err)
 		}
 
-		var foreignInterface *backend.ForeignInterface
+		var foreignServer *backend.ForeignServer
 		for _, fn := range foreignInterfaces {
 			if strings.EqualFold(fn.Name, name) {
-				foreignInterface = fn.Interface
+				foreignServer = fn
 				break
 			}
 		}
 
-		if foreignInterface == nil {
+		if foreignServer == nil {
 			return nil, fmt.Errorf("foreign interface: %s not found", name)
 		}
 
-		device, err := s.wireguardService.Device(ctx, b.Id, b.Type(), foreignInterface.Name)
+		device, err := s.wireguardService.Device(ctx, b.Id, b.Type(), foreignServer.Interface.Name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to open interface: %s", foreignInterface.Name)
+			return nil, fmt.Errorf("failed to open interface: %s", foreignServer.Interface.Name)
 		}
 
 		var address string
-		if len(foreignInterface.Addresses) != 0 {
-			address = foreignInterface.Addresses[0]
+		if len(foreignServer.Interface.Addresses) != 0 {
+			address = foreignServer.Interface.Addresses[0]
 		}
 
 		createServer, err := s.serverService.CreateServer(ctx, &server.CreateOptions{
-			Name:         foreignInterface.Name,
-			Description:  "",
+			Name:         foreignServer.Interface.Name,
+			Description:  foreignServer.Description,
 			BackendId:    backendId,
 			Enabled:      true,
 			Running:      true,
@@ -386,7 +386,7 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 			FirewallMark: adapt.ToPointerNilZero(device.Wireguard.FirewallMark),
 			Address:      address,
 			DNS:          nil,
-			MTU:          foreignInterface.Mtu,
+			MTU:          foreignServer.Interface.Mtu,
 		}, userId)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create server: %w", err)
@@ -526,9 +526,10 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 
 	return s.wireguardService.Up(ctx, b.Id, b.Type(), backend.ConfigureOptions{
 		InterfaceOptions: backend.InterfaceOptions{
-			Name:    srv.Name,
-			Address: srv.Address,
-			Mtu:     srv.MTU,
+			Name:        srv.Name,
+			Description: srv.Description,
+			Address:     srv.Address,
+			Mtu:         srv.MTU,
 		},
 		WireguardOptions: backend.WireguardOptions{
 			PrivateKey:   srv.PrivateKey,

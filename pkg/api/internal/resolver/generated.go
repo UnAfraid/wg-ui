@@ -54,6 +54,12 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AvailableBackend struct {
+		Registered func(childComplexity int) int
+		Supported  func(childComplexity int) int
+		Type       func(childComplexity int) int
+	}
+
 	Backend struct {
 		CreateUser     func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
@@ -217,14 +223,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Backends       func(childComplexity int, typeArg *string) int
-		ForeignServers func(childComplexity int) int
-		Node           func(childComplexity int, id model.ID) int
-		Nodes          func(childComplexity int, ids []*model.ID) int
-		Peers          func(childComplexity int, query *string) int
-		Servers        func(childComplexity int, query *string, enabled *bool) int
-		Users          func(childComplexity int, query *string) int
-		Viewer         func(childComplexity int) int
+		AvailableBackends func(childComplexity int) int
+		Backends          func(childComplexity int, typeArg *string) int
+		ForeignServers    func(childComplexity int) int
+		Node              func(childComplexity int, id model.ID) int
+		Nodes             func(childComplexity int, ids []*model.ID) int
+		Peers             func(childComplexity int, query *string) int
+		Servers           func(childComplexity int, query *string, enabled *bool) int
+		Users             func(childComplexity int, query *string) int
+		Viewer            func(childComplexity int) int
 	}
 
 	Server struct {
@@ -396,6 +403,7 @@ type QueryResolver interface {
 	Node(ctx context.Context, id model.ID) (model.Node, error)
 	Nodes(ctx context.Context, ids []*model.ID) ([]model.Node, error)
 	Users(ctx context.Context, query *string) ([]*model.User, error)
+	AvailableBackends(ctx context.Context) ([]*model.AvailableBackend, error)
 	Backends(ctx context.Context, typeArg *string) ([]*model.Backend, error)
 	Servers(ctx context.Context, query *string, enabled *bool) ([]*model.Server, error)
 	Peers(ctx context.Context, query *string) ([]*model.Peer, error)
@@ -440,6 +448,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "AvailableBackend.registered":
+		if e.complexity.AvailableBackend.Registered == nil {
+			break
+		}
+
+		return e.complexity.AvailableBackend.Registered(childComplexity), true
+	case "AvailableBackend.supported":
+		if e.complexity.AvailableBackend.Supported == nil {
+			break
+		}
+
+		return e.complexity.AvailableBackend.Supported(childComplexity), true
+	case "AvailableBackend.type":
+		if e.complexity.AvailableBackend.Type == nil {
+			break
+		}
+
+		return e.complexity.AvailableBackend.Type(childComplexity), true
 
 	case "Backend.createUser":
 		if e.complexity.Backend.CreateUser == nil {
@@ -1168,6 +1195,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PeerStats.TransmitBytes(childComplexity), true
 
+	case "Query.availableBackends":
+		if e.complexity.Query.AvailableBackends == nil {
+			break
+		}
+
+		return e.complexity.Query.AvailableBackends(childComplexity), true
 	case "Query.backends":
 		if e.complexity.Query.Backends == nil {
 			break
@@ -1918,6 +1951,26 @@ var sources = []*ast.Source{
     expiresIn: Int!
 }
 `, BuiltIn: false},
+	{Name: "../../../../schema/backend/available_backend.graphql", Input: `"""
+Represents a backend type that can be registered
+"""
+type AvailableBackend {
+    """
+    The backend type identifier (e.g., "linux", "networkmanager", "macos")
+    """
+    type: String!
+
+    """
+    Whether this backend type is supported on the current platform
+    """
+    supported: Boolean!
+
+    """
+    Whether a backend of this type has already been created (only one per type allowed)
+    """
+    registered: Boolean!
+}
+`, BuiltIn: false},
 	{Name: "../../../../schema/backend/backend.graphql", Input: `type Backend implements Node {
     id: ID!
     name: String!
@@ -2255,6 +2308,11 @@ var sources = []*ast.Source{
     Use this query to find multiple users
     """
     users(query: String): [User!]! @authenticated
+
+    """
+    Use this query to list available backend types that can be registered
+    """
+    availableBackends: [AvailableBackend!]! @authenticated
 
     """
     Use this query to find backends
@@ -2854,6 +2912,93 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _AvailableBackend_type(ctx context.Context, field graphql.CollectedField, obj *model.AvailableBackend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AvailableBackend_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AvailableBackend_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AvailableBackend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AvailableBackend_supported(ctx context.Context, field graphql.CollectedField, obj *model.AvailableBackend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AvailableBackend_supported,
+		func(ctx context.Context) (any, error) {
+			return obj.Supported, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AvailableBackend_supported(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AvailableBackend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AvailableBackend_registered(ctx context.Context, field graphql.CollectedField, obj *model.AvailableBackend) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AvailableBackend_registered,
+		func(ctx context.Context) (any, error) {
+			return obj.Registered, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AvailableBackend_registered(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AvailableBackend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _Backend_id(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
@@ -7449,6 +7594,56 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 	if fc.Args, err = ec.field_Query_users_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_availableBackends(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_availableBackends,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().AvailableBackends(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.Authenticated == nil {
+					var zeroVal []*model.AvailableBackend
+					return zeroVal, errors.New("directive authenticated is not implemented")
+				}
+				return ec.directives.Authenticated(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		ec.marshalNAvailableBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackendᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_availableBackends(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_AvailableBackend_type(ctx, field)
+			case "supported":
+				return ec.fieldContext_AvailableBackend_supported(ctx, field)
+			case "registered":
+				return ec.fieldContext_AvailableBackend_registered(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AvailableBackend", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -13541,6 +13736,55 @@ func (ec *executionContext) _NodeChangedEvent(ctx context.Context, sel ast.Selec
 
 // region    **************************** object.gotpl ****************************
 
+var availableBackendImplementors = []string{"AvailableBackend"}
+
+func (ec *executionContext) _AvailableBackend(ctx context.Context, sel ast.SelectionSet, obj *model.AvailableBackend) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, availableBackendImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AvailableBackend")
+		case "type":
+			out.Values[i] = ec._AvailableBackend_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "supported":
+			out.Values[i] = ec._AvailableBackend_supported(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "registered":
+			out.Values[i] = ec._AvailableBackend_registered(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var backendImplementors = []string{"Backend", "Node"}
 
 func (ec *executionContext) _Backend(ctx context.Context, sel ast.SelectionSet, obj *model.Backend) graphql.Marshaler {
@@ -15212,6 +15456,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "availableBackends":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_availableBackends(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "backends":
 			field := field
 
@@ -16666,6 +16932,60 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNAvailableBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackendᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AvailableBackend) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAvailableBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackend(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAvailableBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackend(ctx context.Context, sel ast.SelectionSet, v *model.AvailableBackend) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AvailableBackend(ctx, sel, v)
+}
 
 func (ec *executionContext) marshalNBackend2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx context.Context, sel ast.SelectionSet, v model.Backend) graphql.Marshaler {
 	return ec._Backend(ctx, sel, &v)

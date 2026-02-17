@@ -20,6 +20,11 @@ type Query {
     users(query: String): [User!]! @authenticated
 
     """
+    Use this query to list available backend types that can be registered
+    """
+    availableBackends: [AvailableBackend!]! @authenticated
+
+    """
     Use this query to find backends
     """
     backends(type: String): [Backend!]! @authenticated

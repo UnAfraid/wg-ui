@@ -6,6 +6,8 @@ var (
 	ErrBackendNotFound                = errors.New("backend not found")
 	ErrBackendIdAlreadyExists         = errors.New("backend id already exists")
 	ErrBackendNameAlreadyInUse        = errors.New("backend name already in use")
+	ErrBackendTypeAlreadyExists       = errors.New("backend of this type already exists")
+	ErrBackendTypeChangeNotAllowed    = errors.New("backend type cannot be changed")
 	ErrBackendNotSupported            = errors.New("backend type not supported on this platform")
 	ErrBackendHasServers              = errors.New("backend has servers and cannot be deleted")
 	ErrInvalidBackendURL              = errors.New("invalid backend URL")

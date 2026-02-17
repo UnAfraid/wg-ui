@@ -115,7 +115,8 @@ func main() {
 	}
 
 	backendRepository := bbolt.NewBackendRepository(db)
-	backendService := backend.NewService(backendRepository, transactionScoper, subscriptionImpl)
+	serverCounter := backend.NewServerCounter(serverRepository)
+	backendService := backend.NewService(backendRepository, serverCounter, transactionScoper, subscriptionImpl)
 
 	wireguardRegistry := wireguard.NewRegistry()
 	wireguardService := wireguard.NewService(wireguardRegistry)

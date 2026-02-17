@@ -3,9 +3,10 @@ package backend
 import "errors"
 
 type InterfaceOptions struct {
-	Name    string
-	Address string
-	Mtu     int
+	Name        string
+	Description string
+	Address     string
+	Mtu         int
 }
 
 func (o InterfaceOptions) Validate() error {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
+	"slices"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 
 	"github.com/UnAfraid/wg-ui/pkg/dbx"
 	"github.com/UnAfraid/wg-ui/pkg/subscription"
+	wgbackend "github.com/UnAfraid/wg-ui/pkg/wireguard/backend"
 )
 
 var (
@@ -25,19 +27,27 @@ type Service interface {
 	CreateBackend(ctx context.Context, options *CreateOptions, userId string) (*Backend, error)
 	UpdateBackend(ctx context.Context, backendId string, options *UpdateOptions, fieldMask *UpdateFieldMask, userId string) (*Backend, error)
 	DeleteBackend(ctx context.Context, backendId string, userId string) (*Backend, error)
+	RegisteredTypes(ctx context.Context) ([]string, error)
 	Subscribe(ctx context.Context) (<-chan *ChangedEvent, error)
 	HasSubscribers() bool
 }
 
+// ServerCounter checks if a backend has servers (to avoid circular dependency with server package)
+type ServerCounter interface {
+	CountServersByBackendId(ctx context.Context, backendId string) (int, error)
+}
+
 type service struct {
 	backendRepository Repository
+	serverCounter     ServerCounter
 	transactionScoper dbx.TransactionScoper
 	subscription      subscription.Subscription
 }
 
-func NewService(backendRepository Repository, transactionScoper dbx.TransactionScoper, subscription subscription.Subscription) Service {
+func NewService(backendRepository Repository, serverCounter ServerCounter, transactionScoper dbx.TransactionScoper, subscription subscription.Subscription) Service {
 	return &service{
 		backendRepository: backendRepository,
+		serverCounter:     serverCounter,
 		transactionScoper: transactionScoper,
 		subscription:      subscription,
 	}
@@ -64,7 +74,17 @@ func (s *service) CreateBackend(ctx context.Context, options *CreateOptions, use
 		return nil, err
 	}
 
+	// Validate that backend type is supported on this platform
+	if !wgbackend.IsSupported(backend.Type()) {
+		return nil, ErrBackendNotSupported
+	}
+
 	if err := s.validateBackendName(ctx, options.Name); err != nil {
+		return nil, err
+	}
+
+	// Validate that no backend of this type already exists
+	if err := s.validateBackendType(ctx, backend.Type()); err != nil {
 		return nil, err
 	}
 
@@ -89,6 +109,8 @@ func (s *service) UpdateBackend(ctx context.Context, backendId string, options *
 			return nil, err
 		}
 
+		originalType := backend.Type()
+
 		if err := processUpdateBackend(backend, options, fieldMask, userId); err != nil {
 			return nil, err
 		}
@@ -100,6 +122,14 @@ func (s *service) UpdateBackend(ctx context.Context, backendId string, options *
 		if fieldMask.Name && backend.Name != options.Name {
 			if err := s.validateBackendName(ctx, options.Name); err != nil {
 				return nil, err
+			}
+		}
+
+		// Prevent changing the backend URL scheme (type)
+		if fieldMask.Url {
+			newType := backend.Type()
+			if newType != originalType {
+				return nil, ErrBackendTypeChangeNotAllowed
 			}
 		}
 
@@ -130,6 +160,15 @@ func (s *service) DeleteBackend(ctx context.Context, backendId string, userId st
 		backend, err := s.findBackendById(ctx, backendId)
 		if err != nil {
 			return nil, err
+		}
+
+		// Check if backend has servers
+		serverCount, err := s.serverCounter.CountServersByBackendId(ctx, backendId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check servers for backend: %w", err)
+		}
+		if serverCount > 0 {
+			return nil, ErrBackendHasServers
 		}
 
 		deletedBackend, err := s.backendRepository.Delete(ctx, backend.Id, userId)
@@ -173,6 +212,34 @@ func (s *service) validateBackendName(ctx context.Context, name string) error {
 		return ErrBackendNameAlreadyInUse
 	}
 	return nil
+}
+
+func (s *service) validateBackendType(ctx context.Context, backendType string) error {
+	backends, err := s.backendRepository.FindAll(ctx, &FindOptions{
+		Type: &backendType,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to find existing backends by type: %s - %w", backendType, err)
+	}
+	if len(backends) > 0 {
+		return ErrBackendTypeAlreadyExists
+	}
+	return nil
+}
+
+func (s *service) RegisteredTypes(ctx context.Context) ([]string, error) {
+	backends, err := s.backendRepository.FindAll(ctx, &FindOptions{})
+	if err != nil {
+		return nil, err
+	}
+	var types []string
+	for _, b := range backends {
+		t := b.Type()
+		if !slices.Contains(types, t) {
+			types = append(types, t)
+		}
+	}
+	return types, nil
 }
 
 func newId() (string, error) {
