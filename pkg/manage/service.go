@@ -91,12 +91,17 @@ func (s *service) init() {
 		return
 	}
 
-	var initialized, failed int
+	var initialized, failed, deleted int
 	for _, srv := range servers {
-		// Skip servers without a backend (legacy data)
+		// Delete servers without a backend (invalid/legacy data)
 		if srv.BackendId == "" {
-			logrus.WithField("name", srv.Name).Warn("server has no backend, skipping initialization")
-			failed++
+			logrus.WithField("name", srv.Name).Warn("server has no backend, deleting invalid server")
+			if _, err := s.serverService.DeleteServer(ctx, srv.Id, ""); err != nil {
+				logrus.WithError(err).WithField("name", srv.Name).Error("failed to delete invalid server")
+				failed++
+			} else {
+				deleted++
+			}
 			continue
 		}
 
@@ -131,8 +136,15 @@ func (s *service) init() {
 		initialized++
 	}
 
+	if deleted > 0 {
+		logrus.WithField("deleted", deleted).Warn("deleted invalid servers without backend")
+	}
 	if failed > 0 {
-		logrus.WithField("initialized", initialized).WithField("failed", failed).Warn("server initialization completed with errors")
+		if initialized == 0 {
+			logrus.WithField("failed", failed).Error("server initialization failed: no servers could be configured")
+		} else {
+			logrus.WithField("initialized", initialized).WithField("failed", failed).Warn("server initialization completed with errors")
+		}
 	} else if initialized > 0 {
 		logrus.WithField("initialized", initialized).Info("server initialization completed")
 	}
