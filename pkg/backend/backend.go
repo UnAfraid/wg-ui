@@ -32,7 +32,7 @@ func (b *Backend) Type() string {
 }
 
 func (b *Backend) validate(fieldMask *UpdateFieldMask) error {
-	if fieldMask == nil {
+	if fieldMask == nil || fieldMask.Name {
 		if len(strings.TrimSpace(b.Name)) == 0 {
 			return fmt.Errorf("name is required")
 		}
