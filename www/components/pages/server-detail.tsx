@@ -406,7 +406,7 @@ export default function ServerDetailPage({ id }: { id: string }) {
                     </code>
                   </TableCell>
                   <TableCell className="hidden font-mono text-xs text-muted-foreground md:table-cell">
-                    {peer.endpoint || "--"}
+                    {peer.stats?.endpoint || peer.endpoint || "--"}
                   </TableCell>
                   <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
                     {peer.allowedIPs?.join(", ") || "--"}

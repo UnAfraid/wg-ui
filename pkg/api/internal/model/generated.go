@@ -259,6 +259,7 @@ type PeerHookInput struct {
 }
 
 type PeerStats struct {
+	Endpoint          *string    `json:"endpoint,omitempty"`
 	LastHandshakeTime *time.Time `json:"lastHandshakeTime,omitempty"`
 	ReceiveBytes      float64    `json:"receiveBytes"`
 	TransmitBytes     float64    `json:"transmitBytes"`

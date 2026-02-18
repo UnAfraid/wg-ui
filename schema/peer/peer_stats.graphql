@@ -1,4 +1,5 @@
 type PeerStats {
+    endpoint:          String
     lastHandshakeTime: DateTime
     receiveBytes:      Float!
     transmitBytes:     Float!

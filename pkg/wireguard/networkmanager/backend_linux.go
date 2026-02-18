@@ -261,7 +261,13 @@ func (b *nmBackend) PeerStats(ctx context.Context, name string, peerPublicKey st
 
 	for _, peer := range device.Peers {
 		if peer.PublicKey == publicKey {
+			endpoint := ""
+			if peer.Endpoint != nil {
+				endpoint = peer.Endpoint.String()
+			}
+
 			return &driver.PeerStats{
+				Endpoint:          endpoint,
 				LastHandshakeTime: peer.LastHandshakeTime,
 				ReceiveBytes:      peer.ReceiveBytes,
 				TransmitBytes:     peer.TransmitBytes,

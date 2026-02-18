@@ -79,6 +79,7 @@ export const SERVER_DETAIL_CHANGED_SUBSCRIPTION = gql`
           createdAt
           updatedAt
           stats {
+            endpoint
             lastHandshakeTime
             receiveBytes
             transmitBytes
@@ -106,6 +107,7 @@ export const PEER_CHANGED_SUBSCRIPTION = gql`
         createdAt
         updatedAt
         stats {
+          endpoint
           lastHandshakeTime
           receiveBytes
           transmitBytes

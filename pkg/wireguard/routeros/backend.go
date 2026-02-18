@@ -453,6 +453,8 @@ func peerPayload(interfaceName string, p *driver.PeerOptions) (map[string]string
 	}
 
 	payload := map[string]string{
+		"name":                 p.Name,
+		"comment":              p.Description,
 		"interface":            interfaceName,
 		"public-key":           p.PublicKey,
 		"allowed-address":      allowedAddress,
@@ -670,6 +672,14 @@ func peerNeedsPatch(existing entry, desired map[string]string) bool {
 		return true
 	}
 
+	if strings.TrimSpace(value(existing, "name")) != strings.TrimSpace(desired["name"]) {
+		return true
+	}
+
+	if strings.TrimSpace(value(existing, "comment")) != strings.TrimSpace(desired["comment"]) {
+		return true
+	}
+
 	if normalizeEndpointAddress(value(existing, "endpoint-address")) != normalizeEndpointAddress(desired["endpoint-address"]) {
 		return true
 	}
@@ -741,12 +751,17 @@ func normalizeBoolString(raw string) string {
 }
 
 func endpointValue(peerEntry entry) string {
-	address := strings.TrimSpace(value(peerEntry, "endpoint-address"))
+	// RouterOS reports active peer endpoint via current-endpoint-* while
+	// endpoint-* contains configured/static values.
+	address := strings.TrimSpace(value(peerEntry, "current-endpoint-address"))
+	port := intValue(peerEntry, "current-endpoint-port")
+	if address == "" {
+		address = strings.TrimSpace(value(peerEntry, "endpoint-address"))
+		port = intValue(peerEntry, "endpoint-port")
+	}
 	if address == "" {
 		return ""
 	}
-
-	port := intValue(peerEntry, "endpoint-port")
 	if port <= 0 {
 		return address
 	}
@@ -759,17 +774,126 @@ func endpointValue(peerEntry entry) string {
 }
 
 func peerStatsFromEntry(peerEntry entry) driver.PeerStats {
-	lastHandshake := time.Time{}
-	if seconds := intValue(peerEntry, "last-handshake", "last-handshake-time"); seconds > 0 {
-		lastHandshake = time.Now().Add(-time.Duration(seconds) * time.Second)
-	}
+	lastHandshake := parseRouterOSHandshakeTime(
+		value(peerEntry, "last-handshake", "last-handshake-time"),
+		time.Now(),
+	)
 
 	return driver.PeerStats{
+		Endpoint:          endpointValue(peerEntry),
 		LastHandshakeTime: lastHandshake,
 		ReceiveBytes:      int64(uint64Value(peerEntry, "rx", "rx-byte", "rx-bytes")),
 		TransmitBytes:     int64(uint64Value(peerEntry, "tx", "tx-byte", "tx-bytes")),
 		ProtocolVersion:   intValue(peerEntry, "protocol-version"),
 	}
+}
+
+func parseRouterOSHandshakeTime(raw string, now time.Time) time.Time {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || strings.EqualFold(raw, "never") || strings.EqualFold(raw, "none") {
+		return time.Time{}
+	}
+
+	if n, err := strconv.ParseInt(raw, 10, 64); err == nil {
+		if n <= 0 {
+			return time.Time{}
+		}
+
+		// RouterOS may expose handshake either as seconds-ago or unix timestamp.
+		if n >= 1_000_000_000 {
+			return time.Unix(n, 0)
+		}
+		return now.Add(-time.Duration(n) * time.Second)
+	}
+
+	if duration, ok := parseRouterOSDuration(raw); ok && duration > 0 {
+		return now.Add(-duration)
+	}
+
+	for _, layout := range []string{
+		time.RFC3339,
+		time.RFC3339Nano,
+		"2006-01-02 15:04:05",
+		"2006-01-02T15:04:05",
+		"Jan/02/2006 15:04:05",
+		"Jan/2/2006 15:04:05",
+		"Jan/02/2006 15:04",
+		"Jan/2/2006 15:04",
+		"Jan/02 15:04:05",
+		"Jan/2 15:04:05",
+	} {
+		if parsed, err := time.ParseInLocation(layout, raw, now.Location()); err == nil {
+			// RouterOS may omit year in some formats; assume current year.
+			if parsed.Year() == 0 {
+				parsed = parsed.AddDate(now.Year(), 0, 0)
+			}
+			return parsed
+		}
+	}
+
+	return time.Time{}
+}
+
+func parseRouterOSDuration(raw string) (time.Duration, bool) {
+	normalized := strings.ToLower(strings.TrimSpace(raw))
+	if normalized == "" {
+		return 0, false
+	}
+	normalized = strings.ReplaceAll(normalized, " ", "")
+
+	if parsed, err := time.ParseDuration(normalized); err == nil {
+		return parsed, true
+	}
+
+	var (
+		total time.Duration
+		i     int
+	)
+
+	for i < len(normalized) {
+		j := i
+		for j < len(normalized) && normalized[j] >= '0' && normalized[j] <= '9' {
+			j++
+		}
+		if j == i {
+			return 0, false
+		}
+
+		valuePart, err := strconv.ParseInt(normalized[i:j], 10, 64)
+		if err != nil {
+			return 0, false
+		}
+
+		k := j
+		for k < len(normalized) && ((normalized[k] >= 'a' && normalized[k] <= 'z') || normalized[k] == 'µ') {
+			k++
+		}
+		if k == j {
+			return 0, false
+		}
+
+		unit := normalized[j:k]
+		switch unit {
+		case "w":
+			total += time.Duration(valuePart) * 7 * 24 * time.Hour
+		case "d":
+			total += time.Duration(valuePart) * 24 * time.Hour
+		case "h":
+			total += time.Duration(valuePart) * time.Hour
+		case "m":
+			total += time.Duration(valuePart) * time.Minute
+		case "s":
+			total += time.Duration(valuePart) * time.Second
+		case "ms":
+			total += time.Duration(valuePart) * time.Millisecond
+		default:
+			return 0, false
+		}
+
+		i = k
+	}
+
+	return total, true
 }
 
 func parseAllowedIPs(allowed string) []net.IPNet {
@@ -990,10 +1114,15 @@ func uint64Value(values entry, keys ...string) uint64 {
 	}
 
 	parsed, err := strconv.ParseUint(raw, 10, 64)
-	if err != nil {
+	if err == nil {
+		return parsed
+	}
+
+	parsedSize, sizeErr := parseRouterOSByteSize(raw)
+	if sizeErr != nil {
 		return 0
 	}
-	return parsed
+	return parsedSize
 }
 
 func boolValue(values entry, keys ...string) bool {
@@ -1007,6 +1136,57 @@ func parseBool(raw string) bool {
 	default:
 		return false
 	}
+}
+
+func parseRouterOSByteSize(raw string) (uint64, error) {
+	normalized := strings.TrimSpace(raw)
+	if normalized == "" {
+		return 0, nil
+	}
+	normalized = strings.ReplaceAll(normalized, " ", "")
+
+	i := 0
+	for i < len(normalized) {
+		c := normalized[i]
+		if (c >= '0' && c <= '9') || c == '.' {
+			i++
+			continue
+		}
+		break
+	}
+	if i == 0 {
+		return 0, fmt.Errorf("invalid byte size %q", raw)
+	}
+
+	valuePart := normalized[:i]
+	unitPart := strings.ToLower(normalized[i:])
+
+	valueFloat, err := strconv.ParseFloat(valuePart, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	multiplier := float64(1)
+	switch unitPart {
+	case "", "b":
+		multiplier = 1
+	case "k", "kb", "kib":
+		multiplier = 1024
+	case "m", "mb", "mib":
+		multiplier = 1024 * 1024
+	case "g", "gb", "gib":
+		multiplier = 1024 * 1024 * 1024
+	case "t", "tb", "tib":
+		multiplier = 1024 * 1024 * 1024 * 1024
+	default:
+		return 0, fmt.Errorf("invalid byte size unit %q", unitPart)
+	}
+
+	if valueFloat <= 0 {
+		return 0, nil
+	}
+
+	return uint64(math.Round(valueFloat * multiplier)), nil
 }
 
 func parseURL(rawURL string) (*parsedURL, error) {

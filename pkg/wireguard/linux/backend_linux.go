@@ -350,7 +350,13 @@ func peerStats(device *wgtypes.Device, name string, peerPublicKey string) (*driv
 
 	for _, p := range device.Peers {
 		if p.PublicKey == publicKey {
+			endpoint := ""
+			if p.Endpoint != nil {
+				endpoint = p.Endpoint.String()
+			}
+
 			return &driver.PeerStats{
+				Endpoint:          endpoint,
 				LastHandshakeTime: p.LastHandshakeTime,
 				ReceiveBytes:      p.ReceiveBytes,
 				TransmitBytes:     p.TransmitBytes,

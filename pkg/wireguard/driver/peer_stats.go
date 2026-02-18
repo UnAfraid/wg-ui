@@ -5,6 +5,7 @@ import (
 )
 
 type PeerStats struct {
+	Endpoint          string
 	LastHandshakeTime time.Time
 	ReceiveBytes      int64
 	TransmitBytes     int64

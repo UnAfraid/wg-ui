@@ -1,6 +1,9 @@
 package routeros
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestParseURLDefaults(t *testing.T) {
 	parsed, err := parseURL("routeros://admin:secret@192.168.88.1/")
@@ -96,6 +99,8 @@ func TestShouldSkipForeignInterface(t *testing.T) {
 
 func TestPeerNeedsPatch(t *testing.T) {
 	existing := entry{
+		"name":                 "peer-1",
+		"comment":              "Office laptop",
 		"public-key":           "pubkey",
 		"allowed-address":      "10.0.0.2/32, 10.0.0.3/32",
 		"endpoint-address":     "vpn.example.com",
@@ -106,6 +111,8 @@ func TestPeerNeedsPatch(t *testing.T) {
 	}
 
 	desiredSame := map[string]string{
+		"name":                 "peer-1",
+		"comment":              "Office laptop",
 		"public-key":           "pubkey",
 		"allowed-address":      "10.0.0.3/32,10.0.0.2/32",
 		"endpoint-address":     "vpn.example.com",
@@ -119,6 +126,8 @@ func TestPeerNeedsPatch(t *testing.T) {
 	}
 
 	desiredChanged := map[string]string{
+		"name":                 "peer-1",
+		"comment":              "Office laptop",
 		"public-key":           "pubkey",
 		"allowed-address":      "10.0.0.4/32",
 		"endpoint-address":     "vpn.example.com",
@@ -129,6 +138,21 @@ func TestPeerNeedsPatch(t *testing.T) {
 	}
 	if !peerNeedsPatch(existing, desiredChanged) {
 		t.Fatalf("expected patch when allowed-address changes")
+	}
+
+	desiredRenamed := map[string]string{
+		"name":                 "peer-renamed",
+		"comment":              "Office laptop",
+		"public-key":           "pubkey",
+		"allowed-address":      "10.0.0.3/32,10.0.0.2/32",
+		"endpoint-address":     "vpn.example.com",
+		"endpoint-port":        "51820",
+		"persistent-keepalive": "25",
+		"preshared-key":        "psk",
+		"disabled":             "false",
+	}
+	if !peerNeedsPatch(existing, desiredRenamed) {
+		t.Fatalf("expected patch when peer name changes")
 	}
 }
 
@@ -164,5 +188,91 @@ func TestInterfaceNeedsPatch(t *testing.T) {
 	}
 	if !interfaceNeedsPatch(existing, desiredChanged) {
 		t.Fatalf("expected patch when interface comment changes")
+	}
+}
+
+func TestParseRouterOSHandshakeTimeDuration(t *testing.T) {
+	now := time.Date(2026, 2, 18, 16, 40, 0, 0, time.UTC)
+	handshake := parseRouterOSHandshakeTime("1m29s", now)
+
+	expected := now.Add(-89 * time.Second)
+	if !handshake.Equal(expected) {
+		t.Fatalf("expected %s, got %s", expected, handshake)
+	}
+}
+
+func TestPeerStatsFromEntryParsesHumanReadableCounters(t *testing.T) {
+	stats := peerStatsFromEntry(entry{
+		"last-handshake": "1m29s",
+		"rx":             "2450.9KiB",
+		"tx":             "42.3MiB",
+	})
+
+	if stats.LastHandshakeTime.IsZero() {
+		t.Fatalf("expected non-zero last handshake")
+	}
+	if stats.ReceiveBytes == 0 {
+		t.Fatalf("expected non-zero receive bytes")
+	}
+	if stats.TransmitBytes == 0 {
+		t.Fatalf("expected non-zero transmit bytes")
+	}
+}
+
+func TestParseRouterOSByteSize(t *testing.T) {
+	tests := []struct {
+		raw      string
+		expected uint64
+	}{
+		{raw: "2450.9KiB", expected: 2509722},
+		{raw: "42.3MiB", expected: 44354765},
+		{raw: "123", expected: 123},
+	}
+
+	for _, tt := range tests {
+		got, err := parseRouterOSByteSize(tt.raw)
+		if err != nil {
+			t.Fatalf("parseRouterOSByteSize(%q) returned error: %v", tt.raw, err)
+		}
+		if got != tt.expected {
+			t.Fatalf("parseRouterOSByteSize(%q) expected %d, got %d", tt.raw, tt.expected, got)
+		}
+	}
+}
+
+func TestEndpointValuePrefersCurrentEndpoint(t *testing.T) {
+	got := endpointValue(entry{
+		"endpoint-address":         "",
+		"endpoint-port":            "0",
+		"current-endpoint-address": "62.176.113.208",
+		"current-endpoint-port":    "46138",
+	})
+
+	if got != "62.176.113.208:46138" {
+		t.Fatalf("expected current endpoint, got %q", got)
+	}
+}
+
+func TestEndpointValueFallsBackToConfiguredEndpoint(t *testing.T) {
+	got := endpointValue(entry{
+		"endpoint-address":         "vpn.example.com",
+		"endpoint-port":            "51820",
+		"current-endpoint-address": "",
+		"current-endpoint-port":    "0",
+	})
+
+	if got != "vpn.example.com:51820" {
+		t.Fatalf("expected configured endpoint fallback, got %q", got)
+	}
+}
+
+func TestEndpointValueFormatsIPv6CurrentEndpoint(t *testing.T) {
+	got := endpointValue(entry{
+		"current-endpoint-address": "2001:db8::1",
+		"current-endpoint-port":    "51820",
+	})
+
+	if got != "[2001:db8::1]:51820" {
+		t.Fatalf("expected IPv6 endpoint to be bracketed, got %q", got)
 	}
 }

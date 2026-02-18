@@ -145,6 +145,7 @@ func ToPeerStats(stats *driver.PeerStats) *PeerStats {
 		return nil
 	}
 	return &PeerStats{
+		Endpoint:          adapt.ToPointerNilZero(stats.Endpoint),
 		LastHandshakeTime: adapt.ToPointer(stats.LastHandshakeTime),
 		ReceiveBytes:      float64(stats.ReceiveBytes),
 		TransmitBytes:     float64(stats.TransmitBytes),

@@ -86,6 +86,7 @@ export const SERVER_QUERY = gql`
           createdAt
           updatedAt
           stats {
+            endpoint
             lastHandshakeTime
             receiveBytes
             transmitBytes
@@ -111,6 +112,7 @@ export const PEERS_QUERY = gql`
       createdAt
       updatedAt
       stats {
+        endpoint
         lastHandshakeTime
         receiveBytes
         transmitBytes
@@ -149,6 +151,7 @@ export const PEER_QUERY = gql`
           runOnUpdate
         }
         stats {
+          endpoint
           lastHandshakeTime
           receiveBytes
           transmitBytes

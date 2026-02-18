@@ -216,6 +216,7 @@ type ComplexityRoot struct {
 	}
 
 	PeerStats struct {
+		Endpoint          func(childComplexity int) int
 		LastHandshakeTime func(childComplexity int) int
 		ProtocolVersion   func(childComplexity int) int
 		ReceiveBytes      func(childComplexity int) int
@@ -1149,6 +1150,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PeerHook.RunOnUpdate(childComplexity), true
 
+	case "PeerStats.endpoint":
+		if e.complexity.PeerStats.Endpoint == nil {
+			break
+		}
+
+		return e.complexity.PeerStats.Endpoint(childComplexity), true
 	case "PeerStats.lastHandshakeTime":
 		if e.complexity.PeerStats.LastHandshakeTime == nil {
 			break
@@ -2112,6 +2119,7 @@ type AvailableBackend {
     runOnDelete: Boolean!
 }`, BuiltIn: false},
 	{Name: "../../../../schema/peer/peer_stats.graphql", Input: `type PeerStats {
+    endpoint:          String
     lastHandshakeTime: DateTime
     receiveBytes:      Float!
     transmitBytes:     Float!
@@ -6596,6 +6604,8 @@ func (ec *executionContext) fieldContext_Peer_stats(_ context.Context, field gra
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "endpoint":
+				return ec.fieldContext_PeerStats_endpoint(ctx, field)
 			case "lastHandshakeTime":
 				return ec.fieldContext_PeerStats_lastHandshakeTime(ctx, field)
 			case "receiveBytes":
@@ -7073,6 +7083,35 @@ func (ec *executionContext) fieldContext_PeerHook_runOnDelete(_ context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PeerStats_endpoint(ctx context.Context, field graphql.CollectedField, obj *model.PeerStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PeerStats_endpoint,
+		func(ctx context.Context) (any, error) {
+			return obj.Endpoint, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PeerStats_endpoint(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PeerStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14470,6 +14509,8 @@ func (ec *executionContext) _PeerStats(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PeerStats")
+		case "endpoint":
+			out.Values[i] = ec._PeerStats_endpoint(ctx, field, obj)
 		case "lastHandshakeTime":
 			out.Values[i] = ec._PeerStats_lastHandshakeTime(ctx, field, obj)
 		case "receiveBytes":

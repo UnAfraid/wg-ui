@@ -424,6 +424,7 @@ func parseDeviceDump(name string, output string) (*driver.Device, error) {
 			PresharedKey:        presharedKey,
 			PersistentKeepalive: time.Duration(persistentKeepalive) * time.Second,
 			Stats: driver.PeerStats{
+				Endpoint:          endpoint,
 				LastHandshakeTime: latestHandshake,
 				ReceiveBytes:      receiveBytes,
 				TransmitBytes:     transmitBytes,

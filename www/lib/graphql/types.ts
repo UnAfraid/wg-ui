@@ -77,6 +77,7 @@ export interface PeerHook {
 }
 
 export interface PeerStats {
+  endpoint: string | null;
   lastHandshakeTime: string | null;
   protocolVersion: number;
   receiveBytes: number;
