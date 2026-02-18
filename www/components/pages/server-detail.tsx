@@ -57,9 +57,10 @@ export default function ServerDetailPage({ id }: { id: string }) {
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev;
         const { action, node } = subscriptionData.data.serverChanged;
+        const normalizedAction = String(action).toUpperCase();
         // Only update if this is the server we're viewing
         if (node.id !== id) return prev;
-        if (action === "deleted") {
+        if (normalizedAction === "DELETED") {
           return { ...prev, node: null };
         }
         return { ...prev, node: { ...prev.node, ...node } };
@@ -71,15 +72,16 @@ export default function ServerDetailPage({ id }: { id: string }) {
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev;
         const { action, node: peerNode } = subscriptionData.data.peerChanged;
+        const normalizedAction = String(action).toUpperCase();
         const server = prev.node;
         if (!server || peerNode.server?.id !== id) return prev;
         const peers: Peer[] = server.peers ?? [];
 
-        switch (action) {
-          case "created":
+        switch (normalizedAction) {
+          case "CREATED":
             if (peers.some((p: Peer) => p.id === peerNode.id)) return prev;
             return { ...prev, node: { ...server, peers: [...peers, peerNode] } };
-          case "updated":
+          case "UPDATED":
             return {
               ...prev,
               node: {
@@ -89,7 +91,7 @@ export default function ServerDetailPage({ id }: { id: string }) {
                 ),
               },
             };
-          case "deleted":
+          case "DELETED":
             return {
               ...prev,
               node: {

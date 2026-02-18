@@ -32,15 +32,19 @@ export default function ServersPage() {
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev;
         const { action, node } = subscriptionData.data.serverChanged;
+        const normalizedAction = String(action).toUpperCase();
         const existing: Server[] = prev.servers ?? [];
 
-        switch (action) {
-          case "created":
+        switch (normalizedAction) {
+          case "CREATED":
             // Add if not already in list
             if (existing.some((s: Server) => s.id === node.id)) return prev;
             return { ...prev, servers: [...existing, node] };
 
-          case "updated":
+          case "UPDATED":
+          case "STARTED":
+          case "STOPPED":
+          case "INTERFACE_STATS_UPDATED":
             return {
               ...prev,
               servers: existing.map((s: Server) =>
@@ -48,7 +52,7 @@ export default function ServersPage() {
               ),
             };
 
-          case "deleted":
+          case "DELETED":
             return {
               ...prev,
               servers: existing.filter((s: Server) => s.id !== node.id),
