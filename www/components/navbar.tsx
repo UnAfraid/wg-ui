@@ -8,6 +8,7 @@ import {
   Shield,
   HardDrive,
   Server,
+  Network,
   Users,
   LogOut,
   Moon,
@@ -38,6 +39,7 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { name: "Backends", href: "/backends", icon: HardDrive },
   { name: "Servers", href: "/servers", icon: Server },
+  { name: "Peers", href: "/peers", icon: Network },
   { name: "Users", href: "/users", icon: Users },
 ];
 

@@ -13,6 +13,7 @@ import { Navbar } from "@/components/navbar";
 // Pages
 import LoginPage from "@/components/pages/login";
 import ServersPage from "@/components/pages/servers";
+import PeersPage from "@/components/pages/peers";
 import NewServerPage from "@/components/pages/servers-new";
 import ServerDetailPage from "@/components/pages/server-detail";
 import EditServerPage from "@/components/pages/server-edit";
@@ -74,6 +75,7 @@ export default function AppShell() {
         />
         <Route path="/backends" element={<DashboardLayout><BackendsPage /></DashboardLayout>} />
         <Route path="/servers" element={<DashboardLayout><ServersPage /></DashboardLayout>} />
+        <Route path="/peers" element={<DashboardLayout><PeersPage /></DashboardLayout>} />
         <Route path="/servers/new" element={<DashboardLayout><NewServerPage /></DashboardLayout>} />
         <Route path="/servers/:id" element={<DashboardLayout><ParamServerDetail /></DashboardLayout>} />
         <Route path="/servers/:id/edit" element={<DashboardLayout><ParamServerEdit /></DashboardLayout>} />
