@@ -1,6 +1,11 @@
 package routeros
 
 import (
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -188,6 +193,78 @@ func TestInterfaceNeedsPatch(t *testing.T) {
 	}
 	if !interfaceNeedsPatch(existing, desiredChanged) {
 		t.Fatalf("expected patch when interface comment changes")
+	}
+}
+
+func TestDownDisablesInterfaceInsteadOfDeleting(t *testing.T) {
+	var patched bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/rest/interface/wireguard":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `[{"name":"wg0",".id":"*1","disabled":"false"}]`)
+		case r.Method == http.MethodPatch && r.URL.Path == "/rest/interface/wireguard/*1":
+			var payload map[string]string
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+				t.Fatalf("failed to decode patch payload: %v", err)
+			}
+			if payload["disabled"] != "true" {
+				t.Fatalf("expected disabled=true payload, got: %+v", payload)
+			}
+			patched = true
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `{}`)
+		default:
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	backend := &routerOSBackend{
+		baseURL:  server.URL + "/rest",
+		username: "api",
+		password: "secret",
+		client:   server.Client(),
+	}
+
+	if err := backend.Down(context.Background(), "wg0"); err != nil {
+		t.Fatalf("Down returned error: %v", err)
+	}
+	if !patched {
+		t.Fatalf("expected interface to be patched as disabled")
+	}
+}
+
+func TestDownSkipsPatchWhenAlreadyDisabled(t *testing.T) {
+	var patchRequests int
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/rest/interface/wireguard":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `[{"name":"wg0",".id":"*1","disabled":"true"}]`)
+		case r.Method == http.MethodPatch:
+			patchRequests++
+			t.Fatalf("did not expect patch request for disabled interface")
+		default:
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	backend := &routerOSBackend{
+		baseURL:  server.URL + "/rest",
+		username: "api",
+		password: "secret",
+		client:   server.Client(),
+	}
+
+	if err := backend.Down(context.Background(), "wg0"); err != nil {
+		t.Fatalf("Down returned error: %v", err)
+	}
+	if patchRequests != 0 {
+		t.Fatalf("expected no patch requests, got %d", patchRequests)
 	}
 }
 

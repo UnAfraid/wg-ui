@@ -173,31 +173,13 @@ func (b *routerOSBackend) Down(ctx context.Context, name string) error {
 		return nil
 	}
 
-	peers, err := b.interfacePeerEntries(ctx, iface)
-	if err != nil {
-		return err
-	}
-	for _, p := range peers {
-		// RouterOS dynamic peers are owned by other subsystems and cannot be edited/deleted.
-		if boolValue(p, "dynamic") {
-			continue
-		}
-		if err := b.deleteEntry(ctx, "interface/wireguard/peers", value(p, ".id")); err != nil {
-			return err
-		}
+	if boolValue(iface, "disabled") {
+		return nil
 	}
 
-	addressEntries, err := b.interfaceAddressEntries(ctx, name)
-	if err != nil {
-		return err
-	}
-	for _, address := range addressEntries {
-		if err := b.deleteEntry(ctx, "ip/address", value(address, ".id")); err != nil {
-			return err
-		}
-	}
-
-	return b.deleteEntry(ctx, "interface/wireguard", value(iface, ".id"))
+	return b.patchEntry(ctx, "interface/wireguard", value(iface, ".id"), map[string]string{
+		"disabled": "true",
+	})
 }
 
 func (b *routerOSBackend) Status(ctx context.Context, name string) (bool, error) {
