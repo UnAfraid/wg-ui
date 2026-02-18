@@ -3,6 +3,8 @@ package driver
 import "errors"
 
 type PeerOptions struct {
+	Name                string
+	Description         string
 	PublicKey           string
 	Endpoint            string
 	AllowedIPs          []string

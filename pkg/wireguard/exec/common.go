@@ -52,11 +52,8 @@ func renderConfig(options driver.ConfigureOptions) string {
 
 	var sb strings.Builder
 	sb.WriteString("[Interface]\n")
-	if interfaceOptions.Description != "" {
-		sb.WriteString("# ")
-		sb.WriteString(strings.ReplaceAll(interfaceOptions.Description, "\n", " "))
-		sb.WriteString("\n")
-	}
+	writeConfigComment(&sb, "Name", interfaceOptions.Name)
+	writeConfigComment(&sb, "Description", interfaceOptions.Description)
 	sb.WriteString("Address = ")
 	sb.WriteString(interfaceOptions.Address)
 	sb.WriteString("\n")
@@ -84,6 +81,8 @@ func renderConfig(options driver.ConfigureOptions) string {
 
 	for _, p := range wireguardOptions.Peers {
 		sb.WriteString("\n[Peer]\n")
+		writeConfigComment(&sb, "Name", p.Name)
+		writeConfigComment(&sb, "Description", p.Description)
 		sb.WriteString("PublicKey = ")
 		sb.WriteString(p.PublicKey)
 		sb.WriteString("\n")
@@ -116,6 +115,30 @@ func renderConfig(options driver.ConfigureOptions) string {
 	return sb.String()
 }
 
+func writeConfigComment(sb *strings.Builder, key string, value string) {
+	value = sanitizeCommentValue(value)
+	if value == "" {
+		return
+	}
+
+	sb.WriteString("# ")
+	sb.WriteString(key)
+	sb.WriteString(": ")
+	sb.WriteString(value)
+	sb.WriteString("\n")
+}
+
+func sanitizeCommentValue(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+
+	value = strings.ReplaceAll(value, "\r", " ")
+	value = strings.ReplaceAll(value, "\n", " ")
+	return strings.TrimSpace(value)
+}
+
 func parseConfigDevice(name string, content string) (*parsedConfigDevice, error) {
 	parsed := &parsedConfigDevice{
 		Device: &driver.Device{
@@ -139,8 +162,34 @@ func parseConfigDevice(name string, content string) (*parsedConfigDevice, error)
 		}
 
 		if strings.HasPrefix(line, "#") {
-			if section == "interface" && parsed.Description == "" {
-				parsed.Description = strings.TrimSpace(strings.TrimPrefix(line, "#"))
+			comment := strings.TrimSpace(strings.TrimPrefix(line, "#"))
+			commentKey, commentValue, hasStructuredComment := parseConfigComment(comment)
+
+			switch section {
+			case "interface":
+				switch commentKey {
+				case "description":
+					parsed.Description = commentValue
+				default:
+					if !hasStructuredComment && parsed.Description == "" {
+						parsed.Description = comment
+					}
+				}
+			case "peer":
+				if currentPeer == nil {
+					continue
+				}
+
+				switch commentKey {
+				case "name":
+					currentPeer.Name = commentValue
+				case "description":
+					currentPeer.Description = commentValue
+				default:
+					if !hasStructuredComment && currentPeer.Description == "" {
+						currentPeer.Description = comment
+					}
+				}
 			}
 			continue
 		}
@@ -256,6 +305,27 @@ func parseConfigDevice(name string, content string) (*parsedConfigDevice, error)
 	}
 
 	return parsed, nil
+}
+
+func parseConfigComment(comment string) (key string, value string, ok bool) {
+	comment = strings.TrimSpace(comment)
+	if comment == "" {
+		return "", "", false
+	}
+
+	left, right, found := strings.Cut(comment, ":")
+	if !found {
+		return "", "", false
+	}
+
+	key = strings.ToLower(strings.TrimSpace(left))
+	value = strings.TrimSpace(right)
+	switch key {
+	case "name", "description":
+		return key, value, true
+	default:
+		return "", "", false
+	}
 }
 
 func parseDeviceDump(name string, output string) (*driver.Device, error) {

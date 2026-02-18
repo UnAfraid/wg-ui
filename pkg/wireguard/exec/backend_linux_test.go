@@ -29,6 +29,8 @@ func TestRenderConfigIncludesInterfaceAndPeerSettings(t *testing.T) {
 			FirewallMark: &firewallMark,
 			Peers: []*driver.PeerOptions{
 				{
+					Name:                "Laptop",
+					Description:         "Primary endpoint",
 					PublicKey:           "peer-public",
 					Endpoint:            "198.51.100.10:51820",
 					AllowedIPs:          []string{"10.0.0.2/32", "fd00::2/128"},
@@ -41,13 +43,16 @@ func TestRenderConfigIncludesInterfaceAndPeerSettings(t *testing.T) {
 
 	for _, fragment := range []string{
 		"[Interface]",
-		"# My tunnel",
+		"# Name: wg0",
+		"# Description: My tunnel",
 		"Address = 10.0.0.1/24",
 		"PrivateKey = private-key",
 		"ListenPort = 51820",
 		"FwMark = 42",
 		"MTU = 1420",
 		"[Peer]",
+		"# Name: Laptop",
+		"# Description: Primary endpoint",
 		"PublicKey = peer-public",
 		"PresharedKey = peer-psk",
 		"Endpoint = 198.51.100.10:51820",
@@ -143,7 +148,8 @@ func TestParseConfigDevice(t *testing.T) {
 	}
 
 	configContent := fmt.Sprintf(`[Interface]
-# Imported config
+# Name: wg10
+# Description: Imported config
 Address = 10.10.0.1/24, fd10::1/64
 PrivateKey = %s
 ListenPort = 51821
@@ -151,6 +157,8 @@ FwMark = 0x2a
 MTU = 1420
 
 [Peer]
+# Name: Alice
+# Description: Test peer
 PublicKey = peer-public-key
 PresharedKey = peer-psk
 Endpoint = 203.0.113.5:51820
@@ -192,6 +200,12 @@ PersistentKeepalive = 20
 	}
 
 	peer := parsed.Device.Wireguard.Peers[0]
+	if peer.Name != "Alice" {
+		t.Fatalf("expected peer name Alice, got %q", peer.Name)
+	}
+	if peer.Description != "Test peer" {
+		t.Fatalf("expected peer description Test peer, got %q", peer.Description)
+	}
 	if peer.PersistentKeepalive != 20*time.Second {
 		t.Fatalf("expected keepalive 20s, got %s", peer.PersistentKeepalive)
 	}

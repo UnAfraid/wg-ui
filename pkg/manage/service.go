@@ -849,6 +849,8 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 			FirewallMark: srv.FirewallMark,
 			Peers: adapt.Array(peers, func(peer *peer.Peer) *driver.PeerOptions {
 				return &driver.PeerOptions{
+					Name:                peer.Name,
+					Description:         peer.Description,
 					PublicKey:           peer.PublicKey,
 					Endpoint:            peer.Endpoint,
 					AllowedIPs:          peer.AllowedIPs,
