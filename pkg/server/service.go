@@ -76,13 +76,6 @@ func (s *service) CreateServer(ctx context.Context, options *CreateOptions, user
 			return nil, err
 		}
 
-		if err := createdServer.runHooks(HookActionCreate); err != nil {
-			logrus.
-				WithError(err).
-				WithField("server", createdServer.Name).
-				Warn("failed to run hooks on server create")
-		}
-
 		if err = s.notify(ChangedActionCreated, createdServer); err != nil {
 			logrus.WithError(err).Warn("failed to notify server created event")
 		}
@@ -109,21 +102,6 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *Up
 		updatedServer, err := s.serverRepository.Update(ctx, server, fieldMask)
 		if err != nil {
 			return nil, err
-		}
-
-		hookAction := HookActionUpdate
-		if fieldMask.Running {
-			if updatedServer.Running {
-				hookAction = HookActionStart
-			} else {
-				hookAction = HookActionStop
-			}
-		}
-		if err := updatedServer.runHooks(hookAction); err != nil {
-			logrus.
-				WithError(err).
-				WithField("server", updatedServer.Name).
-				Warn("failed to run hooks on server update")
 		}
 
 		action := ChangedActionUpdated
@@ -155,13 +133,6 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 		deletedServer, err := s.serverRepository.Delete(ctx, server.Id, userId)
 		if err != nil {
 			return nil, err
-		}
-
-		if err := deletedServer.runHooks(HookActionDelete); err != nil {
-			logrus.
-				WithError(err).
-				WithField("server", deletedServer.Name).
-				Warn("failed to run hooks on server delete")
 		}
 
 		if err = s.notify(ChangedActionDeleted, deletedServer); err != nil {

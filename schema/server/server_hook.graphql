@@ -1,8 +1,7 @@
 type ServerHook {
     command: String!
-    runOnCreate: Boolean!
-    runOnUpdate: Boolean!
-    runOnDelete: Boolean!
-    runOnStart: Boolean!
-    runOnStop: Boolean!
+    runOnPreUp: Boolean!
+    runOnPostUp: Boolean!
+    runOnPreDown: Boolean!
+    runOnPostDown: Boolean!
 }

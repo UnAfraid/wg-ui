@@ -33,11 +33,10 @@ export interface User {
 
 export interface ServerHook {
   command: string;
-  runOnCreate: boolean;
-  runOnDelete: boolean;
-  runOnStart: boolean;
-  runOnStop: boolean;
-  runOnUpdate: boolean;
+  runOnPreUp: boolean;
+  runOnPostUp: boolean;
+  runOnPreDown: boolean;
+  runOnPostDown: boolean;
 }
 
 export interface ServerInterfaceStats {
@@ -147,11 +146,10 @@ export interface GenerateWireguardKeyPayload {
 // Input types
 export interface ServerHookInput {
   command: string;
-  runOnCreate: boolean;
-  runOnDelete: boolean;
-  runOnStart: boolean;
-  runOnStop: boolean;
-  runOnUpdate: boolean;
+  runOnPreUp: boolean;
+  runOnPostUp: boolean;
+  runOnPreDown: boolean;
+  runOnPostDown: boolean;
 }
 
 export interface PeerHookInput {

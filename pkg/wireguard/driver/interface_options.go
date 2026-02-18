@@ -8,6 +8,7 @@ type InterfaceOptions struct {
 	Address     string
 	DNS         []string
 	Mtu         int
+	Hooks       []*HookOptions
 }
 
 func (o InterfaceOptions) Validate() error {
@@ -16,6 +17,11 @@ func (o InterfaceOptions) Validate() error {
 	}
 	if len(o.Address) == 0 {
 		return errors.New("address is required")
+	}
+	for _, hook := range o.Hooks {
+		if err := hook.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

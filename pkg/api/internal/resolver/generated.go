@@ -265,12 +265,11 @@ type ComplexityRoot struct {
 	}
 
 	ServerHook struct {
-		Command     func(childComplexity int) int
-		RunOnCreate func(childComplexity int) int
-		RunOnDelete func(childComplexity int) int
-		RunOnStart  func(childComplexity int) int
-		RunOnStop   func(childComplexity int) int
-		RunOnUpdate func(childComplexity int) int
+		Command       func(childComplexity int) int
+		RunOnPostDown func(childComplexity int) int
+		RunOnPostUp   func(childComplexity int) int
+		RunOnPreDown  func(childComplexity int) int
+		RunOnPreUp    func(childComplexity int) int
 	}
 
 	ServerInterfaceStats struct {
@@ -1412,36 +1411,30 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ServerHook.Command(childComplexity), true
-	case "ServerHook.runOnCreate":
-		if e.complexity.ServerHook.RunOnCreate == nil {
+	case "ServerHook.runOnPostDown":
+		if e.complexity.ServerHook.RunOnPostDown == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.RunOnCreate(childComplexity), true
-	case "ServerHook.runOnDelete":
-		if e.complexity.ServerHook.RunOnDelete == nil {
+		return e.complexity.ServerHook.RunOnPostDown(childComplexity), true
+	case "ServerHook.runOnPostUp":
+		if e.complexity.ServerHook.RunOnPostUp == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.RunOnDelete(childComplexity), true
-	case "ServerHook.runOnStart":
-		if e.complexity.ServerHook.RunOnStart == nil {
+		return e.complexity.ServerHook.RunOnPostUp(childComplexity), true
+	case "ServerHook.runOnPreDown":
+		if e.complexity.ServerHook.RunOnPreDown == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.RunOnStart(childComplexity), true
-	case "ServerHook.runOnStop":
-		if e.complexity.ServerHook.RunOnStop == nil {
+		return e.complexity.ServerHook.RunOnPreDown(childComplexity), true
+	case "ServerHook.runOnPreUp":
+		if e.complexity.ServerHook.RunOnPreUp == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.RunOnStop(childComplexity), true
-	case "ServerHook.runOnUpdate":
-		if e.complexity.ServerHook.RunOnUpdate == nil {
-			break
-		}
-
-		return e.complexity.ServerHook.RunOnUpdate(childComplexity), true
+		return e.complexity.ServerHook.RunOnPreUp(childComplexity), true
 
 	case "ServerInterfaceStats.rxBytes":
 		if e.complexity.ServerInterfaceStats.RxBytes == nil {
@@ -2262,20 +2255,20 @@ type AvailableBackend {
 `, BuiltIn: false},
 	{Name: "../../../../schema/server/server_hook.graphql", Input: `type ServerHook {
     command: String!
-    runOnCreate: Boolean!
-    runOnUpdate: Boolean!
-    runOnDelete: Boolean!
-    runOnStart: Boolean!
-    runOnStop: Boolean!
-}`, BuiltIn: false},
+    runOnPreUp: Boolean!
+    runOnPostUp: Boolean!
+    runOnPreDown: Boolean!
+    runOnPostDown: Boolean!
+}
+`, BuiltIn: false},
 	{Name: "../../../../schema/server/server_hook_input.graphql", Input: `input ServerHookInput {
     command: String!
-    runOnCreate: Boolean!
-    runOnUpdate: Boolean!
-    runOnDelete: Boolean!
-    runOnStart: Boolean!
-    runOnStop: Boolean!
-}`, BuiltIn: false},
+    runOnPreUp: Boolean!
+    runOnPostUp: Boolean!
+    runOnPreDown: Boolean!
+    runOnPostDown: Boolean!
+}
+`, BuiltIn: false},
 	{Name: "../../../../schema/server/server_interface_stats.graphql", Input: `type ServerInterfaceStats {
     rxBytes:           Float!
     txBytes:           Float!
@@ -8378,16 +8371,14 @@ func (ec *executionContext) fieldContext_Server_hooks(_ context.Context, field g
 			switch field.Name {
 			case "command":
 				return ec.fieldContext_ServerHook_command(ctx, field)
-			case "runOnCreate":
-				return ec.fieldContext_ServerHook_runOnCreate(ctx, field)
-			case "runOnUpdate":
-				return ec.fieldContext_ServerHook_runOnUpdate(ctx, field)
-			case "runOnDelete":
-				return ec.fieldContext_ServerHook_runOnDelete(ctx, field)
-			case "runOnStart":
-				return ec.fieldContext_ServerHook_runOnStart(ctx, field)
-			case "runOnStop":
-				return ec.fieldContext_ServerHook_runOnStop(ctx, field)
+			case "runOnPreUp":
+				return ec.fieldContext_ServerHook_runOnPreUp(ctx, field)
+			case "runOnPostUp":
+				return ec.fieldContext_ServerHook_runOnPostUp(ctx, field)
+			case "runOnPreDown":
+				return ec.fieldContext_ServerHook_runOnPreDown(ctx, field)
+			case "runOnPostDown":
+				return ec.fieldContext_ServerHook_runOnPostDown(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServerHook", field.Name)
 		},
@@ -8909,14 +8900,14 @@ func (ec *executionContext) fieldContext_ServerHook_command(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _ServerHook_runOnCreate(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
+func (ec *executionContext) _ServerHook_runOnPreUp(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_runOnCreate,
+		ec.fieldContext_ServerHook_runOnPreUp,
 		func(ctx context.Context) (any, error) {
-			return obj.RunOnCreate, nil
+			return obj.RunOnPreUp, nil
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -8925,7 +8916,7 @@ func (ec *executionContext) _ServerHook_runOnCreate(ctx context.Context, field g
 	)
 }
 
-func (ec *executionContext) fieldContext_ServerHook_runOnCreate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ServerHook_runOnPreUp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServerHook",
 		Field:      field,
@@ -8938,14 +8929,14 @@ func (ec *executionContext) fieldContext_ServerHook_runOnCreate(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ServerHook_runOnUpdate(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
+func (ec *executionContext) _ServerHook_runOnPostUp(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_runOnUpdate,
+		ec.fieldContext_ServerHook_runOnPostUp,
 		func(ctx context.Context) (any, error) {
-			return obj.RunOnUpdate, nil
+			return obj.RunOnPostUp, nil
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -8954,7 +8945,7 @@ func (ec *executionContext) _ServerHook_runOnUpdate(ctx context.Context, field g
 	)
 }
 
-func (ec *executionContext) fieldContext_ServerHook_runOnUpdate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ServerHook_runOnPostUp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServerHook",
 		Field:      field,
@@ -8967,14 +8958,14 @@ func (ec *executionContext) fieldContext_ServerHook_runOnUpdate(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ServerHook_runOnDelete(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
+func (ec *executionContext) _ServerHook_runOnPreDown(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_runOnDelete,
+		ec.fieldContext_ServerHook_runOnPreDown,
 		func(ctx context.Context) (any, error) {
-			return obj.RunOnDelete, nil
+			return obj.RunOnPreDown, nil
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -8983,7 +8974,7 @@ func (ec *executionContext) _ServerHook_runOnDelete(ctx context.Context, field g
 	)
 }
 
-func (ec *executionContext) fieldContext_ServerHook_runOnDelete(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ServerHook_runOnPreDown(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServerHook",
 		Field:      field,
@@ -8996,14 +8987,14 @@ func (ec *executionContext) fieldContext_ServerHook_runOnDelete(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ServerHook_runOnStart(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
+func (ec *executionContext) _ServerHook_runOnPostDown(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_runOnStart,
+		ec.fieldContext_ServerHook_runOnPostDown,
 		func(ctx context.Context) (any, error) {
-			return obj.RunOnStart, nil
+			return obj.RunOnPostDown, nil
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -9012,36 +9003,7 @@ func (ec *executionContext) _ServerHook_runOnStart(ctx context.Context, field gr
 	)
 }
 
-func (ec *executionContext) fieldContext_ServerHook_runOnStart(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ServerHook_runOnStop(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ServerHook_runOnStop,
-		func(ctx context.Context) (any, error) {
-			return obj.RunOnStop, nil
-		},
-		nil,
-		ec.marshalNBoolean2bool,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_ServerHook_runOnStop(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ServerHook_runOnPostDown(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServerHook",
 		Field:      field,
@@ -12382,7 +12344,7 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"command", "runOnCreate", "runOnUpdate", "runOnDelete", "runOnStart", "runOnStop"}
+	fieldsInOrder := [...]string{"command", "runOnPreUp", "runOnPostUp", "runOnPreDown", "runOnPostDown"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -12396,41 +12358,34 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 				return it, err
 			}
 			it.Command = data
-		case "runOnCreate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnCreate"))
+		case "runOnPreUp":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnPreUp"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RunOnCreate = data
-		case "runOnUpdate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnUpdate"))
+			it.RunOnPreUp = data
+		case "runOnPostUp":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnPostUp"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RunOnUpdate = data
-		case "runOnDelete":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnDelete"))
+			it.RunOnPostUp = data
+		case "runOnPreDown":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnPreDown"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RunOnDelete = data
-		case "runOnStart":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnStart"))
+			it.RunOnPreDown = data
+		case "runOnPostDown":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnPostDown"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.RunOnStart = data
-		case "runOnStop":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("runOnStop"))
-			data, err := ec.unmarshalNBoolean2bool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RunOnStop = data
+			it.RunOnPostDown = data
 		}
 	}
 
@@ -15120,28 +15075,23 @@ func (ec *executionContext) _ServerHook(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "runOnCreate":
-			out.Values[i] = ec._ServerHook_runOnCreate(ctx, field, obj)
+		case "runOnPreUp":
+			out.Values[i] = ec._ServerHook_runOnPreUp(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "runOnUpdate":
-			out.Values[i] = ec._ServerHook_runOnUpdate(ctx, field, obj)
+		case "runOnPostUp":
+			out.Values[i] = ec._ServerHook_runOnPostUp(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "runOnDelete":
-			out.Values[i] = ec._ServerHook_runOnDelete(ctx, field, obj)
+		case "runOnPreDown":
+			out.Values[i] = ec._ServerHook_runOnPreDown(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "runOnStart":
-			out.Values[i] = ec._ServerHook_runOnStart(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "runOnStop":
-			out.Values[i] = ec._ServerHook_runOnStop(ctx, field, obj)
+		case "runOnPostDown":
+			out.Values[i] = ec._ServerHook_runOnPostDown(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

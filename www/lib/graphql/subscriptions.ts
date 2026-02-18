@@ -57,11 +57,10 @@ export const SERVER_DETAIL_CHANGED_SUBSCRIPTION = gql`
         }
         hooks {
           command
-          runOnCreate
-          runOnDelete
-          runOnStart
-          runOnStop
-          runOnUpdate
+          runOnPreUp
+          runOnPostUp
+          runOnPreDown
+          runOnPostDown
         }
         interfaceStats {
           rxBytes

@@ -67,12 +67,11 @@ func ToServerHook(hook *server.Hook) *ServerHook {
 		return nil
 	}
 	return &ServerHook{
-		Command:     hook.Command,
-		RunOnCreate: hook.RunOnCreate,
-		RunOnUpdate: hook.RunOnUpdate,
-		RunOnDelete: hook.RunOnDelete,
-		RunOnStart:  hook.RunOnStart,
-		RunOnStop:   hook.RunOnStop,
+		Command:       hook.Command,
+		RunOnPreUp:    hook.RunOnPreUp,
+		RunOnPostUp:   hook.RunOnPostUp || hook.RunOnStart,
+		RunOnPreDown:  hook.RunOnPreDown,
+		RunOnPostDown: hook.RunOnPostDown || hook.RunOnStop,
 	}
 }
 
@@ -81,12 +80,11 @@ func ServerHookInputToServerHook(hook *ServerHookInput) *server.Hook {
 		return nil
 	}
 	return &server.Hook{
-		Command:     hook.Command,
-		RunOnCreate: hook.RunOnCreate,
-		RunOnUpdate: hook.RunOnUpdate,
-		RunOnDelete: hook.RunOnDelete,
-		RunOnStart:  hook.RunOnStart,
-		RunOnStop:   hook.RunOnStop,
+		Command:       hook.Command,
+		RunOnPreUp:    hook.RunOnPreUp,
+		RunOnPostUp:   hook.RunOnPostUp,
+		RunOnPreDown:  hook.RunOnPreDown,
+		RunOnPostDown: hook.RunOnPostDown,
 	}
 }
 

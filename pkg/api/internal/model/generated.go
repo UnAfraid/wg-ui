@@ -304,21 +304,19 @@ type ServerChangedEvent struct {
 func (ServerChangedEvent) IsNodeChangedEvent() {}
 
 type ServerHook struct {
-	Command     string `json:"command"`
-	RunOnCreate bool   `json:"runOnCreate"`
-	RunOnUpdate bool   `json:"runOnUpdate"`
-	RunOnDelete bool   `json:"runOnDelete"`
-	RunOnStart  bool   `json:"runOnStart"`
-	RunOnStop   bool   `json:"runOnStop"`
+	Command       string `json:"command"`
+	RunOnPreUp    bool   `json:"runOnPreUp"`
+	RunOnPostUp   bool   `json:"runOnPostUp"`
+	RunOnPreDown  bool   `json:"runOnPreDown"`
+	RunOnPostDown bool   `json:"runOnPostDown"`
 }
 
 type ServerHookInput struct {
-	Command     string `json:"command"`
-	RunOnCreate bool   `json:"runOnCreate"`
-	RunOnUpdate bool   `json:"runOnUpdate"`
-	RunOnDelete bool   `json:"runOnDelete"`
-	RunOnStart  bool   `json:"runOnStart"`
-	RunOnStop   bool   `json:"runOnStop"`
+	Command       string `json:"command"`
+	RunOnPreUp    bool   `json:"runOnPreUp"`
+	RunOnPostUp   bool   `json:"runOnPostUp"`
+	RunOnPreDown  bool   `json:"runOnPreDown"`
+	RunOnPostDown bool   `json:"runOnPostDown"`
 }
 
 type ServerInterfaceStats struct {

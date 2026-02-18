@@ -23,6 +23,15 @@ func TestRenderConfigIncludesInterfaceAndPeerSettings(t *testing.T) {
 			Address:     "10.0.0.1/24",
 			DNS:         []string{"1.1.1.1", "8.8.8.8"},
 			Mtu:         1420,
+			Hooks: []*driver.HookOptions{
+				{
+					Command:       "echo pre-up %i",
+					RunOnPreUp:    true,
+					RunOnPostUp:   true,
+					RunOnPreDown:  true,
+					RunOnPostDown: true,
+				},
+			},
 		},
 		WireguardOptions: driver.WireguardOptions{
 			PrivateKey:   "private-key",
@@ -52,6 +61,10 @@ func TestRenderConfigIncludesInterfaceAndPeerSettings(t *testing.T) {
 		"ListenPort = 51820",
 		"FwMark = 42",
 		"MTU = 1420",
+		"PreUp = echo pre-up %i",
+		"PostUp = echo pre-up %i",
+		"PreDown = echo pre-up %i",
+		"PostDown = echo pre-up %i",
 		"[Peer]",
 		"# Name: Laptop",
 		"# Description: Primary endpoint",
@@ -188,6 +201,8 @@ PrivateKey = %s
 ListenPort = 51821
 FwMark = 0x2a
 MTU = 1420
+PreUp = /usr/local/bin/pre-up %%i
+PostDown = /usr/local/bin/post-down %%i
 
 [Peer]
 # Name: Alice
@@ -230,6 +245,15 @@ PersistentKeepalive = 20
 	}
 	if len(parsed.Device.Wireguard.Peers) != 1 {
 		t.Fatalf("expected 1 peer, got %d", len(parsed.Device.Wireguard.Peers))
+	}
+	if len(parsed.Hooks) != 2 {
+		t.Fatalf("expected 2 parsed hooks, got %d", len(parsed.Hooks))
+	}
+	if parsed.Hooks[0].Command != "/usr/local/bin/pre-up %i" || !parsed.Hooks[0].RunOnPreUp {
+		t.Fatalf("expected first hook to be pre-up, got %+v", parsed.Hooks[0])
+	}
+	if parsed.Hooks[1].Command != "/usr/local/bin/post-down %i" || !parsed.Hooks[1].RunOnPostDown {
+		t.Fatalf("expected second hook to be post-down, got %+v", parsed.Hooks[1])
 	}
 
 	peer := parsed.Device.Wireguard.Peers[0]

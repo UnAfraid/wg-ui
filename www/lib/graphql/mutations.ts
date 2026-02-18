@@ -49,11 +49,10 @@ export const UPDATE_SERVER_MUTATION = gql`
         publicKey
         hooks {
           command
-          runOnCreate
-          runOnDelete
-          runOnStart
-          runOnStop
-          runOnUpdate
+          runOnPreUp
+          runOnPostUp
+          runOnPreDown
+          runOnPostDown
         }
         updatedAt
       }

@@ -86,6 +86,33 @@ func renderConfig(options driver.ConfigureOptions) string {
 		sb.WriteString("\n")
 	}
 
+	for _, hook := range interfaceOptions.Hooks {
+		if hook == nil {
+			continue
+		}
+
+		if hook.RunOnPreUp {
+			sb.WriteString("PreUp = ")
+			sb.WriteString(hook.Command)
+			sb.WriteString("\n")
+		}
+		if hook.RunOnPostUp {
+			sb.WriteString("PostUp = ")
+			sb.WriteString(hook.Command)
+			sb.WriteString("\n")
+		}
+		if hook.RunOnPreDown {
+			sb.WriteString("PreDown = ")
+			sb.WriteString(hook.Command)
+			sb.WriteString("\n")
+		}
+		if hook.RunOnPostDown {
+			sb.WriteString("PostDown = ")
+			sb.WriteString(hook.Command)
+			sb.WriteString("\n")
+		}
+	}
+
 	for _, p := range wireguardOptions.Peers {
 		sb.WriteString("\n[Peer]\n")
 		writeConfigComment(&sb, "Name", p.Name)
@@ -263,6 +290,22 @@ func parseConfigDevice(name string, content string) (*parsedConfigDevice, error)
 					return nil, fmt.Errorf("invalid mtu %q: %w", value, err)
 				}
 				parsed.Device.Interface.Mtu = mtu
+			case "preup":
+				addParsedHook(parsed, value, func(hook *driver.HookOptions) {
+					hook.RunOnPreUp = true
+				})
+			case "postup":
+				addParsedHook(parsed, value, func(hook *driver.HookOptions) {
+					hook.RunOnPostUp = true
+				})
+			case "predown":
+				addParsedHook(parsed, value, func(hook *driver.HookOptions) {
+					hook.RunOnPreDown = true
+				})
+			case "postdown":
+				addParsedHook(parsed, value, func(hook *driver.HookOptions) {
+					hook.RunOnPostDown = true
+				})
 			}
 		case "peer":
 			if currentPeer == nil {
@@ -507,5 +550,24 @@ func normalizeCIDR(cidr string) (string, error) {
 
 type parsedConfigDevice struct {
 	Description string
+	Hooks       []*driver.HookOptions
 	Device      *driver.Device
+}
+
+func addParsedHook(parsed *parsedConfigDevice, command string, configure func(*driver.HookOptions)) {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return
+	}
+
+	for _, hook := range parsed.Hooks {
+		if hook != nil && hook.Command == command {
+			configure(hook)
+			return
+		}
+	}
+
+	hook := &driver.HookOptions{Command: command}
+	configure(hook)
+	parsed.Hooks = append(parsed.Hooks, hook)
 }

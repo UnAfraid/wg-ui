@@ -297,11 +297,25 @@ func (s *service) CreateServer(ctx context.Context, options *server.CreateOption
 		}
 
 		if createdServer.Enabled {
+			b, err := s.findBackend(ctx, createdServer.BackendId)
+			if err != nil {
+				return nil, fmt.Errorf("failed to find backend: %w", err)
+			}
+
+			s.runServerHooks(ctx, b, createdServer, server.HookActionPreUp)
+
 			device, err := s.configureDevice(ctx, createdServer, nil)
 			if err != nil {
 				return nil, err
 			}
-			return s.updateServer(ctx, createdServer, device, userId)
+
+			updatedServer, err := s.updateServer(ctx, createdServer, device, userId)
+			if err != nil {
+				return nil, err
+			}
+
+			s.runServerHooks(ctx, b, updatedServer, server.HookActionPostUp)
+			return updatedServer, nil
 		}
 
 		return createdServer, nil
@@ -327,9 +341,14 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *se
 			}
 
 			if status {
+				s.runServerHooks(ctx, b, updatedServer, server.HookActionPreDown)
+
 				if err := s.wireguardService.Down(ctx, b, updatedServer.Name); err != nil {
 					return nil, err
 				}
+
+				s.runServerHooks(ctx, b, updatedServer, server.HookActionPostDown)
+
 				updateOptions := server.UpdateOptions{
 					Running: false,
 				}
@@ -369,7 +388,8 @@ func serverUpdateRequiresReconfigure(fieldMask *server.UpdateFieldMask) bool {
 		fieldMask.FirewallMark ||
 		fieldMask.Address ||
 		fieldMask.DNS ||
-		fieldMask.MTU
+		fieldMask.MTU ||
+		fieldMask.Hooks
 }
 
 func (s *service) DeleteServer(ctx context.Context, serverId string, userId string) (*server.Server, error) {
@@ -383,12 +403,16 @@ func (s *service) DeleteServer(ctx context.Context, serverId string, userId stri
 		if err != nil {
 			logrus.WithError(err).WithField("backendId", svc.BackendId).Warn("failed to find backend")
 		} else {
+			s.runServerHooks(ctx, b, svc, server.HookActionPreDown)
+
 			if err = s.wireguardService.Down(ctx, b, svc.Name); err != nil {
 				logrus.
 					WithError(err).
 					WithField("serverId", svc.Id).
 					WithField("serverName", svc.Name).
 					Warn("failed to stop server")
+			} else {
+				s.runServerHooks(ctx, b, svc, server.HookActionPostDown)
 			}
 		}
 
@@ -422,6 +446,11 @@ func (s *service) StartServer(ctx context.Context, serverId string, userId strin
 			return nil, err
 		}
 
+		b, err := s.findBackend(ctx, srv.BackendId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find backend: %w", err)
+		}
+
 		peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
 			ServerId: &srv.Id,
 		})
@@ -429,11 +458,20 @@ func (s *service) StartServer(ctx context.Context, serverId string, userId strin
 			return nil, err
 		}
 
+		s.runServerHooks(ctx, b, srv, server.HookActionPreUp)
+
 		device, err := s.configureDevice(ctx, srv, peers)
 		if err != nil {
 			return nil, err
 		}
-		return s.updateServer(ctx, srv, device, userId)
+
+		updatedServer, err := s.updateServer(ctx, srv, device, userId)
+		if err != nil {
+			return nil, err
+		}
+
+		s.runServerHooks(ctx, b, updatedServer, server.HookActionPostUp)
+		return updatedServer, nil
 	})
 }
 
@@ -449,9 +487,13 @@ func (s *service) StopServer(ctx context.Context, serverId string, userId string
 			return nil, fmt.Errorf("failed to find backend: %w", err)
 		}
 
+		s.runServerHooks(ctx, b, srv, server.HookActionPreDown)
+
 		if err := s.wireguardService.Down(ctx, b, srv.Name); err != nil {
 			return nil, err
 		}
+
+		s.runServerHooks(ctx, b, srv, server.HookActionPostDown)
 
 		updateOptions := server.UpdateOptions{
 			Running: false,
@@ -528,6 +570,19 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 			Address:      address,
 			DNS:          nil,
 			MTU:          foreignServer.Interface.Mtu,
+			Hooks: adapt.Array(foreignServer.Hooks, func(hook *driver.HookOptions) *server.Hook {
+				if hook == nil {
+					return nil
+				}
+
+				return &server.Hook{
+					Command:       hook.Command,
+					RunOnPreUp:    hook.RunOnPreUp,
+					RunOnPostUp:   hook.RunOnPostUp,
+					RunOnPreDown:  hook.RunOnPreDown,
+					RunOnPostDown: hook.RunOnPostDown,
+				}
+			}),
 		}, userId)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create server: %w", err)
@@ -857,6 +912,19 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 			Address:     srv.Address,
 			DNS:         srv.DNS,
 			Mtu:         srv.MTU,
+			Hooks: adapt.Array(srv.Hooks, func(hook *server.Hook) *driver.HookOptions {
+				if hook == nil {
+					return nil
+				}
+
+				return &driver.HookOptions{
+					Command:       hook.Command,
+					RunOnPreUp:    hook.RunOnPreUp,
+					RunOnPostUp:   hook.RunOnPostUp || hook.RunOnStart,
+					RunOnPreDown:  hook.RunOnPreDown,
+					RunOnPostDown: hook.RunOnPostDown || hook.RunOnStop,
+				}
+			}),
 		},
 		WireguardOptions: driver.WireguardOptions{
 			PrivateKey:   srv.PrivateKey,
@@ -875,6 +943,29 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 			}),
 		},
 	})
+}
+
+func (s *service) runServerHooks(ctx context.Context, b *backend.Backend, srv *server.Server, action server.HookAction) {
+	if srv == nil || len(srv.Hooks) == 0 {
+		return
+	}
+
+	if backendDelegatesHookExecution(b) {
+		return
+	}
+
+	if err := srv.RunHooks(ctx, action); err != nil {
+		logrus.
+			WithError(err).
+			WithField("server", srv.Name).
+			WithField("backend", b.Name).
+			WithField("action", action).
+			Warn("failed to run server hooks")
+	}
+}
+
+func backendDelegatesHookExecution(b *backend.Backend) bool {
+	return b != nil && strings.EqualFold(b.Type(), "exec")
 }
 
 func (s *service) updateServer(ctx context.Context, srv *server.Server, device *driver.Device, userId string) (*server.Server, error) {

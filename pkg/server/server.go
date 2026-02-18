@@ -1,10 +1,12 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
 	"net"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -101,15 +103,21 @@ func (s *Server) validate(fieldMask *UpdateFieldMask) error {
 
 	if fieldMask == nil || fieldMask.Hooks {
 		for i, hook := range s.Hooks {
-			if _, err := exec.LookPath(hook.Command); err != nil {
-				return fmt.Errorf("invalid  server hook #%d command: %s - %w", i+1, hook.Command, err)
+			command := strings.TrimSpace(hook.Command)
+			if command == "" {
+				return fmt.Errorf("invalid server hook #%d command: command is required", i+1)
 			}
-			if i != len(s.Hooks)-1 {
-				for _, nextHook := range s.Hooks[i+1:] {
-					if strings.EqualFold(hook.Command, nextHook.Command) {
-						return fmt.Errorf("hook command: %s already exists", hook.Command)
-					}
-				}
+			if strings.Contains(command, "\n") {
+				return fmt.Errorf("invalid server hook #%d command: multiline commands are not supported", i+1)
+			}
+
+			if !(hook.RunOnPreUp ||
+				hook.RunOnPostUp ||
+				hook.RunOnPreDown ||
+				hook.RunOnPostDown ||
+				hook.RunOnStart ||
+				hook.RunOnStop) {
+				return fmt.Errorf("invalid server hook #%d: no lifecycle events selected", i+1)
 			}
 		}
 	}
@@ -181,15 +189,16 @@ func (s *Server) update(options *UpdateOptions, fieldMask *UpdateFieldMask) erro
 	return nil
 }
 
-func (s *Server) runHooks(action HookAction) error {
+func (s *Server) runHooks(ctx context.Context, action HookAction) error {
 	var errs []error
 	for i, hook := range s.Hooks {
 		if !hook.shouldExecute(action) {
 			continue
 		}
 
-		cmd := exec.Command(hook.Command, "SERVER", s.Name, string(action))
-		cmd.Env = []string{
+		command := interpolateHookCommand(hook.Command, s.Name)
+		cmd := exec.CommandContext(ctx, "sh", "-c", command)
+		cmd.Env = append(os.Environ(),
 			fmt.Sprintf("WG_SERVER_NAME=%s", s.Name),
 			fmt.Sprintf("WG_SERVER_DESCRIPTION=%s", strings.ReplaceAll(s.Description, "\n", "\\n")),
 			fmt.Sprintf("WG_SERVER_PUBLICKEY=%s", s.PublicKey),
@@ -198,10 +207,19 @@ func (s *Server) runHooks(action HookAction) error {
 			fmt.Sprintf("WG_SERVER_ADDRESS=%s", s.Address),
 			fmt.Sprintf("WG_SERVER_DNS=%s", strings.Join(s.DNS, ",")),
 			fmt.Sprintf("WG_SERVER_MTU=%d", s.MTU),
-		}
+			fmt.Sprintf("WG_SERVER_HOOK_ACTION=%s", string(action)),
+		)
 		if err := cmd.Run(); err != nil {
-			errs = append(errs, fmt.Errorf("failed to execute hook #%d %s - %w", i+1, hook.Command, err))
+			errs = append(errs, fmt.Errorf("failed to execute hook #%d %q - %w", i+1, hook.Command, err))
 		}
 	}
 	return errors.Join(errs...)
+}
+
+func (s *Server) RunHooks(ctx context.Context, action HookAction) error {
+	return s.runHooks(ctx, action)
+}
+
+func interpolateHookCommand(command string, interfaceName string) string {
+	return strings.ReplaceAll(command, "%i", interfaceName)
 }

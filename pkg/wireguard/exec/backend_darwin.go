@@ -960,6 +960,7 @@ func (b *execBackend) findForeignServersFromConfigFiles(
 				Mtu:       parsedConfig.Device.Interface.Mtu,
 				State:     "down",
 			},
+			Hooks:        parsedConfig.Hooks,
 			Name:         parsedConfig.Device.Wireguard.Name,
 			Description:  parsedConfig.Description,
 			Type:         "wireguard",

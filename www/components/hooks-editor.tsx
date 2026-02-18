@@ -8,11 +8,10 @@ import { Label } from "@/components/ui/label";
 
 export interface ServerHookValue {
   command: string;
-  runOnCreate: boolean;
-  runOnDelete: boolean;
-  runOnStart: boolean;
-  runOnStop: boolean;
-  runOnUpdate: boolean;
+  runOnPreUp: boolean;
+  runOnPostUp: boolean;
+  runOnPreDown: boolean;
+  runOnPostDown: boolean;
 }
 
 export interface PeerHookValue {
@@ -43,11 +42,10 @@ export function HooksEditor(props: HooksEditorProps) {
     if (type === "server") {
       const newHook: ServerHookValue = {
         command: "",
-        runOnCreate: false,
-        runOnDelete: false,
-        runOnStart: false,
-        runOnStop: false,
-        runOnUpdate: false,
+        runOnPreUp: false,
+        runOnPostUp: false,
+        runOnPreDown: false,
+        runOnPostDown: false,
       };
       (onChange as (hooks: ServerHookValue[]) => void)([
         ...(value as ServerHookValue[]),
@@ -85,11 +83,10 @@ export function HooksEditor(props: HooksEditorProps) {
   const checkboxFields =
     type === "server"
       ? [
-          { key: "runOnCreate", label: "Create" },
-          { key: "runOnDelete", label: "Delete" },
-          { key: "runOnStart", label: "Start" },
-          { key: "runOnStop", label: "Stop" },
-          { key: "runOnUpdate", label: "Update" },
+          { key: "runOnPreUp", label: "PreUp" },
+          { key: "runOnPostUp", label: "PostUp" },
+          { key: "runOnPreDown", label: "PreDown" },
+          { key: "runOnPostDown", label: "PostDown" },
         ]
       : [
           { key: "runOnCreate", label: "Create" },

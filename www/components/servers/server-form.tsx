@@ -72,11 +72,10 @@ function normalizeServerHooks(hooks?: Server["hooks"] | null): ServerHookValue[]
   return (
     hooks?.map((h) => ({
       command: h.command,
-      runOnCreate: h.runOnCreate,
-      runOnDelete: h.runOnDelete,
-      runOnStart: h.runOnStart,
-      runOnStop: h.runOnStop,
-      runOnUpdate: h.runOnUpdate,
+      runOnPreUp: h.runOnPreUp,
+      runOnPostUp: h.runOnPostUp,
+      runOnPreDown: h.runOnPreDown,
+      runOnPostDown: h.runOnPostDown,
     })) ?? []
   );
 }

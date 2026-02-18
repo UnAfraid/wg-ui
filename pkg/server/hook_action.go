@@ -3,9 +3,8 @@ package server
 type HookAction string
 
 var (
-	HookActionCreate HookAction = "CREATE"
-	HookActionUpdate HookAction = "UPDATE"
-	HookActionDelete HookAction = "DELETE"
-	HookActionStart  HookAction = "START"
-	HookActionStop   HookAction = "STOP"
+	HookActionPreUp    HookAction = "PRE_UP"
+	HookActionPostUp   HookAction = "POST_UP"
+	HookActionPreDown  HookAction = "PRE_DOWN"
+	HookActionPostDown HookAction = "POST_DOWN"
 )
