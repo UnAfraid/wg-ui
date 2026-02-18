@@ -340,8 +340,8 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *se
 			}
 		}
 
-		// If description changed and server is running, reconfigure the device
-		if fieldMask.Description && updatedServer.Running {
+		// Reconfigure live interfaces for updates that affect runtime/config state.
+		if updatedServer.Running && serverUpdateRequiresReconfigure(fieldMask) {
 			peers, err := s.peerService.FindPeers(ctx, &peer.FindOptions{
 				ServerId: &updatedServer.Id,
 			})
@@ -356,6 +356,20 @@ func (s *service) UpdateServer(ctx context.Context, serverId string, options *se
 
 		return updatedServer, nil
 	})
+}
+
+func serverUpdateRequiresReconfigure(fieldMask *server.UpdateFieldMask) bool {
+	if fieldMask == nil {
+		return false
+	}
+
+	return fieldMask.Description ||
+		fieldMask.PrivateKey ||
+		fieldMask.ListenPort ||
+		fieldMask.FirewallMark ||
+		fieldMask.Address ||
+		fieldMask.DNS ||
+		fieldMask.MTU
 }
 
 func (s *service) DeleteServer(ctx context.Context, serverId string, userId string) (*server.Server, error) {
