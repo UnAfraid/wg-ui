@@ -21,6 +21,7 @@ func TestRenderConfigIncludesInterfaceAndPeerSettings(t *testing.T) {
 			Name:        "wg0",
 			Description: "My tunnel",
 			Address:     "10.0.0.1/24",
+			DNS:         []string{"1.1.1.1", "8.8.8.8"},
 			Mtu:         1420,
 		},
 		WireguardOptions: driver.WireguardOptions{
@@ -46,6 +47,7 @@ func TestRenderConfigIncludesInterfaceAndPeerSettings(t *testing.T) {
 		"# Name: wg0",
 		"# Description: My tunnel",
 		"Address = 10.0.0.1/24",
+		"DNS = 1.1.1.1, 8.8.8.8",
 		"PrivateKey = private-key",
 		"ListenPort = 51820",
 		"FwMark = 42",
@@ -62,6 +64,24 @@ func TestRenderConfigIncludesInterfaceAndPeerSettings(t *testing.T) {
 		if !strings.Contains(config, fragment) {
 			t.Fatalf("expected config to contain %q, got:\n%s", fragment, config)
 		}
+	}
+}
+
+func TestRenderConfigOmitsFirewallMarkWhenZero(t *testing.T) {
+	firewallMark := 0
+	config := renderConfig(driver.ConfigureOptions{
+		InterfaceOptions: driver.InterfaceOptions{
+			Name:    "wg0",
+			Address: "10.0.0.1/24",
+		},
+		WireguardOptions: driver.WireguardOptions{
+			PrivateKey:   "private-key",
+			FirewallMark: &firewallMark,
+		},
+	})
+
+	if strings.Contains(config, "FwMark = 0") {
+		t.Fatalf("did not expect config to contain fwmark 0, got:\n%s", config)
 	}
 }
 
@@ -116,6 +136,19 @@ func TestParseDeviceDump(t *testing.T) {
 	}
 	if peer.Stats.TransmitBytes != 456 {
 		t.Fatalf("unexpected tx bytes: %d", peer.Stats.TransmitBytes)
+	}
+}
+
+func TestParseDeviceDumpSupportsHexFirewallMark(t *testing.T) {
+	output := "private-key\tpublic-key\t51820\t0x4"
+
+	device, err := parseDeviceDump("wg0", output)
+	if err != nil {
+		t.Fatalf("parseDeviceDump returned error: %v", err)
+	}
+
+	if device.Wireguard.FirewallMark != 4 {
+		t.Fatalf("expected firewall mark 4, got %d", device.Wireguard.FirewallMark)
 	}
 }
 

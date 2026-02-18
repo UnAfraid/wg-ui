@@ -841,6 +841,7 @@ func (s *service) configureDevice(ctx context.Context, srv *server.Server, peers
 			Name:        srv.Name,
 			Description: srv.Description,
 			Address:     srv.Address,
+			DNS:         srv.DNS,
 			Mtu:         srv.MTU,
 		},
 		WireguardOptions: driver.WireguardOptions{

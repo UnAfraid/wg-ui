@@ -6,6 +6,7 @@ type InterfaceOptions struct {
 	Name        string
 	Description string
 	Address     string
+	DNS         []string
 	Mtu         int
 }
 

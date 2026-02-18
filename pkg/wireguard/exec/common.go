@@ -57,6 +57,13 @@ func renderConfig(options driver.ConfigureOptions) string {
 	sb.WriteString("Address = ")
 	sb.WriteString(interfaceOptions.Address)
 	sb.WriteString("\n")
+
+	if len(interfaceOptions.DNS) > 0 {
+		sb.WriteString("DNS = ")
+		sb.WriteString(strings.Join(interfaceOptions.DNS, ", "))
+		sb.WriteString("\n")
+	}
+
 	sb.WriteString("PrivateKey = ")
 	sb.WriteString(wireguardOptions.PrivateKey)
 	sb.WriteString("\n")
