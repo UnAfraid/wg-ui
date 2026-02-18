@@ -1,11 +1,14 @@
 package backend
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"sort"
 	"strings"
 )
+
+const redactedURLPassword = "***"
 
 // ParsedURL represents a parsed backend URL
 type ParsedURL struct {
@@ -104,4 +107,70 @@ func BuildURL(backendType string, host string, port string, user string, path st
 	}
 
 	return sb.String()
+}
+
+// RedactURLPassword replaces URL password with a redaction marker.
+func RedactURLPassword(rawURL string) string {
+	parsed, err := url.Parse(rawURL)
+	if err != nil || parsed.User == nil {
+		return rawURL
+	}
+
+	password, hasPassword := parsed.User.Password()
+	if !hasPassword || password == "" {
+		return rawURL
+	}
+
+	parsed.User = url.UserPassword(parsed.User.Username(), redactedURLPassword)
+	return parsed.String()
+}
+
+// ReplaceRedactedURLPassword replaces redacted password marker with the existing URL password.
+func ReplaceRedactedURLPassword(rawURL string, existingURL string) (string, error) {
+	parsed, err := url.Parse(rawURL)
+	if err != nil || parsed.User == nil {
+		return rawURL, nil
+	}
+
+	password, hasPassword := parsed.User.Password()
+	if !hasPassword || !isRedactedURLPassword(password) {
+		return rawURL, nil
+	}
+
+	existingParsed, err := url.Parse(existingURL)
+	if err != nil {
+		return "", fmt.Errorf("invalid existing backend url: %w", err)
+	}
+	if existingParsed.User == nil {
+		return "", errors.New("redacted password placeholder cannot be used without existing credentials")
+	}
+
+	existingPassword, hasExistingPassword := existingParsed.User.Password()
+	if !hasExistingPassword || existingPassword == "" {
+		return "", errors.New("redacted password placeholder requires an existing password")
+	}
+
+	parsed.User = url.UserPassword(parsed.User.Username(), existingPassword)
+	return parsed.String(), nil
+}
+
+func isRedactedURLPassword(password string) bool {
+	current := strings.TrimSpace(password)
+	if current == "" {
+		return false
+	}
+
+	for i := 0; i < 4; i++ {
+		if current == redactedURLPassword {
+			return true
+		}
+
+		decoded, err := url.PathUnescape(current)
+		if err != nil || decoded == current {
+			break
+		}
+		current = decoded
+	}
+
+	return current == redactedURLPassword
 }

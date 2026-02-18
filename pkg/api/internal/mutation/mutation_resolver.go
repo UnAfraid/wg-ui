@@ -8,25 +8,21 @@ import (
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/model"
 	"github.com/UnAfraid/wg-ui/pkg/api/internal/resolver"
 	"github.com/UnAfraid/wg-ui/pkg/auth"
-	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/manage"
 )
 
 type mutationResolver struct {
-	authService    auth.Service
-	backendService backend.Service
-	manageService  manage.Service
+	authService   auth.Service
+	manageService manage.Service
 }
 
 func NewMutationResolver(
 	authService auth.Service,
-	backendService backend.Service,
 	manageService manage.Service,
 ) resolver.MutationResolver {
 	return &mutationResolver{
-		authService:    authService,
-		backendService: backendService,
-		manageService:  manageService,
+		authService:   authService,
+		manageService: manageService,
 	}
 }
 
@@ -376,7 +372,7 @@ func (r *mutationResolver) CreateBackend(ctx context.Context, input model.Create
 
 	createOptions := model.CreateBackendInputToCreateOptions(input)
 
-	createdBackend, err := r.backendService.CreateBackend(ctx, createOptions, userId)
+	createdBackend, err := r.manageService.CreateBackend(ctx, createOptions, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +401,7 @@ func (r *mutationResolver) UpdateBackend(ctx context.Context, input model.Update
 
 	updateOptions, updateFieldMask := model.UpdateBackendInputToUpdateOptionsAndFieldMask(input)
 
-	updatedBackend, err := r.backendService.UpdateBackend(ctx, backendId, updateOptions, updateFieldMask, userId)
+	updatedBackend, err := r.manageService.UpdateBackend(ctx, backendId, updateOptions, updateFieldMask, userId)
 	if err != nil {
 		return nil, err
 	}

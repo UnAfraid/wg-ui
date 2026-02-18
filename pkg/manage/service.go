@@ -26,6 +26,8 @@ type Service interface {
 	CreateUser(ctx context.Context, options *user.CreateOptions) (*user.User, error)
 	UpdateUser(ctx context.Context, userId string, options *user.UpdateOptions, fieldMask *user.UpdateFieldMask) (*user.User, error)
 	DeleteUser(ctx context.Context, userId string) (*user.User, error)
+	CreateBackend(ctx context.Context, options *backend.CreateOptions, userId string) (*backend.Backend, error)
+	UpdateBackend(ctx context.Context, backendId string, options *backend.UpdateOptions, fieldMask *backend.UpdateFieldMask, userId string) (*backend.Backend, error)
 	CreateServer(ctx context.Context, options *server.CreateOptions, userId string) (*server.Server, error)
 	UpdateServer(ctx context.Context, serverId string, options *server.UpdateOptions, fieldMask *server.UpdateFieldMask, userId string) (*server.Server, error)
 	DeleteServer(ctx context.Context, serverId string, userId string) (*server.Server, error)
@@ -245,6 +247,46 @@ func (s *service) DeleteUser(ctx context.Context, userId string) (*user.User, er
 
 		return deletedUser, nil
 	})
+}
+
+func (s *service) CreateBackend(ctx context.Context, options *backend.CreateOptions, userId string) (*backend.Backend, error) {
+	if options == nil {
+		return nil, backend.ErrCreateBackendOptionsRequired
+	}
+
+	if err := s.testBackendURL(ctx, options.Url); err != nil {
+		return nil, err
+	}
+
+	return s.backendService.CreateBackend(ctx, options, userId)
+}
+
+func (s *service) UpdateBackend(ctx context.Context, backendId string, options *backend.UpdateOptions, fieldMask *backend.UpdateFieldMask, userId string) (*backend.Backend, error) {
+	if options == nil {
+		return nil, backend.ErrUpdateBackendOptionsRequired
+	}
+	if fieldMask == nil {
+		return nil, backend.ErrUpdateBackendFieldMaskRequired
+	}
+
+	if fieldMask.Url {
+		existingBackend, err := s.findBackend(ctx, backendId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find backend: %w", err)
+		}
+
+		resolvedURL, err := backend.ReplaceRedactedURLPassword(options.Url, existingBackend.Url)
+		if err != nil {
+			return nil, err
+		}
+		options.Url = resolvedURL
+
+		if err := s.testBackendURL(ctx, options.Url); err != nil {
+			return nil, err
+		}
+	}
+
+	return s.backendService.UpdateBackend(ctx, backendId, options, fieldMask, userId)
 }
 
 func (s *service) CreateServer(ctx context.Context, options *server.CreateOptions, userId string) (*server.Server, error) {
@@ -945,6 +987,34 @@ func normalizePublicKey(publicKey string) string {
 		return normalizedPublicKey
 	}
 	return key.String()
+}
+
+func (s *service) testBackendURL(ctx context.Context, rawURL string) error {
+	parsedURL, err := backend.ParseURL(rawURL)
+	if err != nil {
+		return err
+	}
+
+	testCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	backendInstance, err := driver.Create(testCtx, parsedURL.Type, rawURL)
+	if err != nil {
+		return fmt.Errorf("failed to connect backend: %w", err)
+	}
+	defer func() {
+		if closeErr := backendInstance.Close(testCtx); closeErr != nil {
+			logrus.WithError(closeErr).
+				WithField("type", parsedURL.Type).
+				Warn("failed to close backend during url validation")
+		}
+	}()
+
+	if _, err := backendInstance.FindForeignServers(testCtx, nil); err != nil {
+		return fmt.Errorf("failed to validate backend url: %w", err)
+	}
+
+	return nil
 }
 
 func (s *service) findUserById(ctx context.Context, userId string) (*user.User, error) {

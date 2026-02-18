@@ -64,7 +64,7 @@ func ToBackend(b *backend.Backend) *Backend {
 		ID:          StringID(IdKindBackend, b.Id),
 		Name:        b.Name,
 		Description: b.Description,
-		URL:         b.Url,
+		URL:         backend.RedactURLPassword(b.Url),
 		Enabled:     b.Enabled,
 		CreateUser:  userIdToUser(b.CreateUserId),
 		UpdateUser:  userIdToUser(b.UpdateUserId),

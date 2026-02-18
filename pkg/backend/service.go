@@ -286,6 +286,12 @@ func processCreateBackend(options *CreateOptions, userId string) (*Backend, erro
 		return nil, ErrCreateBackendOptionsRequired
 	}
 
+	var err error
+	options.Url, err = ReplaceRedactedURLPassword(options.Url, "")
+	if err != nil {
+		return nil, err
+	}
+
 	// Validate URL format
 	if _, err := ParseURL(options.Url); err != nil {
 		return nil, err
@@ -324,6 +330,12 @@ func processUpdateBackend(backend *Backend, options *UpdateOptions, fieldMask *U
 		if len(strings.TrimSpace(options.Url)) == 0 {
 			return fmt.Errorf("url is required")
 		}
+
+		resolvedURL, err := ReplaceRedactedURLPassword(options.Url, backend.Url)
+		if err != nil {
+			return err
+		}
+		options.Url = resolvedURL
 
 		if _, err := ParseURL(options.Url); err != nil {
 			return err

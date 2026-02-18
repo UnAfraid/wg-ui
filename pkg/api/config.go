@@ -39,7 +39,6 @@ func newConfig(
 			),
 			mutationResolver: mutation.NewMutationResolver(
 				authService,
-				backendService,
 				manageService,
 			),
 			subscriptionResolver: sybscriptionResolver.NewSubscriptionResolver(

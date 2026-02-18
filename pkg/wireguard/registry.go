@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
 
+	"github.com/UnAfraid/wg-ui/pkg/backend"
 	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
@@ -58,6 +59,8 @@ func (r *Registry) GetOrCreate(ctx context.Context, backendId string, backendTyp
 
 	createKey := fmt.Sprintf("%s\x00%s\x00%s", backendId, backendType, rawURL)
 	value, err, _ := r.createGroup.Do(createKey, func() (interface{}, error) {
+		redactedURL := backend.RedactURLPassword(rawURL)
+
 		r.mu.RLock()
 		entry, ok := r.backends[backendId]
 		if ok && entry.backendType == backendType && entry.rawURL == rawURL {
@@ -85,7 +88,7 @@ func (r *Registry) GetOrCreate(ctx context.Context, backendId string, backendTyp
 				logrus.WithError(closeErr).
 					WithField("backendId", backendId).
 					WithField("type", backendType).
-					WithField("url", rawURL).
+					WithField("url", redactedURL).
 					Warn("failed to close redundant backend connection")
 			}
 
@@ -120,7 +123,7 @@ func (r *Registry) GetOrCreate(ctx context.Context, backendId string, backendTyp
 
 		logrus.WithField("backendId", backendId).
 			WithField("type", backendType).
-			WithField("url", rawURL).
+			WithField("url", redactedURL).
 			Info(logMessage)
 		return instance, nil
 	})

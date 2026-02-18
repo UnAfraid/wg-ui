@@ -132,6 +132,27 @@ function parseBoolParam(value: string | null, fallback: boolean): boolean {
   return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on";
 }
 
+function normalizeRedactedPassword(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  let current = trimmed;
+  for (let i = 0; i < 4; i++) {
+    if (current === "***") return "***";
+    if (current.toLowerCase() === "%2a%2a%2a") return "***";
+
+    try {
+      const decoded = decodeURIComponent(current);
+      if (decoded === current) break;
+      current = decoded;
+    } catch {
+      break;
+    }
+  }
+
+  return trimmed;
+}
+
 function parseBackendUrl(raw: string): UrlParts {
   const defaults: UrlParts = {
     type: "linux",
@@ -177,7 +198,7 @@ function parseBackendUrl(raw: string): UrlParts {
       defaults.host = url.hostname;
       defaults.port = url.port || "443";
       defaults.user = url.username || "admin";
-      defaults.password = url.password || "";
+      defaults.password = normalizeRedactedPassword(url.password || "");
       defaults.path = url.pathname || "/rest";
       defaults.insecureSkipVerify = parseBoolParam(
         url.searchParams.get("insecureSkipVerify"),
