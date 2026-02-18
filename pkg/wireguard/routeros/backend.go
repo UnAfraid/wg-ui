@@ -176,6 +176,10 @@ func (b *routerOSBackend) Down(ctx context.Context, name string) error {
 		return err
 	}
 	for _, p := range peers {
+		// RouterOS dynamic peers are owned by other subsystems and cannot be edited/deleted.
+		if boolValue(p, "dynamic") {
+			continue
+		}
 		if err := b.deleteEntry(ctx, "interface/wireguard/peers", value(p, ".id")); err != nil {
 			return err
 		}
@@ -279,15 +283,20 @@ func (b *routerOSBackend) FindForeignServers(ctx context.Context, knownInterface
 			continue
 		}
 
+		peerEntries, err := b.interfacePeerEntries(ctx, iface)
+		if err != nil {
+			return nil, err
+		}
+		if shouldSkipForeignInterface(iface, peerEntries) {
+			continue
+		}
+
 		addresses, err := b.interfaceAddresses(ctx, name)
 		if err != nil {
 			return nil, err
 		}
 
-		peers, err := b.interfacePeers(ctx, iface)
-		if err != nil {
-			return nil, err
-		}
+		peers := peerEntriesToPeers(peerEntries)
 
 		foreignServers = append(foreignServers, &driver.ForeignServer{
 			Interface: &driver.ForeignInterface{
@@ -373,11 +382,18 @@ func (b *routerOSBackend) reconcilePeers(ctx context.Context, iface entry, desir
 	}
 
 	existingByPublicKey := make(map[string][]entry, len(existingPeers))
+	dynamicByPublicKey := make(map[string]struct{}, len(existingPeers))
 	for _, p := range existingPeers {
 		publicKey := strings.TrimSpace(value(p, "public-key"))
 		if publicKey == "" {
 			continue
 		}
+
+		if boolValue(p, "dynamic") {
+			dynamicByPublicKey[publicKey] = struct{}{}
+			continue
+		}
+
 		existingByPublicKey[publicKey] = append(existingByPublicKey[publicKey], p)
 	}
 
@@ -389,6 +405,10 @@ func (b *routerOSBackend) reconcilePeers(ctx context.Context, iface entry, desir
 
 		existing := existingByPublicKey[publicKey]
 		if len(existing) == 0 {
+			if _, isDynamic := dynamicByPublicKey[publicKey]; isDynamic {
+				continue
+			}
+
 			if err := b.putEntry(ctx, "interface/wireguard/peers", payload); err != nil {
 				return err
 			}
@@ -518,28 +538,7 @@ func (b *routerOSBackend) interfacePeers(ctx context.Context, iface entry) ([]*d
 		return nil, err
 	}
 
-	peers := make([]*driver.Peer, 0, len(peerEntries))
-	for _, peerEntry := range peerEntries {
-		allowedIPs := parseAllowedIPs(value(peerEntry, "allowed-address"))
-		keepalive := time.Duration(intValue(peerEntry, "persistent-keepalive")) * time.Second
-
-		peers = append(peers, &driver.Peer{
-			Name:                strings.TrimSpace(value(peerEntry, "name")),
-			Description:         strings.TrimSpace(value(peerEntry, "comment")),
-			PublicKey:           value(peerEntry, "public-key"),
-			Endpoint:            endpointValue(peerEntry),
-			AllowedIPs:          allowedIPs,
-			PresharedKey:        value(peerEntry, "preshared-key"),
-			PersistentKeepalive: keepalive,
-			Stats:               peerStatsFromEntry(peerEntry),
-		})
-	}
-
-	sort.Slice(peers, func(i, j int) bool {
-		return strings.ToLower(peers[i].PublicKey) < strings.ToLower(peers[j].PublicKey)
-	})
-
-	return peers, nil
+	return peerEntriesToPeers(peerEntries), nil
 }
 
 func (b *routerOSBackend) interfacePeerEntries(ctx context.Context, iface entry) ([]entry, error) {
@@ -560,6 +559,57 @@ func (b *routerOSBackend) interfacePeerEntries(ctx context.Context, iface entry)
 	}
 
 	return filtered, nil
+}
+
+func peerEntriesToPeers(peerEntries []entry) []*driver.Peer {
+	peers := make([]*driver.Peer, 0, len(peerEntries))
+	for _, peerEntry := range peerEntries {
+		allowedIPs := parseAllowedIPs(value(peerEntry, "allowed-address"))
+		keepalive := time.Duration(intValue(peerEntry, "persistent-keepalive")) * time.Second
+
+		peers = append(peers, &driver.Peer{
+			Name:                strings.TrimSpace(value(peerEntry, "name")),
+			Description:         strings.TrimSpace(value(peerEntry, "comment")),
+			PublicKey:           value(peerEntry, "public-key"),
+			Endpoint:            endpointValue(peerEntry),
+			AllowedIPs:          allowedIPs,
+			PresharedKey:        value(peerEntry, "preshared-key"),
+			PersistentKeepalive: keepalive,
+			Stats:               peerStatsFromEntry(peerEntry),
+		})
+	}
+
+	sort.Slice(peers, func(i, j int) bool {
+		return strings.ToLower(peers[i].PublicKey) < strings.ToLower(peers[j].PublicKey)
+	})
+	return peers
+}
+
+func shouldSkipForeignInterface(iface entry, peerEntries []entry) bool {
+	if boolValue(iface, "dynamic") {
+		return true
+	}
+
+	if containsBackToHomeMarker(value(iface, "name")) || containsBackToHomeMarker(value(iface, "comment")) {
+		return true
+	}
+
+	for _, peerEntry := range peerEntries {
+		if boolValue(peerEntry, "dynamic") {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsBackToHomeMarker(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	if normalized == "" {
+		return false
+	}
+
+	return strings.Contains(normalized, "back-to-home") || strings.Contains(normalized, "back to home")
 }
 
 func endpointValue(peerEntry entry) string {

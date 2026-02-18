@@ -47,3 +47,49 @@ func TestParseURLRequiresCredentials(t *testing.T) {
 		t.Fatalf("expected missing password to fail")
 	}
 }
+
+func TestShouldSkipForeignInterface(t *testing.T) {
+	tests := []struct {
+		name        string
+		iface       entry
+		peerEntries []entry
+		want        bool
+	}{
+		{
+			name:  "dynamic interface",
+			iface: entry{"name": "wg0", "dynamic": "true"},
+			want:  true,
+		},
+		{
+			name:  "back-to-home name",
+			iface: entry{"name": "back-to-home-vpn"},
+			want:  true,
+		},
+		{
+			name:  "back to home comment",
+			iface: entry{"name": "wg0", "comment": "Back to Home"},
+			want:  true,
+		},
+		{
+			name:        "dynamic peer",
+			iface:       entry{"name": "wg0"},
+			peerEntries: []entry{{"public-key": "abc", "dynamic": "true"}},
+			want:        true,
+		},
+		{
+			name:        "regular interface",
+			iface:       entry{"name": "wg0"},
+			peerEntries: []entry{{"public-key": "abc"}},
+			want:        false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := shouldSkipForeignInterface(tt.iface, tt.peerEntries)
+			if got != tt.want {
+				t.Fatalf("expected %v, got %v", tt.want, got)
+			}
+		})
+	}
+}
