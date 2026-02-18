@@ -12,6 +12,7 @@ import {
   Loader2,
   Network,
   ArrowUpDown,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CopyableText } from "@/components/copyable-text";
+import { PeerClientConfigDialog } from "@/components/peers/peer-client-config-dialog";
 import { formatBytes, formatDateTime, timeAgo } from "@/lib/format";
 import { SERVER_QUERY } from "@/lib/graphql/queries";
 import {
@@ -428,11 +430,22 @@ export default function ServerDetailPage({ id }: { id: string }) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/servers/${id}/peers/${peer.id}/edit`}>
-                        <Pencil className="h-3 w-3" />
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <PeerClientConfigDialog
+                        server={server}
+                        peer={peer}
+                        trigger={
+                          <Button variant="ghost" size="sm">
+                            <FileText className="h-3 w-3" />
+                          </Button>
+                        }
+                      />
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/servers/${id}/peers/${peer.id}/edit`}>
+                          <Pencil className="h-3 w-3" />
+                        </Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
