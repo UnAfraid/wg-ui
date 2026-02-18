@@ -38,12 +38,13 @@ func isExecBackendAvailable() bool {
 }
 
 type execBackend struct {
-	configDir   string
-	useSudo     bool
-	sudoPath    string
-	wgPath      string
-	wgQuickPath string
-	ipPath      string
+	configDir      string
+	useSudo        bool
+	sudoPath       string
+	wgPath         string
+	wgQuickPath    string
+	ipPath         string
+	resolvconfPath string
 }
 
 func NewExecBackend(rawURL string) (driver.Backend, error) {
@@ -90,6 +91,7 @@ func NewExecBackend(rawURL string) (driver.Backend, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to find ip command: %w", err)
 	}
+	resolvconfPath, _ := osexec.LookPath("resolvconf")
 
 	sudoPath := ""
 	if useSudo {
@@ -100,12 +102,13 @@ func NewExecBackend(rawURL string) (driver.Backend, error) {
 	}
 
 	return &execBackend{
-		configDir:   configDir,
-		useSudo:     useSudo,
-		sudoPath:    sudoPath,
-		wgPath:      wgPath,
-		wgQuickPath: wgQuickPath,
-		ipPath:      ipPath,
+		configDir:      configDir,
+		useSudo:        useSudo,
+		sudoPath:       sudoPath,
+		wgPath:         wgPath,
+		wgQuickPath:    wgQuickPath,
+		ipPath:         ipPath,
+		resolvconfPath: resolvconfPath,
 	}, nil
 }
 
@@ -335,7 +338,15 @@ func (b *execBackend) syncWithoutRestart(ctx context.Context, options driver.Con
 func (b *execBackend) writeConfig(ctx context.Context, options driver.ConfigureOptions) (string, error) {
 	name := options.InterfaceOptions.Name
 	configPath := b.configFilePath(name)
-	configContent := renderConfig(options)
+
+	configOptions := options
+	if len(configOptions.InterfaceOptions.DNS) > 0 && b.resolvconfPath == "" {
+		logrus.WithField("interface", name).
+			Warn("resolvconf command not found; omitting DNS configuration for wg-quick")
+		configOptions.InterfaceOptions.DNS = nil
+	}
+
+	configContent := renderConfig(configOptions)
 
 	if b.useSudo {
 		tmpPath, err := writeTempFile([]byte(configContent))

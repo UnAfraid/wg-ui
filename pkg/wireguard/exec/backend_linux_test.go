@@ -271,6 +271,67 @@ PersistentKeepalive = 20
 	}
 }
 
+func TestWriteConfigOmitsDNSWithoutResolvconf(t *testing.T) {
+	tmpDir := t.TempDir()
+	backend := &execBackend{
+		configDir: tmpDir,
+	}
+
+	configPath, err := backend.writeConfig(context.Background(), driver.ConfigureOptions{
+		InterfaceOptions: driver.InterfaceOptions{
+			Name:    "wg0",
+			Address: "10.0.0.1/24",
+			DNS:     []string{"1.1.1.1", "8.8.8.8"},
+		},
+		WireguardOptions: driver.WireguardOptions{
+			PrivateKey: "private-key",
+		},
+	})
+	if err != nil {
+		t.Fatalf("writeConfig returned error: %v", err)
+	}
+
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("failed to read config file: %v", err)
+	}
+
+	if strings.Contains(string(content), "DNS =") {
+		t.Fatalf("expected config to omit DNS without resolvconf, got:\n%s", string(content))
+	}
+}
+
+func TestWriteConfigIncludesDNSWithResolvconf(t *testing.T) {
+	tmpDir := t.TempDir()
+	backend := &execBackend{
+		configDir:      tmpDir,
+		resolvconfPath: "/usr/bin/resolvconf",
+	}
+
+	configPath, err := backend.writeConfig(context.Background(), driver.ConfigureOptions{
+		InterfaceOptions: driver.InterfaceOptions{
+			Name:    "wg0",
+			Address: "10.0.0.1/24",
+			DNS:     []string{"1.1.1.1", "8.8.8.8"},
+		},
+		WireguardOptions: driver.WireguardOptions{
+			PrivateKey: "private-key",
+		},
+	})
+	if err != nil {
+		t.Fatalf("writeConfig returned error: %v", err)
+	}
+
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("failed to read config file: %v", err)
+	}
+
+	if !strings.Contains(string(content), "DNS = 1.1.1.1, 8.8.8.8") {
+		t.Fatalf("expected config to include DNS with resolvconf, got:\n%s", string(content))
+	}
+}
+
 func TestDeviceFallsBackToConfigFileWhenInterfaceIsDown(t *testing.T) {
 	privateKey, err := wgtypes.GeneratePrivateKey()
 	if err != nil {
