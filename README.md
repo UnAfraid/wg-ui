@@ -17,11 +17,12 @@
 ## Backend Drivers
 Backends are configured by URL scheme.
 
-| Driver | OS | URL example | Privileges / requirements |
-| --- | --- | --- | --- |
-| `linux` | Linux | `linux:///etc/wireguard` | Needs `CAP_NET_ADMIN` (typically run as root) to create/configure interfaces directly via kernel APIs |
-| `networkmanager` | Linux | `networkmanager:///` | Needs access to NetworkManager system DBus operations (typically root or polkit-authorized service user) |
-| `exec` | Linux, macOS | `exec:///etc/wireguard?sudo=true` | Uses `wg` / `wg-quick` and files under the configured path; with `sudo=true` it requires passwordless sudo for backend commands |
+| Driver | OS | URL example                                                             | Privileges / requirements |
+| --- | --- |-------------------------------------------------------------------------| --- |
+| `linux` | Linux | `linux:///etc/wireguard`                                                | Needs `CAP_NET_ADMIN` (typically run as root) to create/configure interfaces directly via kernel APIs |
+| `networkmanager` | Linux | `networkmanager:///`                                                    | Needs access to NetworkManager system DBus operations (typically root or polkit-authorized service user) |
+| `exec` | Linux, macOS | `exec:///etc/wireguard?sudo=true`                                       | Uses `wg` / `wg-quick` and files under the configured path; with `sudo=true` it requires passwordless sudo for backend commands |
+| `routeros` | Any OS (network reachability required) | `routeros://admin:secret@192.168.88.1:443/rest?insecureSkipVerify=true` | Uses RouterOS REST API over HTTPS to manage WireGuard interfaces and peers |
 
 `exec` is useful when you want behavior close to native WireGuard CLI tooling.
 
@@ -32,6 +33,15 @@ If the app does not run as root, set:
 `sudo=true` is non-interactive, so passwordless sudo (`NOPASSWD`) is required for invoked commands.
 - Linux commands: `wg`, `wg-quick`, `ip`, plus file operations needed for config management.
 - macOS commands: `wg`, `wg-quick`, `ifconfig`, `route`, `netstat`, plus file operations needed for config management.
+
+### RouterOS backend
+`routeros` URL format:
+- `routeros://user:password@host:port/rest`
+
+Supported query parameters:
+- `insecureSkipVerify=true` to ignore self-signed/invalid TLS certificates.
+
+RouterOS backend always uses HTTPS REST API endpoints.
 
 ## Quickstart (Binary)
 Download a release from [Releases](https://github.com/UnAfraid/wg-ui/releases/latest) or build locally:

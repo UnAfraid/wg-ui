@@ -477,10 +477,41 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 			return nil, fmt.Errorf("failed to create server: %w", err)
 		}
 
+		foreignPeersByPublicKey := make(map[string]*driver.Peer, len(foreignServer.Peers))
+		for _, foreignPeer := range foreignServer.Peers {
+			if foreignPeer == nil {
+				continue
+			}
+			publicKey := strings.TrimSpace(foreignPeer.PublicKey)
+			if publicKey == "" {
+				continue
+			}
+			if _, exists := foreignPeersByPublicKey[publicKey]; !exists {
+				foreignPeersByPublicKey[publicKey] = foreignPeer
+			}
+		}
+
+		usedPeerNames := make(map[string]struct{}, len(device.Wireguard.Peers))
 		for i, p := range device.Wireguard.Peers {
+			if p == nil {
+				continue
+			}
+
+			peerName := strings.TrimSpace(p.Name)
+			peerDescription := strings.TrimSpace(p.Description)
+
+			if foreignPeer, exists := foreignPeersByPublicKey[strings.TrimSpace(p.PublicKey)]; exists {
+				if peerName == "" {
+					peerName = strings.TrimSpace(foreignPeer.Name)
+				}
+				if peerDescription == "" {
+					peerDescription = strings.TrimSpace(foreignPeer.Description)
+				}
+			}
+
 			_, err := s.peerService.CreatePeer(ctx, createServer.Id, &peer.CreateOptions{
-				Name:        fmt.Sprintf("Peer #%d", i+1),
-				Description: "",
+				Name:        importedPeerName(peerName, i, usedPeerNames),
+				Description: peerDescription,
 				PublicKey:   p.PublicKey,
 				Endpoint:    p.Endpoint,
 				AllowedIPs: adapt.Array(p.AllowedIPs, func(allowedIp net.IPNet) string {
@@ -496,6 +527,90 @@ func (s *service) ImportForeignServer(ctx context.Context, backendId string, nam
 
 		return createServer, nil
 	})
+}
+
+func importedPeerName(preferred string, index int, used map[string]struct{}) string {
+	base := normalizeImportedPeerName(preferred)
+	if base == "" {
+		base = fmt.Sprintf("Peer #%d", index+1)
+	}
+
+	if name := reserveUniqueImportedPeerName(base, used); name != "" {
+		return name
+	}
+
+	fallback := fmt.Sprintf("Peer #%d", index+1)
+	if name := reserveUniqueImportedPeerName(fallback, used); name != "" {
+		return name
+	}
+
+	// This should never happen, but keep deterministic output if we fail to reserve.
+	return fallback
+}
+
+func normalizeImportedPeerName(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ""
+	}
+
+	name = truncateRunes(name, 30)
+	if len([]rune(name)) < 3 {
+		return ""
+	}
+
+	return name
+}
+
+func reserveUniqueImportedPeerName(base string, used map[string]struct{}) string {
+	base = normalizeImportedPeerName(base)
+	if base == "" {
+		return ""
+	}
+
+	if used == nil {
+		return base
+	}
+
+	baseKey := strings.ToLower(base)
+	if _, exists := used[baseKey]; !exists {
+		used[baseKey] = struct{}{}
+		return base
+	}
+
+	for suffixIndex := 2; ; suffixIndex++ {
+		suffix := fmt.Sprintf(" (%d)", suffixIndex)
+		maxBaseLen := 30 - len([]rune(suffix))
+		if maxBaseLen < 3 {
+			maxBaseLen = 3
+		}
+
+		candidate := normalizeImportedPeerName(truncateRunes(base, maxBaseLen) + suffix)
+		if candidate == "" {
+			continue
+		}
+
+		candidateKey := strings.ToLower(candidate)
+		if _, exists := used[candidateKey]; exists {
+			continue
+		}
+
+		used[candidateKey] = struct{}{}
+		return candidate
+	}
+}
+
+func truncateRunes(value string, max int) string {
+	if max <= 0 {
+		return ""
+	}
+
+	runes := []rune(value)
+	if len(runes) <= max {
+		return value
+	}
+
+	return string(runes[:max])
 }
 
 func (s *service) CreatePeer(ctx context.Context, serverId string, options *peer.CreateOptions, userId string) (*peer.Peer, error) {

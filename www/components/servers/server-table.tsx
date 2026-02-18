@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 import {
@@ -50,6 +50,12 @@ interface ServerTableProps {
 
 type SortKey = "name" | "backend" | "address" | "status" | "peers";
 type SortDir = "asc" | "desc";
+
+interface ServerGroup {
+  key: string;
+  backendName: string;
+  servers: Server[];
+}
 
 function SortableHead({
   label,
@@ -102,17 +108,18 @@ export function ServerTable({ servers }: ServerTableProps) {
     }
   };
 
-  const sorted = useMemo(() => {
-    const copy = [...servers];
-    const dir = sortDir === "asc" ? 1 : -1;
-    copy.sort((a, b) => {
-      switch (sortKey) {
+  const groupedServers = useMemo(() => {
+    const compareText = (a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" });
+
+    const compareServers = (a: Server, b: Server, key: SortKey, dir: number) => {
+      switch (key) {
         case "name":
-          return dir * a.name.localeCompare(b.name);
+          return dir * compareText(a.name, b.name);
         case "backend":
-          return dir * (a.backend?.name ?? "").localeCompare(b.backend?.name ?? "");
+          return dir * compareText(a.backend?.name ?? "", b.backend?.name ?? "");
         case "address":
-          return dir * a.address.localeCompare(b.address);
+          return dir * compareText(a.address, b.address);
         case "status": {
           const aVal = a.running ? 1 : 0;
           const bVal = b.running ? 1 : 0;
@@ -123,8 +130,37 @@ export function ServerTable({ servers }: ServerTableProps) {
         default:
           return 0;
       }
-    });
-    return copy;
+    };
+
+    const groupsByBackend = new Map<string, ServerGroup>();
+    for (const server of servers) {
+      const backendName = server.backend?.name?.trim() || "No Backend";
+      const key = server.backend?.id?.trim() || `name:${backendName.toLowerCase()}`;
+
+      let group = groupsByBackend.get(key);
+      if (!group) {
+        group = { key, backendName, servers: [] };
+        groupsByBackend.set(key, group);
+      }
+      group.servers.push(server);
+    }
+
+    const groups = Array.from(groupsByBackend.values());
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    const groupDir = sortKey === "backend" ? dir : 1;
+    groups.sort((a, b) => groupDir * compareText(a.backendName, b.backendName));
+
+    for (const group of groups) {
+      group.servers.sort((a, b) => {
+        if (sortKey === "backend") {
+          return dir * compareText(a.name, b.name);
+        }
+        return compareServers(a, b, sortKey, dir);
+      });
+    }
+
+    return groups;
   }, [servers, sortKey, sortDir]);
 
   const [startServer] = useMutation(START_SERVER_MUTATION, {
@@ -196,126 +232,142 @@ export function ServerTable({ servers }: ServerTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sorted.map((server) => (
-            <TableRow key={server.id}>
-              <TableCell>
-                <Link
-                  to={`/servers/${server.id}`}
-                  className="font-medium text-foreground hover:text-primary"
-                >
-                  {server.name}
-                </Link>
-                {server.description && (
-                  <p className="mt-0.5 max-w-xs truncate text-xs text-muted-foreground">
-                    {server.description}
-                  </p>
-                )}
-              </TableCell>
-              <TableCell className="hidden lg:table-cell">
-                <span className="text-sm text-muted-foreground">
-                  {server.backend?.name ?? "--"}
-                </span>
-              </TableCell>
-              <TableCell>
-                <CopyableText text={server.address} truncate={false} />
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
-                <span className="font-mono text-sm text-muted-foreground">
-                  {server.listenPort ?? "Auto"}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {server.running ? (
-                    <Badge
-                      variant="outline"
-                      className="border-success/30 bg-success/10 text-success"
-                    >
-                      Running
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="border-muted-foreground/30 text-muted-foreground"
-                    >
-                      Stopped
-                    </Badge>
-                  )}
-                  {!server.enabled && (
-                    <Badge variant="secondary" className="text-xs">
-                      Disabled
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
-                <span className="text-sm text-muted-foreground">
-                  {server.peers?.length ?? 0}
-                </span>
-              </TableCell>
-              <TableCell className="hidden lg:table-cell">
-                {server.interfaceStats ? (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <ArrowUpDown className="h-3 w-3" />
-                      {formatBytes(server.interfaceStats.rxBytes)} /{" "}
-                      {formatBytes(server.interfaceStats.txBytes)}
+          {groupedServers.map((group) => (
+            <Fragment key={group.key}>
+              <TableRow className="bg-muted/20 hover:bg-muted/20">
+                <TableCell colSpan={8} className="py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {group.backendName}
                     </span>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {group.servers.length}
+                    </Badge>
                   </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground">--</span>
-                )}
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {server.running ? (
-                      <DropdownMenuItem
-                        onClick={() => handleStop(server.id)}
-                      >
-                        <Square className="mr-2 h-4 w-4" />
-                        Stop
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem
-                        onClick={() => handleStart(server.id)}
-                      >
-                        <Play className="mr-2 h-4 w-4" />
-                        Start
-                      </DropdownMenuItem>
+                </TableCell>
+              </TableRow>
+              {group.servers.map((server) => (
+                <TableRow key={server.id}>
+                  <TableCell>
+                    <Link
+                      to={`/servers/${server.id}`}
+                      className="font-medium text-foreground hover:text-primary"
+                    >
+                      {server.name}
+                    </Link>
+                    {server.description && (
+                      <p className="mt-0.5 max-w-xs truncate text-xs text-muted-foreground">
+                        {server.description}
+                      </p>
                     )}
-                    <DropdownMenuItem asChild>
-                      <Link to={`/servers/${server.id}/edit`}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <ConfirmDialog
-                      trigger={
-                        <DropdownMenuItem
-                          onSelect={(e) => e.preventDefault()}
-                          className="text-destructive focus:text-destructive"
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <span className="text-sm text-muted-foreground">
+                      {server.backend?.name ?? "--"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <CopyableText text={server.address} truncate={false} />
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {server.listenPort ?? "Auto"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {server.running ? (
+                        <Badge
+                          variant="outline"
+                          className="border-success/30 bg-success/10 text-success"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          Running
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-muted-foreground/30 text-muted-foreground"
+                        >
+                          Stopped
+                        </Badge>
+                      )}
+                      {!server.enabled && (
+                        <Badge variant="secondary" className="text-xs">
+                          Disabled
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <span className="text-sm text-muted-foreground">
+                      {server.peers?.length ?? 0}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    {server.interfaceStats ? (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <ArrowUpDown className="h-3 w-3" />
+                          {formatBytes(server.interfaceStats.rxBytes)} /{" "}
+                          {formatBytes(server.interfaceStats.txBytes)}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">--</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Actions</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {server.running ? (
+                          <DropdownMenuItem
+                            onClick={() => handleStop(server.id)}
+                          >
+                            <Square className="mr-2 h-4 w-4" />
+                            Stop
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() => handleStart(server.id)}
+                          >
+                            <Play className="mr-2 h-4 w-4" />
+                            Start
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem asChild>
+                          <Link to={`/servers/${server.id}/edit`}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </Link>
                         </DropdownMenuItem>
-                      }
-                      title="Delete Server"
-                      description={`Are you sure you want to delete "${server.name}"? This will also remove all associated peers. This action cannot be undone.`}
-                      confirmLabel="Delete Server"
-                      onConfirm={() => handleDelete(server.id)}
-                    />
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
+                        <DropdownMenuSeparator />
+                        <ConfirmDialog
+                          trigger={
+                            <DropdownMenuItem
+                              onSelect={(e) => e.preventDefault()}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          }
+                          title="Delete Server"
+                          description={`Are you sure you want to delete "${server.name}"? This will also remove all associated peers. This action cannot be undone.`}
+                          confirmLabel="Delete Server"
+                          onConfirm={() => handleDelete(server.id)}
+                        />
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </Fragment>
           ))}
         </TableBody>
       </Table>

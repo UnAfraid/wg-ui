@@ -107,6 +107,7 @@ const backendTypeMeta: Record<string, { label: string; description: string; hasF
   darwin: { label: "macOS", description: "Local macOS backend", hasFields: false },
   networkmanager: { label: "NetworkManager", description: "NetworkManager via D-Bus", hasFields: false },
   exec: { label: "Exec (wg-quick)", description: "Run wg-quick or similar tools locally", hasFields: true },
+  routeros: { label: "RouterOS", description: "Manage MikroTik WireGuard via RouterOS API", hasFields: true },
   ssh: { label: "SSH (remote)", description: "Manage WireGuard on remote hosts via SSH", hasFields: true },
 };
 
@@ -119,8 +120,16 @@ interface UrlParts {
   host: string;
   port: string;
   user: string;
+  password: string;
   path: string;
   sudo: boolean;
+  insecureSkipVerify: boolean;
+}
+
+function parseBoolParam(value: string | null, fallback: boolean): boolean {
+  if (value == null) return fallback;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on";
 }
 
 function parseBackendUrl(raw: string): UrlParts {
@@ -129,8 +138,10 @@ function parseBackendUrl(raw: string): UrlParts {
     host: "",
     port: "22",
     user: "root",
+    password: "",
     path: "/etc/wireguard",
     sudo: false,
+    insecureSkipVerify: false,
   };
 
   if (!raw) return defaults;
@@ -160,6 +171,21 @@ function parseBackendUrl(raw: string): UrlParts {
     } catch {
       /* keep defaults */
     }
+  } else if (scheme === "routeros") {
+    try {
+      const url = new URL(raw);
+      defaults.host = url.hostname;
+      defaults.port = url.port || "443";
+      defaults.user = url.username || "admin";
+      defaults.password = url.password || "";
+      defaults.path = url.pathname || "/rest";
+      defaults.insecureSkipVerify = parseBoolParam(
+        url.searchParams.get("insecureSkipVerify"),
+        false
+      );
+    } catch {
+      /* keep defaults */
+    }
   }
 
   return defaults;
@@ -180,10 +206,38 @@ function buildBackendUrl(parts: UrlParts): string {
       const q = parts.sudo ? "?sudo=true" : "";
       return `ssh://${user}@${host}${port}${p}${q}`;
     }
+    case "routeros": {
+      const host = parts.host || "router";
+      const portDefault = "443";
+      const port = parts.port && parts.port !== portDefault ? `:${parts.port}` : "";
+      const user = encodeURIComponent(parts.user || "admin");
+      const password = encodeURIComponent(parts.password || "password");
+      const p = parts.path
+        ? parts.path.startsWith("/")
+          ? parts.path
+          : `/${parts.path}`
+        : "/rest";
+
+      const query = new URLSearchParams();
+      if (parts.insecureSkipVerify) {
+        query.set("insecureSkipVerify", "true");
+      }
+
+      const q = query.toString();
+      return `routeros://${user}:${password}@${host}${port}${p}${q ? `?${q}` : ""}`;
+    }
     default:
       // Simple types: linux://, darwin://, networkmanager://, etc.
       return `${parts.type}://`;
   }
+}
+
+function maskBackendUrl(raw: string): string {
+  if (!raw) return raw;
+  return raw.replace(
+    /^([a-z][a-z0-9+.-]*:\/\/[^/?#@:\s]+):[^@/?#\s]*@/i,
+    "$1:***@"
+  );
 }
 
 // ─── Form dialog ────────────────────────────────────────────────────────────
@@ -211,6 +265,10 @@ function BackendFormDialog({
   const [sshHost, setSshHost] = useState(initialParts.host);
   const [sshPort, setSshPort] = useState(initialParts.port);
   const [sshUser, setSshUser] = useState(initialParts.user);
+  const [routerPassword, setRouterPassword] = useState(initialParts.password);
+  const [routerInsecureSkipVerify, setRouterInsecureSkipVerify] = useState(
+    initialParts.insecureSkipVerify
+  );
   const [configPath, setConfigPath] = useState(initialParts.path);
   const [useSudo, setUseSudo] = useState(initialParts.sudo);
 
@@ -219,8 +277,10 @@ function BackendFormDialog({
     host: sshHost,
     port: sshPort,
     user: sshUser,
+    password: routerPassword,
     path: configPath,
     sudo: useSudo,
+    insecureSkipVerify: routerInsecureSkipVerify,
   });
 
   const typeInfo = getTypeMeta(backendType);
@@ -295,6 +355,8 @@ function BackendFormDialog({
     setSshHost(parts.host);
     setSshPort(parts.port);
     setSshUser(parts.user);
+    setRouterPassword(parts.password);
+    setRouterInsecureSkipVerify(parts.insecureSkipVerify);
     setConfigPath(parts.path);
     setUseSudo(parts.sudo);
 
@@ -317,9 +379,12 @@ function BackendFormDialog({
     }
   };
 
+  const requiresHost = backendType === "ssh" || backendType === "routeros";
   const isValid =
     name.trim().length > 0 &&
-    (backendType !== "ssh" || sshHost.trim().length > 0);
+    (!requiresHost || sshHost.trim().length > 0) &&
+    (backendType !== "routeros" ||
+      (sshUser.trim().length > 0 && routerPassword.trim().length > 0));
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -506,6 +571,87 @@ function BackendFormDialog({
                     onCheckedChange={(v) => setUseSudo(v === true)}
                   />
                   <span className="text-sm">Use sudo</span>
+                </label>
+              </div>
+            )}
+
+            {backendType === "routeros" && (
+              <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/30 p-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  RouterOS API
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="col-span-2 flex flex-col gap-1.5">
+                    <Label htmlFor="routeros-host" className="text-xs">
+                      Host
+                    </Label>
+                    <Input
+                      id="routeros-host"
+                      value={sshHost}
+                      onChange={(e) => setSshHost(e.target.value)}
+                      placeholder="192.168.88.1"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="routeros-port" className="text-xs">
+                      Port
+                    </Label>
+                    <Input
+                      id="routeros-port"
+                      type="number"
+                      min={1}
+                      max={65535}
+                      value={sshPort}
+                      onChange={(e) => setSshPort(e.target.value)}
+                      placeholder="443"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="routeros-user" className="text-xs">
+                      Username
+                    </Label>
+                    <Input
+                      id="routeros-user"
+                      value={sshUser}
+                      onChange={(e) => setSshUser(e.target.value)}
+                      placeholder="admin"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="routeros-password" className="text-xs">
+                      Password
+                    </Label>
+                    <Input
+                      id="routeros-password"
+                      type="password"
+                      value={routerPassword}
+                      onChange={(e) => setRouterPassword(e.target.value)}
+                      placeholder="password"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="routeros-path" className="text-xs">
+                    API Path
+                  </Label>
+                  <Input
+                    id="routeros-path"
+                    value={configPath}
+                    onChange={(e) => setConfigPath(e.target.value)}
+                    placeholder="/rest"
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={routerInsecureSkipVerify}
+                    onCheckedChange={(v) => setRouterInsecureSkipVerify(v === true)}
+                  />
+                  <span className="text-sm">
+                    Ignore TLS certificate errors (`insecureSkipVerify=true`)
+                  </span>
                 </label>
               </div>
             )}
@@ -714,7 +860,7 @@ export default function BackendsPage() {
                         {parseBackendUrl(backend.url).type}
                       </Badge>
                       <span className="font-mono text-xs text-muted-foreground break-all">
-                        {backend.url}
+                        {maskBackendUrl(backend.url)}
                       </span>
                     </div>
                   </TableCell>
