@@ -3,19 +3,30 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@apollo/client";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus, Search, Loader2, X } from "lucide-react";
+import { Plus, Search, Loader2, X, ChevronsUpDown, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ServerTable } from "@/components/servers/server-table";
 import { ForeignServers } from "@/components/servers/foreign-servers";
 import { SERVERS_QUERY, BACKENDS_QUERY } from "@/lib/graphql/queries";
 import { SERVER_CHANGED_SUBSCRIPTION } from "@/lib/graphql/subscriptions";
 import type { Server, Backend } from "@/lib/graphql/types";
+import { cn } from "@/lib/utils";
 
 export default function ServersPage() {
   const [search, setSearch] = useState("");
+  const [backendFilterOpen, setBackendFilterOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const backendFilter = searchParams.get("backend");
   const { data, loading, subscribeToMore } = useQuery(SERVERS_QUERY);
@@ -81,8 +92,15 @@ export default function ServersPage() {
   });
 
   const clearBackendFilter = () => {
-    searchParams.delete("backend");
-    setSearchParams(searchParams);
+    const next = new URLSearchParams(searchParams);
+    next.delete("backend");
+    setSearchParams(next);
+  };
+
+  const setBackendFilter = (backendId: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("backend", backendId);
+    setSearchParams(next);
   };
 
   return (
@@ -115,6 +133,68 @@ export default function ServersPage() {
               className="pl-9"
             />
           </div>
+        )}
+        {backends.length > 0 && (
+          <Popover open={backendFilterOpen} onOpenChange={setBackendFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={backendFilterOpen}
+                className="w-[260px] justify-between"
+              >
+                {backendFilter
+                  ? `Backend: ${backendName ?? backendFilter}`
+                  : "Filter by backend"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[260px] p-0">
+              <Command>
+                <CommandInput placeholder="Search backends..." />
+                <CommandList>
+                  <CommandEmpty>No backend found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="all backends"
+                      onSelect={() => {
+                        clearBackendFilter();
+                        setBackendFilterOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          !backendFilter ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      All backends
+                    </CommandItem>
+                    {backends.map((backend) => (
+                      <CommandItem
+                        key={backend.id}
+                        value={`${backend.name} ${backend.description ?? ""}`}
+                        onSelect={() => {
+                          setBackendFilter(backend.id);
+                          setBackendFilterOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            backendFilter === backend.id
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        {backend.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         )}
         {backendFilter && (
           <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-sm">
