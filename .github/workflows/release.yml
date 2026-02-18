@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-env:
-  FRONTEND_REPOSITORY: desislavsd/wireguard-manager
 jobs:
   test:
     name: Test
@@ -64,17 +62,6 @@ jobs:
           node-version: lts/Jod
           cache-dependency-path: 'www/pnpm-lock.yaml'
           cache: 'pnpm'
-
-      - name: Discover latest frontend release
-        run: |
-          LATEST_FRONTEND_RELEASE=$(curl -sS "https://api.github.com/repos/${FRONTEND_REPOSITORY}/releases/latest" | jq -r ".tag_name")
-          echo 'latest_frontend_release=${LATEST_FRONTEND_RELEASE}' >> $GITHUB_OUTPUT
-
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ env.FRONTEND_REPOSITORY }}
-          ref: ${{ steps.variables.outputs.latest_frontend_release }}
-          path: pkg/api/internal/tools/frontend/wireguard-manager
 
       - name: Build Frontend
         working-directory: www
