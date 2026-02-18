@@ -1,67 +1,103 @@
 # wg-ui
 [![Go](https://github.com/UnAfraid/wg-ui/actions/workflows/go.yml/badge.svg)](https://github.com/UnAfraid/wg-ui/actions/workflows/go.yml)
 
-Self-contained WireGuard management service with a web UI and GraphQL API written in pure Go.
+`wg-ui` is a WireGuard management service with:
+- embedded web UI
+- GraphQL API
+- single Go binary deployment
 
-## Features
-* Ability to import existing wireguard configurations
-* Web UI - https://github.com/desislavsd/wireguard-manager
-* Multiple wireguard interfaces
-* Simple multi-user authentication support
-* Portable - No external dependencies (one single binary)
-* Configures wireguard by directly communicating with kernel module
-* Flexible deployment - binary and oci container
+## Highlights
+- Import and manage existing WireGuard interfaces
+- Manage multiple servers/interfaces and peers
+- Multi-user auth with JWT sessions
+- Automatic interface stats updates (`rxBytes`/`txBytes`)
+- Works with different WireGuard backends (kernel, NetworkManager, exec)
+- Deploy as a binary, package, or OCI container
 
-# Quickstart
-Compile from source or download a release from [Releases](https://github.com/UnAfraid/wg-ui/releases/latest) page
+## Backend Drivers
+Backends are configured by URL scheme.
 
-# Run manually from the shell
+| Driver | OS | URL example | Privileges / requirements |
+| --- | --- | --- | --- |
+| `linux` | Linux | `linux:///etc/wireguard` | Needs `CAP_NET_ADMIN` (typically run as root) to create/configure interfaces directly via kernel APIs |
+| `networkmanager` | Linux | `networkmanager:///` | Needs access to NetworkManager system DBus operations (typically root or polkit-authorized service user) |
+| `exec` | Linux, macOS | `exec:///etc/wireguard?sudo=true` | Uses `wg` / `wg-quick` and files under the configured path; with `sudo=true` it requires passwordless sudo for backend commands |
+
+`exec` is useful when you want behavior close to native WireGuard CLI tooling.
+
+### Exec backend sudo mode
+If the app does not run as root, set:
+- `exec:///etc/wireguard?sudo=true`
+
+`sudo=true` is non-interactive, so passwordless sudo (`NOPASSWD`) is required for invoked commands.
+- Linux commands: `wg`, `wg-quick`, `ip`, plus file operations needed for config management.
+- macOS commands: `wg`, `wg-quick`, `ifconfig`, `route`, `netstat`, plus file operations needed for config management.
+
+## Quickstart (Binary)
+Download a release from [Releases](https://github.com/UnAfraid/wg-ui/releases/latest) or build locally:
+
 ```shell
-# Copy default .env.dist as .env
+go build -o wg-ui .
+```
+
+Initialize config and run:
+
+```shell
+# 1) Copy default config
 cp .env.dist .env
 
-# Generate random jwt secret
-sed -i "s|WG_UI_JWT_SECRET=Any_secret_base64_value_here|WG_UI_JWT_SECRET=$(head -c 128 </dev/urandom | base64 -w 0 -)|g" .env
+# 2) Generate JWT secret and set it in .env (GNU/BSD sed compatible)
+JWT_SECRET="$(openssl rand -base64 64 | tr -d '\n')"
+sed -i.bak "s|^WG_UI_JWT_SECRET=.*|WG_UI_JWT_SECRET=${JWT_SECRET}|" .env && rm -f .env.bak
 
-# Start wg-ui
-env $(cat .env | xargs) ./wg-ui
+# 3) Start wg-ui with env vars from .env
+set -a
+. ./.env
+set +a
+./wg-ui
 ```
 
-# Debian/Ubuntu
-### amd64 (x64)
+Default endpoints:
+- App/UI: `http://127.0.0.1:4580`
+- GraphQL: `http://127.0.0.1:4580/query`
+- Health: `http://127.0.0.1:4580/health`
+
+## Docker
+```shell
+# Download compose + env files
+wget https://raw.githubusercontent.com/UnAfraid/wg-ui/master/docker-compose.yaml
+wget -O .env https://raw.githubusercontent.com/UnAfraid/wg-ui/master/.env.dist
+
+# Set JWT secret
+JWT_SECRET="$(openssl rand -base64 64 | tr -d '\n')"
+sed -i.bak "s|^WG_UI_JWT_SECRET=.*|WG_UI_JWT_SECRET=${JWT_SECRET}|" .env && rm -f .env.bak
+
+# Start
+docker compose up -d
+```
+
+## Linux Packages
+Debian/Ubuntu:
 ```shell
 sudo dpkg -i wg-ui_*_linux_amd64.deb
-```
-### arm64
-```shell
+# or
 sudo dpkg -i wg-ui_*_linux_arm64.deb
 ```
 
-
-# Archlinux
-### amd64 (x64)
+Arch Linux:
 ```shell
 sudo pacman -U --noconfirm wg-ui_*_linux_amd64.pkg.tar.zst
-```
-### arm64
-```shell
+# or
 sudo pacman -U --noconfirm wg-ui_*_linux_arm64.pkg.tar.zst
 ```
 
-# Docker
-```shell
-# Download the docker-compose file
-wget https://raw.githubusercontent.com/UnAfraid/wg-ui/master/docker-compose.yaml
+## Configuration
+Use `.env.dist` as the base. Important values:
+- `WG_UI_JWT_SECRET`
+- `WG_UI_HTTP_SERVER_HOST`
+- `WG_UI_HTTP_SERVER_PORT`
+- `WG_UI_BOLT_DB_PATH`
+- `WG_UI_INITIAL_EMAIL`
+- `WG_UI_INITIAL_PASSWORD`
 
-# Download the default .env file
-wget -O .env https://raw.githubusercontent.com/UnAfraid/wg-ui/master/.env.dist
-
-# Generate random jwt secret
-sed -i "s|WG_UI_JWT_SECRET=Any_secret_base64_value_here|WG_UI_JWT_SECRET=$(head -c 128 </dev/urandom | base64 -w 0 -)|g" .env
-
-# Modify .env
-nano .env
-
-# Start the container
-docker-compose up -d
-```
+See `.env.dist` for full configuration and defaults.
