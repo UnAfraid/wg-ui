@@ -75,7 +75,12 @@ func userBatchFn(userService user.Service) func(context.Context, []string) []*da
 		users, err := userService.FindUsers(ctx, &user.FindOptions{
 			Ids: ids,
 		})
-		return resultAndErrorToDataloaderResult(len(ids), adapt.Array(users, model.ToUser), err)
+		return resultAndErrorToDataloaderResult(ids, adapt.Array(users, model.ToUser), func(item *model.User) string {
+			if item == nil {
+				return ""
+			}
+			return item.ID.Value
+		}, err)
 	}
 }
 
@@ -84,7 +89,12 @@ func serverBatchFn(serverService server.Service) func(context.Context, []string)
 		servers, err := serverService.FindServers(ctx, &server.FindOptions{
 			Ids: ids,
 		})
-		return resultAndErrorToDataloaderResult(len(ids), adapt.Array(servers, model.ToServer), err)
+		return resultAndErrorToDataloaderResult(ids, adapt.Array(servers, model.ToServer), func(item *model.Server) string {
+			if item == nil {
+				return ""
+			}
+			return item.ID.Value
+		}, err)
 	}
 }
 
@@ -93,7 +103,12 @@ func peerBatchFn(peerService peer.Service) func(context.Context, []string) []*da
 		peers, err := peerService.FindPeers(ctx, &peer.FindOptions{
 			Ids: ids,
 		})
-		return resultAndErrorToDataloaderResult(len(ids), adapt.Array(peers, model.ToPeer), err)
+		return resultAndErrorToDataloaderResult(ids, adapt.Array(peers, model.ToPeer), func(item *model.Peer) string {
+			if item == nil {
+				return ""
+			}
+			return item.ID.Value
+		}, err)
 	}
 }
 
@@ -102,7 +117,12 @@ func backendBatchFn(backendService backend.Service) func(context.Context, []stri
 		backends, err := backendService.FindBackends(ctx, &backend.FindOptions{
 			Ids: ids,
 		})
-		return resultAndErrorToDataloaderResult(len(ids), adapt.Array(backends, model.ToBackend), err)
+		return resultAndErrorToDataloaderResult(ids, adapt.Array(backends, model.ToBackend), func(item *model.Backend) string {
+			if item == nil {
+				return ""
+			}
+			return item.ID.Value
+		}, err)
 	}
 }
 
@@ -110,10 +130,15 @@ func newBatchedLoader[K comparable, V any](batchFn func(context.Context, []K) []
 	return dataloader.NewBatchedLoader(batchFn, dataloader.WithWait[K, V](wait), dataloader.WithInputCapacity[K, V](maxBatch))
 }
 
-func resultAndErrorToDataloaderResult[T any](length int, values []T, err error) []*dataloader.Result[T] {
+func resultAndErrorToDataloaderResult[K comparable, T any](
+	keys []K,
+	values []T,
+	keyFn func(T) K,
+	err error,
+) []*dataloader.Result[T] {
 	if err != nil {
-		result := make([]*dataloader.Result[T], length)
-		for i := 0; i < length; i++ {
+		result := make([]*dataloader.Result[T], len(keys))
+		for i := 0; i < len(keys); i++ {
 			result[i] = &dataloader.Result[T]{
 				Error: err,
 			}
@@ -121,9 +146,21 @@ func resultAndErrorToDataloaderResult[T any](length int, values []T, err error) 
 		return result
 	}
 
-	return adapt.Array(values, func(value T) *dataloader.Result[T] {
-		return &dataloader.Result[T]{
-			Data: value,
+	valuesByKey := make(map[K]T, len(values))
+	for _, value := range values {
+		valuesByKey[keyFn(value)] = value
+	}
+
+	result := make([]*dataloader.Result[T], len(keys))
+	for i, key := range keys {
+		value, ok := valuesByKey[key]
+		if ok {
+			result[i] = &dataloader.Result[T]{Data: value}
+			continue
 		}
-	})
+		var zero T
+		result[i] = &dataloader.Result[T]{Data: zero}
+	}
+
+	return result
 }
