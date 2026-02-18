@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useApolloClient } from "@apollo/client";
 import { useTheme } from "next-themes";
@@ -11,6 +12,7 @@ import {
   LogOut,
   Moon,
   Sun,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +22,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/components/auth-guard";
 import { clearToken } from "@/lib/auth";
@@ -37,12 +47,14 @@ export function Navbar() {
   const client = useApolloClient();
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     clearToken();
     await client.clearStore();
     navigate("/login", { replace: true });
   };
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
   const initials = user.email
     .split("@")[0]
@@ -52,17 +64,65 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b bg-card">
       <div className="mx-auto flex h-14 max-w-7xl items-center px-4 lg:px-6">
-        <Link
-          to="/servers"
-          className="mr-8 flex items-center gap-2 text-foreground"
-        >
-          <Shield className="h-5 w-5 text-primary" />
-          <span className="text-sm font-semibold tracking-tight">
-            WireGuard Manager
-          </span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 md:hidden"
+                aria-label="Open navigation"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] sm:w-[320px]">
+              <SheetHeader className="text-left">
+                <SheetTitle className="flex items-center gap-2 text-base">
+                  <Shield className="h-4 w-4 text-primary" />
+                  WireGuard Manager
+                </SheetTitle>
+              </SheetHeader>
 
-        <nav className="flex items-center gap-1" aria-label="Main navigation">
+              <div className="mt-6 flex flex-col gap-1">
+                {navigation.map((item) => {
+                  const isActive = pathname.startsWith(item.href);
+                  return (
+                    <SheetClose asChild key={item.href}>
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-accent text-foreground"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
+                      </Link>
+                    </SheetClose>
+                  );
+                })}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Link
+            to="/servers"
+            className="flex items-center gap-2 text-foreground"
+          >
+            <Shield className="h-5 w-5 text-primary" />
+            <span className="hidden text-sm font-semibold tracking-tight sm:inline">
+              WireGuard Manager
+            </span>
+          </Link>
+        </div>
+
+        <nav
+          className="ml-6 hidden items-center gap-1 md:flex"
+          aria-label="Main navigation"
+        >
           {navigation.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
@@ -88,7 +148,7 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={toggleTheme}
             aria-label="Toggle theme"
           >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
