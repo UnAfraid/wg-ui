@@ -149,7 +149,9 @@ export function HooksEditor(props: HooksEditorProps) {
               >
                 <Checkbox
                   checked={
-                    (hook as Record<string, unknown>)[field.key] as boolean
+                    (hook as unknown as Record<string, unknown>)[
+                      field.key
+                    ] as boolean
                   }
                   onCheckedChange={(checked) =>
                     updateHook(index, field.key, !!checked)

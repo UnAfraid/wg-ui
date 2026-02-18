@@ -47,13 +47,15 @@ const peerSchema = z.object({
   presharedKey: z.string().optional(),
   endpoint: z.string().optional(),
   allowedIPs: z.string().min(1, "At least one allowed IP is required"),
-  persistentKeepalive: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .max(65535)
-    .optional()
-    .or(z.literal("")),
+  persistentKeepalive: z.preprocess(
+    (value) => {
+      if (value === "" || value === null || value === undefined) {
+        return undefined;
+      }
+      return value;
+    },
+    z.coerce.number().int().min(0).max(65535).optional()
+  ),
 });
 
 type PeerFormValues = z.infer<typeof peerSchema>;
@@ -63,16 +65,34 @@ interface PeerFormProps {
   peer?: Peer;
 }
 
-export function PeerForm({ serverId, peer }: PeerFormProps) {
-  const navigate = useNavigate();
-  const isEditing = !!peer;
-  const [hooks, setHooks] = useState<PeerHookValue[]>(
-    peer?.hooks?.map((h) => ({
+function normalizeAllowedIPs(value: string): string[] {
+  return value
+    .split(",")
+    .map((ip) => ip.trim())
+    .filter(Boolean);
+}
+
+function areStringArraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((value, index) => value === b[index]);
+}
+
+function normalizePeerHooks(hooks?: Peer["hooks"] | null): PeerHookValue[] {
+  return (
+    hooks?.map((h) => ({
       command: h.command,
       runOnCreate: h.runOnCreate,
       runOnDelete: h.runOnDelete,
       runOnUpdate: h.runOnUpdate,
     })) ?? []
+  );
+}
+
+export function PeerForm({ serverId, peer }: PeerFormProps) {
+  const navigate = useNavigate();
+  const isEditing = !!peer;
+  const [hooks, setHooks] = useState<PeerHookValue[]>(
+    normalizePeerHooks(peer?.hooks)
   );
   const [generatedPrivateKey, setGeneratedPrivateKey] = useState<string | null>(
     null
@@ -112,8 +132,7 @@ export function PeerForm({ serverId, peer }: PeerFormProps) {
       presharedKey: "",
       endpoint: peer?.endpoint ?? "",
       allowedIPs: peer?.allowedIPs?.join(", ") ?? "",
-      persistentKeepalive:
-        peer?.persistentKeepalive ?? ("" as unknown as undefined),
+      persistentKeepalive: peer?.persistentKeepalive ?? undefined,
     },
   });
 
@@ -134,25 +153,54 @@ export function PeerForm({ serverId, peer }: PeerFormProps) {
 
   const onSubmit = async (values: PeerFormValues) => {
     try {
-      const allowedIPs = values.allowedIPs
-        .split(",")
-        .map((ip) => ip.trim())
-        .filter(Boolean);
+      const allowedIPs = normalizeAllowedIPs(values.allowedIPs);
 
       if (isEditing) {
+        const updateInput: Record<string, unknown> = { id: peer.id };
+        const description = values.description || "";
+        const endpoint = values.endpoint || "";
+        const currentHooks = hooks.length > 0 ? hooks : [];
+        const originalHooks = normalizePeerHooks(peer.hooks);
+        const originalAllowedIPs = peer.allowedIPs ?? [];
+        const originalKeepalive = peer.persistentKeepalive ?? 0;
+        const presharedKey = values.presharedKey?.trim() || "";
+
+        if (values.name !== peer.name) updateInput.name = values.name;
+        if (description !== (peer.description || "")) {
+          updateInput.description = description;
+        }
+        if (values.publicKey !== peer.publicKey) {
+          updateInput.publicKey = values.publicKey;
+        }
+        if (endpoint !== (peer.endpoint || "")) {
+          updateInput.endpoint = endpoint;
+        }
+        if (!areStringArraysEqual(allowedIPs, originalAllowedIPs)) {
+          updateInput.allowedIPs = allowedIPs;
+        }
+        if (presharedKey.length > 0 && presharedKey !== (peer.presharedKey || "")) {
+          updateInput.presharedKey = presharedKey;
+        }
+        if (values.persistentKeepalive === undefined) {
+          if (originalKeepalive !== 0) {
+            updateInput.persistentKeepalive = 0;
+          }
+        } else if (values.persistentKeepalive !== originalKeepalive) {
+          updateInput.persistentKeepalive = values.persistentKeepalive;
+        }
+        if (JSON.stringify(currentHooks) !== JSON.stringify(originalHooks)) {
+          updateInput.hooks = currentHooks;
+        }
+
+        if (Object.keys(updateInput).length === 1) {
+          toast.info("No changes to save");
+          navigate(`/servers/${serverId}`);
+          return;
+        }
+
         await updatePeer({
           variables: {
-            input: {
-              id: peer.id,
-              name: values.name,
-              description: values.description || "",
-              publicKey: values.publicKey,
-              presharedKey: values.presharedKey || undefined,
-              endpoint: values.endpoint || "",
-              allowedIPs,
-              persistentKeepalive: values.persistentKeepalive || undefined,
-              hooks: hooks.length > 0 ? hooks : undefined,
-            },
+            input: updateInput,
           },
         });
         toast.success("Peer updated");
@@ -167,7 +215,7 @@ export function PeerForm({ serverId, peer }: PeerFormProps) {
               presharedKey: values.presharedKey || undefined,
               endpoint: values.endpoint || "",
               allowedIPs,
-              persistentKeepalive: values.persistentKeepalive || undefined,
+              persistentKeepalive: values.persistentKeepalive,
               hooks: hooks.length > 0 ? hooks : undefined,
             },
           },

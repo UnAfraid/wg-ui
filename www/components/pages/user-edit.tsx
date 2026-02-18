@@ -86,14 +86,29 @@ export default function EditUserPage({ id }: { id: string }) {
   });
 
   const onSubmit = async (values: EditUserFormValues) => {
+    if (!user) {
+      toast.error("User not found");
+      return;
+    }
+
     try {
+      const updateInput: Record<string, string> = { id };
+
+      if (values.email !== user.email) {
+        updateInput.email = values.email;
+      }
+      if (values.password && values.password.length > 0) {
+        updateInput.password = values.password;
+      }
+
+      if (Object.keys(updateInput).length === 1) {
+        toast.info("No changes to save");
+        return;
+      }
+
       await updateUser({
         variables: {
-          input: {
-            id,
-            email: values.email,
-            ...(values.password ? { password: values.password } : {}),
-          },
+          input: updateInput,
         },
       });
       toast.success("User updated");

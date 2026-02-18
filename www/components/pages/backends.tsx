@@ -253,6 +253,10 @@ function buildBackendUrl(parts: UrlParts): string {
   }
 }
 
+function normalizeBackendUrl(raw: string): string {
+  return buildBackendUrl(parseBackendUrl(raw));
+}
+
 function maskBackendUrl(raw: string): string {
   if (!raw) return raw;
   return raw.replace(
@@ -347,9 +351,25 @@ function BackendFormDialog({
     e.preventDefault();
     try {
       if (isEditing) {
+        const updateInput: Record<string, unknown> = { id: backend.id };
+        const originalUrl = normalizeBackendUrl(backend.url);
+        const currentUrl = normalizeBackendUrl(computedUrl);
+
+        if (name !== backend.name) updateInput.name = name;
+        if (description !== backend.description) updateInput.description = description;
+        if (currentUrl !== originalUrl) updateInput.url = computedUrl;
+        if (enabled !== backend.enabled) updateInput.enabled = enabled;
+
+        if (Object.keys(updateInput).length === 1) {
+          toast.info("No changes to save");
+          setOpen(false);
+          onClose?.();
+          return;
+        }
+
         await updateBackend({
           variables: {
-            input: { id: backend.id, name, description, url: computedUrl, enabled },
+            input: updateInput,
           },
         });
         toast.success("Backend updated");

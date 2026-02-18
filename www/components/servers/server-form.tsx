@@ -53,11 +53,24 @@ interface ServerFormProps {
   showAdvanced?: boolean;
 }
 
-export function ServerForm({ server, showAdvanced = false }: ServerFormProps) {
-  const navigate = useNavigate();
-  const isEditing = !!server;
-  const [hooks, setHooks] = useState<ServerHookValue[]>(
-    server?.hooks?.map((h) => ({
+function normalizeDnsList(value: string): string[] {
+  if (!value.trim()) {
+    return [];
+  }
+  return value
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean);
+}
+
+function areStringArraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((value, index) => value === b[index]);
+}
+
+function normalizeServerHooks(hooks?: Server["hooks"] | null): ServerHookValue[] {
+  return (
+    hooks?.map((h) => ({
       command: h.command,
       runOnCreate: h.runOnCreate,
       runOnDelete: h.runOnDelete,
@@ -65,6 +78,14 @@ export function ServerForm({ server, showAdvanced = false }: ServerFormProps) {
       runOnStop: h.runOnStop,
       runOnUpdate: h.runOnUpdate,
     })) ?? []
+  );
+}
+
+export function ServerForm({ server, showAdvanced = false }: ServerFormProps) {
+  const navigate = useNavigate();
+  const isEditing = !!server;
+  const [hooks, setHooks] = useState<ServerHookValue[]>(
+    normalizeServerHooks(server?.hooks)
   );
   const [advancedOpen, setAdvancedOpen] = useState(showAdvanced);
 
@@ -120,41 +141,52 @@ export function ServerForm({ server, showAdvanced = false }: ServerFormProps) {
 
   const onSubmit = async (values: ServerFormValues) => {
     try {
-      const dnsArray = values.dns
-        ? values.dns
-            .split(",")
-            .map((d) => d.trim())
-            .filter(Boolean)
-        : undefined;
+      const dnsArray = normalizeDnsList(values.dns || "");
 
       if (isEditing) {
-        // Only send fields that have actually changed
-        const dirtyFields = form.formState.dirtyFields;
         const updateInput: Record<string, unknown> = { id: server.id };
+        const description = values.description || "";
+        const listenPort = typeof values.listenPort === "number" ? values.listenPort : null;
+        const firewallMark =
+          typeof values.firewallMark === "number" ? values.firewallMark : null;
+        const mtu = typeof values.mtu === "number" ? values.mtu : undefined;
+        const currentHooks = hooks.length > 0 ? hooks : [];
+        const originalHooks = normalizeServerHooks(server.hooks);
+        const originalDns = server.dns ?? [];
 
-        if (dirtyFields.description) updateInput.description = values.description || "";
-        if (dirtyFields.address) updateInput.address = values.address;
-        if (dirtyFields.listenPort) updateInput.listenPort = values.listenPort || undefined;
-        if (dirtyFields.dns) updateInput.dns = dnsArray;
-        if (dirtyFields.mtu) updateInput.mtu = values.mtu || undefined;
-        if (dirtyFields.firewallMark) updateInput.firewallMark = values.firewallMark || undefined;
-        if (dirtyFields.privateKey && values.privateKey) updateInput.privateKey = values.privateKey;
-        if (dirtyFields.enabled) updateInput.enabled = values.enabled;
+        if (description !== (server.description || "")) {
+          updateInput.description = description;
+        }
+        if (values.address !== server.address) {
+          updateInput.address = values.address;
+        }
+        if (listenPort !== (server.listenPort ?? null)) {
+          updateInput.listenPort = listenPort;
+        }
+        if (!areStringArraysEqual(dnsArray, originalDns)) {
+          updateInput.dns = dnsArray;
+        }
+        if (mtu !== undefined && mtu !== server.mtu) {
+          updateInput.mtu = mtu;
+        }
+        if (firewallMark !== (server.firewallMark ?? null)) {
+          updateInput.firewallMark = firewallMark;
+        }
+        if (values.privateKey?.trim()) {
+          updateInput.privateKey = values.privateKey.trim();
+        }
+        if (values.enabled !== server.enabled) {
+          updateInput.enabled = values.enabled;
+        }
+        if (JSON.stringify(currentHooks) !== JSON.stringify(originalHooks)) {
+          updateInput.hooks = currentHooks;
+        }
 
-        // Always send hooks if they differ from the original
-        const hooksChanged =
-          JSON.stringify(hooks) !==
-          JSON.stringify(
-            server.hooks?.map((h) => ({
-              command: h.command,
-              runOnCreate: h.runOnCreate,
-              runOnDelete: h.runOnDelete,
-              runOnStart: h.runOnStart,
-              runOnStop: h.runOnStop,
-              runOnUpdate: h.runOnUpdate,
-            })) ?? []
-          );
-        if (hooksChanged) updateInput.hooks = hooks.length > 0 ? hooks : [];
+        if (Object.keys(updateInput).length === 1) {
+          toast.info("No changes to save");
+          navigate(`/servers/${server.id}`);
+          return;
+        }
 
         await updateServer({
           variables: { input: updateInput },
@@ -169,7 +201,7 @@ export function ServerForm({ server, showAdvanced = false }: ServerFormProps) {
               description: values.description || "",
               address: values.address,
               listenPort: values.listenPort || undefined,
-              dns: dnsArray,
+              dns: dnsArray.length > 0 ? dnsArray : undefined,
               mtu: values.mtu || undefined,
               firewallMark: values.firewallMark || undefined,
               privateKey: values.privateKey || undefined,
