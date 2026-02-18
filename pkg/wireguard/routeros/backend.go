@@ -139,8 +139,10 @@ func (b *routerOSBackend) Up(ctx context.Context, options driver.ConfigureOption
 			return nil, err
 		}
 	} else {
-		if err := b.patchEntry(ctx, "interface/wireguard", value(iface, ".id"), payload); err != nil {
-			return nil, err
+		if interfaceNeedsPatch(iface, payload) {
+			if err := b.patchEntry(ctx, "interface/wireguard", value(iface, ".id"), payload); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -415,8 +417,10 @@ func (b *routerOSBackend) reconcilePeers(ctx context.Context, iface entry, desir
 			continue
 		}
 
-		if err := b.patchEntry(ctx, "interface/wireguard/peers", value(existing[0], ".id"), payload); err != nil {
-			return err
+		if peerNeedsPatch(existing[0], payload) {
+			if err := b.patchEntry(ctx, "interface/wireguard/peers", value(existing[0], ".id"), payload); err != nil {
+				return err
+			}
 		}
 
 		for _, duplicate := range existing[1:] {
@@ -610,6 +614,130 @@ func containsBackToHomeMarker(value string) bool {
 	}
 
 	return strings.Contains(normalized, "back-to-home") || strings.Contains(normalized, "back to home")
+}
+
+func interfaceNeedsPatch(existing entry, desired map[string]string) bool {
+	if desired == nil {
+		return false
+	}
+
+	for key, desiredValue := range desired {
+		switch key {
+		case "name":
+			if !strings.EqualFold(strings.TrimSpace(value(existing, "name")), strings.TrimSpace(desiredValue)) {
+				return true
+			}
+		case "private-key":
+			if strings.TrimSpace(value(existing, "private-key")) != strings.TrimSpace(desiredValue) {
+				return true
+			}
+		case "comment":
+			if strings.TrimSpace(value(existing, "comment")) != strings.TrimSpace(desiredValue) {
+				return true
+			}
+		case "mtu":
+			if normalizeOptionalInt(value(existing, "mtu")) != normalizeOptionalInt(desiredValue) {
+				return true
+			}
+		case "listen-port":
+			if normalizeOptionalInt(value(existing, "listen-port")) != normalizeOptionalInt(desiredValue) {
+				return true
+			}
+		case "disabled":
+			if normalizeBoolString(value(existing, "disabled")) != normalizeBoolString(desiredValue) {
+				return true
+			}
+		default:
+			if strings.TrimSpace(value(existing, key)) != strings.TrimSpace(desiredValue) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func peerNeedsPatch(existing entry, desired map[string]string) bool {
+	if desired == nil {
+		return false
+	}
+
+	if !strings.EqualFold(strings.TrimSpace(value(existing, "public-key")), strings.TrimSpace(desired["public-key"])) {
+		return true
+	}
+
+	if normalizeCSV(value(existing, "allowed-address")) != normalizeCSV(desired["allowed-address"]) {
+		return true
+	}
+
+	if normalizeEndpointAddress(value(existing, "endpoint-address")) != normalizeEndpointAddress(desired["endpoint-address"]) {
+		return true
+	}
+
+	if normalizeOptionalInt(value(existing, "endpoint-port")) != normalizeOptionalInt(desired["endpoint-port"]) {
+		return true
+	}
+
+	if normalizeOptionalInt(value(existing, "persistent-keepalive")) != normalizeOptionalInt(desired["persistent-keepalive"]) {
+		return true
+	}
+
+	if strings.TrimSpace(value(existing, "preshared-key")) != strings.TrimSpace(desired["preshared-key"]) {
+		return true
+	}
+
+	if normalizeBoolString(value(existing, "disabled")) != normalizeBoolString(desired["disabled"]) {
+		return true
+	}
+
+	return false
+}
+
+func normalizeCSV(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+
+	parts := strings.Split(raw, ",")
+	values := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		values = append(values, part)
+	}
+
+	sort.Strings(values)
+	return strings.Join(values, ",")
+}
+
+func normalizeEndpointAddress(raw string) string {
+	return strings.Trim(strings.TrimSpace(raw), "[]")
+}
+
+func normalizeOptionalInt(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+
+	parsed, err := strconv.Atoi(raw)
+	if err != nil {
+		return raw
+	}
+	if parsed <= 0 {
+		return ""
+	}
+	return strconv.Itoa(parsed)
+}
+
+func normalizeBoolString(raw string) string {
+	if parseBool(raw) {
+		return "true"
+	}
+	return "false"
 }
 
 func endpointValue(peerEntry entry) string {

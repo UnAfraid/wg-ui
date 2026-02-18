@@ -93,3 +93,76 @@ func TestShouldSkipForeignInterface(t *testing.T) {
 		})
 	}
 }
+
+func TestPeerNeedsPatch(t *testing.T) {
+	existing := entry{
+		"public-key":           "pubkey",
+		"allowed-address":      "10.0.0.2/32, 10.0.0.3/32",
+		"endpoint-address":     "vpn.example.com",
+		"endpoint-port":        "51820",
+		"persistent-keepalive": "25",
+		"preshared-key":        "psk",
+		"disabled":             "false",
+	}
+
+	desiredSame := map[string]string{
+		"public-key":           "pubkey",
+		"allowed-address":      "10.0.0.3/32,10.0.0.2/32",
+		"endpoint-address":     "vpn.example.com",
+		"endpoint-port":        "51820",
+		"persistent-keepalive": "25",
+		"preshared-key":        "psk",
+		"disabled":             "false",
+	}
+	if peerNeedsPatch(existing, desiredSame) {
+		t.Fatalf("expected no patch for equivalent peer settings")
+	}
+
+	desiredChanged := map[string]string{
+		"public-key":           "pubkey",
+		"allowed-address":      "10.0.0.4/32",
+		"endpoint-address":     "vpn.example.com",
+		"endpoint-port":        "51820",
+		"persistent-keepalive": "25",
+		"preshared-key":        "psk",
+		"disabled":             "false",
+	}
+	if !peerNeedsPatch(existing, desiredChanged) {
+		t.Fatalf("expected patch when allowed-address changes")
+	}
+}
+
+func TestInterfaceNeedsPatch(t *testing.T) {
+	existing := entry{
+		"name":        "wg0",
+		"private-key": "private-key",
+		"comment":     "Office",
+		"mtu":         "1420",
+		"listen-port": "51820",
+		"disabled":    "false",
+	}
+
+	desiredSame := map[string]string{
+		"name":        "wg0",
+		"private-key": "private-key",
+		"comment":     "Office",
+		"mtu":         "1420",
+		"listen-port": "51820",
+		"disabled":    "false",
+	}
+	if interfaceNeedsPatch(existing, desiredSame) {
+		t.Fatalf("expected no patch for equivalent interface settings")
+	}
+
+	desiredChanged := map[string]string{
+		"name":        "wg0",
+		"private-key": "private-key",
+		"comment":     "Home",
+		"mtu":         "1420",
+		"listen-port": "51820",
+		"disabled":    "false",
+	}
+	if !interfaceNeedsPatch(existing, desiredChanged) {
+		t.Fatalf("expected patch when interface comment changes")
+	}
+}
