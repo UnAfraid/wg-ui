@@ -73,7 +73,8 @@ func (s *Server) validate(fieldMask *UpdateFieldMask) error {
 	}
 
 	if fieldMask == nil || fieldMask.FirewallMark {
-		if s.FirewallMark != nil && (*s.FirewallMark < 1 || *s.FirewallMark > math.MaxInt32) {
+		// WireGuard allows fwmark 0 ("off"), so only negative values are invalid.
+		if s.FirewallMark != nil && (*s.FirewallMark < 0 || *s.FirewallMark > math.MaxInt32) {
 			return fmt.Errorf("invalid firewall mark: %d", *s.FirewallMark)
 		}
 	}

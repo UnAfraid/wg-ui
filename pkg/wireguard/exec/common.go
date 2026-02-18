@@ -74,7 +74,7 @@ func renderConfig(options driver.ConfigureOptions) string {
 		sb.WriteString("\n")
 	}
 
-	if wireguardOptions.FirewallMark != nil {
+	if wireguardOptions.FirewallMark != nil && *wireguardOptions.FirewallMark > 0 {
 		sb.WriteString("FwMark = ")
 		sb.WriteString(strconv.Itoa(*wireguardOptions.FirewallMark))
 		sb.WriteString("\n")
@@ -455,11 +455,11 @@ func parseDumpInt(v string) (int, error) {
 	if v == "" || v == "off" || v == "(none)" {
 		return 0, nil
 	}
-	n, err := strconv.Atoi(v)
+	n, err := strconv.ParseInt(v, 0, 64)
 	if err != nil {
 		return 0, err
 	}
-	return n, nil
+	return int(n), nil
 }
 
 func parseConfigInt(v string) (int, error) {

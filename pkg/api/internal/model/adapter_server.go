@@ -18,7 +18,7 @@ func CreateServerInputToCreateServerOptions(input CreateServerInput) (*server.Cr
 		Enabled:      adapt.Dereference(input.Enabled.Value()),
 		PrivateKey:   adapt.Dereference(input.PrivateKey.Value()),
 		ListenPort:   input.ListenPort.Value(),
-		FirewallMark: input.FirewallMark.Value(),
+		FirewallMark: nilIfZeroIntPointer(input.FirewallMark.Value()),
 		Address:      input.Address,
 		DNS:          input.DNS.Value(),
 		MTU:          adapt.Dereference(input.Mtu.Value()),
@@ -132,7 +132,7 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 	}
 
 	if fieldMask.FirewallMark {
-		firewallMark = input.FirewallMark.Value()
+		firewallMark = nilIfZeroIntPointer(input.FirewallMark.Value())
 	}
 
 	if fieldMask.Address {
@@ -164,6 +164,13 @@ func UpdateServerInputToUpdateOptionsAndUpdateFieldMask(input UpdateServerInput)
 	}
 
 	return options, fieldMask, nil
+}
+
+func nilIfZeroIntPointer(v *int) *int {
+	if v == nil || *v == 0 {
+		return nil
+	}
+	return v
 }
 
 func ToServerInterfaceStats(stats server.Stats) *ServerInterfaceStats {
