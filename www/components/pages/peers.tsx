@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@apollo/client";
 import { Link } from "react-router-dom";
 import { Search, Loader2, Network, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -21,8 +28,17 @@ import { PEERS_QUERY } from "@/lib/graphql/queries";
 import { PEER_CHANGED_SUBSCRIPTION } from "@/lib/graphql/subscriptions";
 import type { Peer } from "@/lib/graphql/types";
 
+type GroupBy = "none" | "server" | "backend";
+
+interface PeerGroup {
+  key: string;
+  label: string;
+  peers: Peer[];
+}
+
 export default function PeersPage() {
   const [search, setSearch] = useState("");
+  const [groupBy, setGroupBy] = useState<GroupBy>("none");
   const { data, loading, subscribeToMore } = useQuery(PEERS_QUERY);
 
   const subscribedRef = useRef(false);
@@ -75,6 +91,44 @@ export default function PeersPage() {
     );
   }, [peers, searchValue]);
 
+  const groupedPeers = useMemo<PeerGroup[]>(() => {
+    if (groupBy === "none") {
+      return [{ key: "all", label: "All peers", peers: filteredPeers }];
+    }
+
+    const groups = new Map<string, PeerGroup>();
+    for (const peer of filteredPeers) {
+      const groupName =
+        groupBy === "server"
+          ? peer.server?.name?.trim() || "No Server"
+          : peer.backend?.name?.trim() || "No Backend";
+      const groupId =
+        groupBy === "server"
+          ? peer.server?.id?.trim()
+          : peer.backend?.id?.trim();
+      const groupKey = groupId || `name:${groupName.toLowerCase()}`;
+
+      let group = groups.get(groupKey);
+      if (!group) {
+        group = { key: groupKey, label: groupName, peers: [] };
+        groups.set(groupKey, group);
+      }
+      group.peers.push(peer);
+    }
+
+    const result = Array.from(groups.values());
+    result.sort((a, b) =>
+      a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+    );
+    for (const group of result) {
+      group.peers.sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+      );
+    }
+
+    return result;
+  }, [filteredPeers, groupBy]);
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -87,14 +141,32 @@ export default function PeersPage() {
       </div>
 
       {peers.length > 0 && (
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search by peer name or public key..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by peer name or public key..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <div className="w-full sm:w-48">
+            <Select
+              value={groupBy}
+              onValueChange={(value) => setGroupBy(value as GroupBy)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Group by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Group: None</SelectItem>
+                <SelectItem value="server">Group: Server</SelectItem>
+                <SelectItem value="backend">Group: Backend</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
 
@@ -126,66 +198,84 @@ export default function PeersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPeers.map((peer) => {
-                const serverDetailPath = peer.server?.id
-                  ? `/servers/${encodeURIComponent(peer.server.id)}`
-                  : null;
-                const peerEditPath =
-                  serverDetailPath != null
-                    ? `${serverDetailPath}/peers/${encodeURIComponent(peer.id)}/edit`
-                    : null;
+              {groupedPeers.map((group) => (
+                <Fragment key={group.key}>
+                  {groupBy !== "none" && (
+                    <TableRow className="bg-muted/20 hover:bg-muted/20">
+                      <TableCell colSpan={6} className="py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {group.label}
+                          </span>
+                          <Badge variant="secondary" className="text-[10px]">
+                            {group.peers.length}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {group.peers.map((peer) => {
+                    const serverDetailPath = peer.server?.id
+                      ? `/servers/${encodeURIComponent(peer.server.id)}`
+                      : null;
+                    const peerEditPath =
+                      serverDetailPath != null
+                        ? `${serverDetailPath}/peers/${encodeURIComponent(peer.id)}/edit`
+                        : null;
 
-                return (
-                <TableRow key={peer.id}>
-                  <TableCell>
-                    <span className="font-medium text-foreground">{peer.name}</span>
-                    {peer.description && (
-                      <p className="mt-0.5 max-w-xs truncate text-xs text-muted-foreground">
-                        {peer.description}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <CopyableText text={peer.publicKey} />
-                  </TableCell>
-                  <TableCell>
-                    {serverDetailPath ? (
-                      <Link
-                        to={serverDetailPath}
-                        className="text-sm font-medium text-foreground hover:text-primary"
-                      >
-                        {peer.server.name}
-                      </Link>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">--</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {peer.backend?.name ? (
-                      <Badge variant="secondary">{peer.backend.name}</Badge>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">--</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden font-mono text-xs text-muted-foreground md:table-cell">
-                    {peer.stats?.endpoint || peer.endpoint || "--"}
-                  </TableCell>
-                  <TableCell>
-                    {peerEditPath ? (
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={peerEditPath}>
-                          <Pencil className="h-3 w-3" />
-                        </Link>
-                      </Button>
-                    ) : (
-                      <Button variant="ghost" size="sm" disabled>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-                );
-              })}
+                    return (
+                      <TableRow key={peer.id}>
+                        <TableCell>
+                          <span className="font-medium text-foreground">{peer.name}</span>
+                          {peer.description && (
+                            <p className="mt-0.5 max-w-xs truncate text-xs text-muted-foreground">
+                              {peer.description}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <CopyableText text={peer.publicKey} />
+                        </TableCell>
+                        <TableCell>
+                          {serverDetailPath ? (
+                            <Link
+                              to={serverDetailPath}
+                              className="text-sm font-medium text-foreground hover:text-primary"
+                            >
+                              {peer.server.name}
+                            </Link>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">--</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {peer.backend?.name ? (
+                            <Badge variant="secondary">{peer.backend.name}</Badge>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">--</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden font-mono text-xs text-muted-foreground md:table-cell">
+                          {peer.stats?.endpoint || peer.endpoint || "--"}
+                        </TableCell>
+                        <TableCell>
+                          {peerEditPath ? (
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={peerEditPath}>
+                                <Pencil className="h-3 w-3" />
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button variant="ghost" size="sm" disabled>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </Fragment>
+              ))}
             </TableBody>
           </Table>
         </div>
