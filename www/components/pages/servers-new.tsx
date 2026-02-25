@@ -79,7 +79,6 @@ const centralizedSchema = z.object({
   description: z.string().optional(),
   address: z.string().min(1, "Address is required"),
   listenPort: z.coerce.number().int().min(1).max(65535),
-  dns: z.string().optional(),
   privateKey: z.string().optional(),
   enabled: z.boolean(),
 });
@@ -222,7 +221,6 @@ function CentralizedForm({ backendId }: { backendId: string }) {
       description: "",
       address: "10.0.0.1/24",
       listenPort: 51820,
-      dns: "1.1.1.1",
       privateKey: "",
       enabled: true,
     },
@@ -242,10 +240,6 @@ function CentralizedForm({ backendId }: { backendId: string }) {
 
   const onSubmit = async (values: z.infer<typeof centralizedSchema>) => {
     try {
-      const dnsArray = values.dns
-        ? values.dns.split(",").map((d) => d.trim()).filter(Boolean)
-        : undefined;
-
       const { data } = await createServer({
         variables: {
           input: {
@@ -254,7 +248,6 @@ function CentralizedForm({ backendId }: { backendId: string }) {
             description: values.description || "",
             address: values.address,
             listenPort: values.listenPort,
-            dns: dnsArray,
             privateKey: values.privateKey || undefined,
             enabled: values.enabled,
           },
@@ -319,34 +312,19 @@ function CentralizedForm({ backendId }: { backendId: string }) {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="listenPort"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Listen Port</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="51820" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="dns"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>DNS Servers</FormLabel>
-                    <FormControl>
-                      <Input placeholder="1.1.1.1, 8.8.8.8" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="listenPort"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Listen Port</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="51820" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="enabled"
