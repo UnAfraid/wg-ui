@@ -19,7 +19,7 @@ Backends are configured by URL scheme.
 
 | Driver | OS | URL example                                                             | Privileges / requirements |
 | --- | --- |-------------------------------------------------------------------------| --- |
-| `linux` | Linux | `linux:///etc/wireguard`                                                | Needs `CAP_NET_ADMIN` (typically run as root) to create/configure interfaces directly via kernel APIs |
+| `linux` | Linux | `linux://`                                                              | Needs `CAP_NET_ADMIN` (typically run as root) to create/configure interfaces directly via kernel APIs |
 | `networkmanager` | Linux | `networkmanager:///`                                                    | Needs access to NetworkManager system DBus operations (typically root or polkit-authorized service user) |
 | `exec` | Linux, macOS | `exec:///etc/wireguard?sudo=true`                                       | Uses `wg` / `wg-quick` and files under the configured path; with `sudo=true` it requires passwordless sudo for backend commands |
 | `routeros` | Any OS (network reachability required) | `routeros://admin:secret@192.168.88.1:443/rest?insecureSkipVerify=true` | Uses RouterOS REST API over HTTPS to manage WireGuard interfaces and peers |

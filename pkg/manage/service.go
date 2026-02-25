@@ -183,7 +183,7 @@ func (s *service) getOrCreateDefaultBackend(ctx context.Context) (*backend.Backe
 	return s.backendService.CreateBackend(ctx, &backend.CreateOptions{
 		Name:        "Linux (Default)",
 		Description: "Default backend created for legacy server migration",
-		Url:         "linux:///etc/wireguard",
+		Url:         "linux://",
 		Enabled:     true,
 	}, "")
 }
