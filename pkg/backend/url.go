@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"sort"
 	"strings"
 )
 
@@ -58,55 +57,6 @@ func ParseURL(rawURL string) (*ParsedURL, error) {
 	}
 
 	return result, nil
-}
-
-// BuildURL constructs a backend URL from components
-func BuildURL(backendType string, host string, port string, user string, path string, options map[string]string) string {
-	var sb strings.Builder
-	sb.WriteString(backendType)
-	sb.WriteString("://")
-
-	if user != "" {
-		sb.WriteString(user)
-		sb.WriteString("@")
-	}
-
-	if host != "" {
-		sb.WriteString(host)
-		if port != "" {
-			sb.WriteString(":")
-			sb.WriteString(port)
-		}
-	}
-
-	if path != "" {
-		if !strings.HasPrefix(path, "/") {
-			sb.WriteString("/")
-		}
-		sb.WriteString(path)
-	}
-
-	if len(options) > 0 {
-		sb.WriteString("?")
-		// Sort keys for deterministic output
-		keys := make([]string, 0, len(options))
-		for k := range options {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		first := true
-		for _, k := range keys {
-			if !first {
-				sb.WriteString("&")
-			}
-			sb.WriteString(url.QueryEscape(k))
-			sb.WriteString("=")
-			sb.WriteString(url.QueryEscape(options[k]))
-			first = false
-		}
-	}
-
-	return sb.String()
 }
 
 // RedactURLPassword replaces URL password with a redaction marker.

@@ -19,6 +19,7 @@ import (
 	"github.com/vishvananda/netlink"
 
 	"github.com/UnAfraid/wg-ui/pkg/backend"
+	"github.com/UnAfraid/wg-ui/pkg/internal/adapt"
 	"github.com/UnAfraid/wg-ui/pkg/wireguard/driver"
 )
 
@@ -140,7 +141,7 @@ func (b *execBackend) Device(ctx context.Context, name string) (*driver.Device, 
 
 	device.Interface = driver.Interface{
 		Name: link.Attrs().Name,
-		Addresses: mapArray(addressList, func(addr netlink.Addr) string {
+		Addresses: adapt.Array(addressList, func(addr netlink.Addr) string {
 			return addr.String()
 		}),
 		Mtu: link.Attrs().MTU,
@@ -825,14 +826,6 @@ func linkStatisticsToBackendInterfaceStats(statistics *netlink.LinkStatistics) *
 		RxBytes: statistics.RxBytes,
 		TxBytes: statistics.TxBytes,
 	}
-}
-
-func mapArray[T any, R any](items []T, fn func(T) R) []R {
-	result := make([]R, 0, len(items))
-	for _, item := range items {
-		result = append(result, fn(item))
-	}
-	return result
 }
 
 type ipInterfaceState struct {
