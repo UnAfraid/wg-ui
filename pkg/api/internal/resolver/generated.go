@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -23,20 +22,10 @@ import (
 
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
-	return &executableSchema{
-		schema:     cfg.Schema,
-		resolvers:  cfg.Resolvers,
-		directives: cfg.Directives,
-		complexity: cfg.Complexity,
-	}
+	return &executableSchema{SchemaData: cfg.Schema, Resolvers: cfg.Resolvers, Directives: cfg.Directives, ComplexityRoot: cfg.Complexity}
 }
 
-type Config struct {
-	Schema     *ast.Schema
-	Resolvers  ResolverRoot
-	Directives DirectiveRoot
-	Complexity ComplexityRoot
-}
+type Config = graphql.Config[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 type ResolverRoot interface {
 	Backend() BackendResolver
@@ -409,100 +398,95 @@ type UserResolver interface {
 	Peers(ctx context.Context, obj *model.User) ([]*model.Peer, error)
 }
 
-type executableSchema struct {
-	schema     *ast.Schema
-	resolvers  ResolverRoot
-	directives DirectiveRoot
-	complexity ComplexityRoot
-}
+type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 func (e *executableSchema) Schema() *ast.Schema {
-	if e.schema != nil {
-		return e.schema
+	if e.SchemaData != nil {
+		return e.SchemaData
 	}
 	return parsedSchema
 }
 
 func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
-	ec := executionContext{nil, e, 0, 0, nil}
+	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
 
 	case "AvailableBackend.registered":
-		if e.complexity.AvailableBackend.Registered == nil {
+		if e.ComplexityRoot.AvailableBackend.Registered == nil {
 			break
 		}
 
-		return e.complexity.AvailableBackend.Registered(childComplexity), true
+		return e.ComplexityRoot.AvailableBackend.Registered(childComplexity), true
 	case "AvailableBackend.supported":
-		if e.complexity.AvailableBackend.Supported == nil {
+		if e.ComplexityRoot.AvailableBackend.Supported == nil {
 			break
 		}
 
-		return e.complexity.AvailableBackend.Supported(childComplexity), true
+		return e.ComplexityRoot.AvailableBackend.Supported(childComplexity), true
 	case "AvailableBackend.type":
-		if e.complexity.AvailableBackend.Type == nil {
+		if e.ComplexityRoot.AvailableBackend.Type == nil {
 			break
 		}
 
-		return e.complexity.AvailableBackend.Type(childComplexity), true
+		return e.ComplexityRoot.AvailableBackend.Type(childComplexity), true
 
 	case "Backend.createUser":
-		if e.complexity.Backend.CreateUser == nil {
+		if e.ComplexityRoot.Backend.CreateUser == nil {
 			break
 		}
 
-		return e.complexity.Backend.CreateUser(childComplexity), true
+		return e.ComplexityRoot.Backend.CreateUser(childComplexity), true
 	case "Backend.createdAt":
-		if e.complexity.Backend.CreatedAt == nil {
+		if e.ComplexityRoot.Backend.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Backend.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Backend.CreatedAt(childComplexity), true
 	case "Backend.deleteUser":
-		if e.complexity.Backend.DeleteUser == nil {
+		if e.ComplexityRoot.Backend.DeleteUser == nil {
 			break
 		}
 
-		return e.complexity.Backend.DeleteUser(childComplexity), true
+		return e.ComplexityRoot.Backend.DeleteUser(childComplexity), true
 	case "Backend.deletedAt":
-		if e.complexity.Backend.DeletedAt == nil {
+		if e.ComplexityRoot.Backend.DeletedAt == nil {
 			break
 		}
 
-		return e.complexity.Backend.DeletedAt(childComplexity), true
+		return e.ComplexityRoot.Backend.DeletedAt(childComplexity), true
 	case "Backend.description":
-		if e.complexity.Backend.Description == nil {
+		if e.ComplexityRoot.Backend.Description == nil {
 			break
 		}
 
-		return e.complexity.Backend.Description(childComplexity), true
+		return e.ComplexityRoot.Backend.Description(childComplexity), true
 	case "Backend.enabled":
-		if e.complexity.Backend.Enabled == nil {
+		if e.ComplexityRoot.Backend.Enabled == nil {
 			break
 		}
 
-		return e.complexity.Backend.Enabled(childComplexity), true
+		return e.ComplexityRoot.Backend.Enabled(childComplexity), true
 	case "Backend.foreignServers":
-		if e.complexity.Backend.ForeignServers == nil {
+		if e.ComplexityRoot.Backend.ForeignServers == nil {
 			break
 		}
 
-		return e.complexity.Backend.ForeignServers(childComplexity), true
+		return e.ComplexityRoot.Backend.ForeignServers(childComplexity), true
 	case "Backend.id":
-		if e.complexity.Backend.ID == nil {
+		if e.ComplexityRoot.Backend.ID == nil {
 			break
 		}
 
-		return e.complexity.Backend.ID(childComplexity), true
+		return e.ComplexityRoot.Backend.ID(childComplexity), true
 	case "Backend.name":
-		if e.complexity.Backend.Name == nil {
+		if e.ComplexityRoot.Backend.Name == nil {
 			break
 		}
 
-		return e.complexity.Backend.Name(childComplexity), true
+		return e.ComplexityRoot.Backend.Name(childComplexity), true
 	case "Backend.peers":
-		if e.complexity.Backend.Peers == nil {
+		if e.ComplexityRoot.Backend.Peers == nil {
 			break
 		}
 
@@ -511,9 +495,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Backend.Peers(childComplexity, args["query"].(*string)), true
+		return e.ComplexityRoot.Backend.Peers(childComplexity, args["query"].(*string)), true
 	case "Backend.servers":
-		if e.complexity.Backend.Servers == nil {
+		if e.ComplexityRoot.Backend.Servers == nil {
 			break
 		}
 
@@ -522,300 +506,300 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Backend.Servers(childComplexity, args["query"].(*string), args["enabled"].(*bool)), true
+		return e.ComplexityRoot.Backend.Servers(childComplexity, args["query"].(*string), args["enabled"].(*bool)), true
 	case "Backend.supported":
-		if e.complexity.Backend.Supported == nil {
+		if e.ComplexityRoot.Backend.Supported == nil {
 			break
 		}
 
-		return e.complexity.Backend.Supported(childComplexity), true
+		return e.ComplexityRoot.Backend.Supported(childComplexity), true
 	case "Backend.url":
-		if e.complexity.Backend.URL == nil {
+		if e.ComplexityRoot.Backend.URL == nil {
 			break
 		}
 
-		return e.complexity.Backend.URL(childComplexity), true
+		return e.ComplexityRoot.Backend.URL(childComplexity), true
 	case "Backend.updateUser":
-		if e.complexity.Backend.UpdateUser == nil {
+		if e.ComplexityRoot.Backend.UpdateUser == nil {
 			break
 		}
 
-		return e.complexity.Backend.UpdateUser(childComplexity), true
+		return e.ComplexityRoot.Backend.UpdateUser(childComplexity), true
 	case "Backend.updatedAt":
-		if e.complexity.Backend.UpdatedAt == nil {
+		if e.ComplexityRoot.Backend.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.Backend.UpdatedAt(childComplexity), true
+		return e.ComplexityRoot.Backend.UpdatedAt(childComplexity), true
 
 	case "BackendChangedEvent.action":
-		if e.complexity.BackendChangedEvent.Action == nil {
+		if e.ComplexityRoot.BackendChangedEvent.Action == nil {
 			break
 		}
 
-		return e.complexity.BackendChangedEvent.Action(childComplexity), true
+		return e.ComplexityRoot.BackendChangedEvent.Action(childComplexity), true
 	case "BackendChangedEvent.node":
-		if e.complexity.BackendChangedEvent.Node == nil {
+		if e.ComplexityRoot.BackendChangedEvent.Node == nil {
 			break
 		}
 
-		return e.complexity.BackendChangedEvent.Node(childComplexity), true
+		return e.ComplexityRoot.BackendChangedEvent.Node(childComplexity), true
 
 	case "CreateBackendPayload.backend":
-		if e.complexity.CreateBackendPayload.Backend == nil {
+		if e.ComplexityRoot.CreateBackendPayload.Backend == nil {
 			break
 		}
 
-		return e.complexity.CreateBackendPayload.Backend(childComplexity), true
+		return e.ComplexityRoot.CreateBackendPayload.Backend(childComplexity), true
 	case "CreateBackendPayload.clientMutationId":
-		if e.complexity.CreateBackendPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.CreateBackendPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.CreateBackendPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.CreateBackendPayload.ClientMutationID(childComplexity), true
 
 	case "CreatePeerPayload.clientMutationId":
-		if e.complexity.CreatePeerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.CreatePeerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.CreatePeerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.CreatePeerPayload.ClientMutationID(childComplexity), true
 	case "CreatePeerPayload.peer":
-		if e.complexity.CreatePeerPayload.Peer == nil {
+		if e.ComplexityRoot.CreatePeerPayload.Peer == nil {
 			break
 		}
 
-		return e.complexity.CreatePeerPayload.Peer(childComplexity), true
+		return e.ComplexityRoot.CreatePeerPayload.Peer(childComplexity), true
 
 	case "CreateServerPayload.clientMutationId":
-		if e.complexity.CreateServerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.CreateServerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.CreateServerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.CreateServerPayload.ClientMutationID(childComplexity), true
 	case "CreateServerPayload.server":
-		if e.complexity.CreateServerPayload.Server == nil {
+		if e.ComplexityRoot.CreateServerPayload.Server == nil {
 			break
 		}
 
-		return e.complexity.CreateServerPayload.Server(childComplexity), true
+		return e.ComplexityRoot.CreateServerPayload.Server(childComplexity), true
 
 	case "CreateUserPayload.clientMutationId":
-		if e.complexity.CreateUserPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.CreateUserPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.CreateUserPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.CreateUserPayload.ClientMutationID(childComplexity), true
 	case "CreateUserPayload.user":
-		if e.complexity.CreateUserPayload.User == nil {
+		if e.ComplexityRoot.CreateUserPayload.User == nil {
 			break
 		}
 
-		return e.complexity.CreateUserPayload.User(childComplexity), true
+		return e.ComplexityRoot.CreateUserPayload.User(childComplexity), true
 
 	case "DeleteBackendPayload.backend":
-		if e.complexity.DeleteBackendPayload.Backend == nil {
+		if e.ComplexityRoot.DeleteBackendPayload.Backend == nil {
 			break
 		}
 
-		return e.complexity.DeleteBackendPayload.Backend(childComplexity), true
+		return e.ComplexityRoot.DeleteBackendPayload.Backend(childComplexity), true
 	case "DeleteBackendPayload.clientMutationId":
-		if e.complexity.DeleteBackendPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.DeleteBackendPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.DeleteBackendPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.DeleteBackendPayload.ClientMutationID(childComplexity), true
 
 	case "DeletePeerPayload.clientMutationId":
-		if e.complexity.DeletePeerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.DeletePeerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.DeletePeerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.DeletePeerPayload.ClientMutationID(childComplexity), true
 	case "DeletePeerPayload.peer":
-		if e.complexity.DeletePeerPayload.Peer == nil {
+		if e.ComplexityRoot.DeletePeerPayload.Peer == nil {
 			break
 		}
 
-		return e.complexity.DeletePeerPayload.Peer(childComplexity), true
+		return e.ComplexityRoot.DeletePeerPayload.Peer(childComplexity), true
 
 	case "DeleteServerPayload.clientMutationId":
-		if e.complexity.DeleteServerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.DeleteServerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.DeleteServerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.DeleteServerPayload.ClientMutationID(childComplexity), true
 	case "DeleteServerPayload.server":
-		if e.complexity.DeleteServerPayload.Server == nil {
+		if e.ComplexityRoot.DeleteServerPayload.Server == nil {
 			break
 		}
 
-		return e.complexity.DeleteServerPayload.Server(childComplexity), true
+		return e.ComplexityRoot.DeleteServerPayload.Server(childComplexity), true
 
 	case "DeleteUserPayload.clientMutationId":
-		if e.complexity.DeleteUserPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.DeleteUserPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.DeleteUserPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.DeleteUserPayload.ClientMutationID(childComplexity), true
 	case "DeleteUserPayload.user":
-		if e.complexity.DeleteUserPayload.User == nil {
+		if e.ComplexityRoot.DeleteUserPayload.User == nil {
 			break
 		}
 
-		return e.complexity.DeleteUserPayload.User(childComplexity), true
+		return e.ComplexityRoot.DeleteUserPayload.User(childComplexity), true
 
 	case "ForeignInterface.addresses":
-		if e.complexity.ForeignInterface.Addresses == nil {
+		if e.ComplexityRoot.ForeignInterface.Addresses == nil {
 			break
 		}
 
-		return e.complexity.ForeignInterface.Addresses(childComplexity), true
+		return e.ComplexityRoot.ForeignInterface.Addresses(childComplexity), true
 	case "ForeignInterface.mtu":
-		if e.complexity.ForeignInterface.Mtu == nil {
+		if e.ComplexityRoot.ForeignInterface.Mtu == nil {
 			break
 		}
 
-		return e.complexity.ForeignInterface.Mtu(childComplexity), true
+		return e.ComplexityRoot.ForeignInterface.Mtu(childComplexity), true
 	case "ForeignInterface.name":
-		if e.complexity.ForeignInterface.Name == nil {
+		if e.ComplexityRoot.ForeignInterface.Name == nil {
 			break
 		}
 
-		return e.complexity.ForeignInterface.Name(childComplexity), true
+		return e.ComplexityRoot.ForeignInterface.Name(childComplexity), true
 
 	case "ForeignPeer.allowedIps":
-		if e.complexity.ForeignPeer.AllowedIps == nil {
+		if e.ComplexityRoot.ForeignPeer.AllowedIps == nil {
 			break
 		}
 
-		return e.complexity.ForeignPeer.AllowedIps(childComplexity), true
+		return e.ComplexityRoot.ForeignPeer.AllowedIps(childComplexity), true
 	case "ForeignPeer.endpoint":
-		if e.complexity.ForeignPeer.Endpoint == nil {
+		if e.ComplexityRoot.ForeignPeer.Endpoint == nil {
 			break
 		}
 
-		return e.complexity.ForeignPeer.Endpoint(childComplexity), true
+		return e.ComplexityRoot.ForeignPeer.Endpoint(childComplexity), true
 	case "ForeignPeer.lastHandshakeTime":
-		if e.complexity.ForeignPeer.LastHandshakeTime == nil {
+		if e.ComplexityRoot.ForeignPeer.LastHandshakeTime == nil {
 			break
 		}
 
-		return e.complexity.ForeignPeer.LastHandshakeTime(childComplexity), true
+		return e.ComplexityRoot.ForeignPeer.LastHandshakeTime(childComplexity), true
 	case "ForeignPeer.persistentKeepAliveInterval":
-		if e.complexity.ForeignPeer.PersistentKeepAliveInterval == nil {
+		if e.ComplexityRoot.ForeignPeer.PersistentKeepAliveInterval == nil {
 			break
 		}
 
-		return e.complexity.ForeignPeer.PersistentKeepAliveInterval(childComplexity), true
+		return e.ComplexityRoot.ForeignPeer.PersistentKeepAliveInterval(childComplexity), true
 	case "ForeignPeer.protocolVersion":
-		if e.complexity.ForeignPeer.ProtocolVersion == nil {
+		if e.ComplexityRoot.ForeignPeer.ProtocolVersion == nil {
 			break
 		}
 
-		return e.complexity.ForeignPeer.ProtocolVersion(childComplexity), true
+		return e.ComplexityRoot.ForeignPeer.ProtocolVersion(childComplexity), true
 	case "ForeignPeer.publicKey":
-		if e.complexity.ForeignPeer.PublicKey == nil {
+		if e.ComplexityRoot.ForeignPeer.PublicKey == nil {
 			break
 		}
 
-		return e.complexity.ForeignPeer.PublicKey(childComplexity), true
+		return e.ComplexityRoot.ForeignPeer.PublicKey(childComplexity), true
 	case "ForeignPeer.receiveBytes":
-		if e.complexity.ForeignPeer.ReceiveBytes == nil {
+		if e.ComplexityRoot.ForeignPeer.ReceiveBytes == nil {
 			break
 		}
 
-		return e.complexity.ForeignPeer.ReceiveBytes(childComplexity), true
+		return e.ComplexityRoot.ForeignPeer.ReceiveBytes(childComplexity), true
 	case "ForeignPeer.transmitBytes":
-		if e.complexity.ForeignPeer.TransmitBytes == nil {
+		if e.ComplexityRoot.ForeignPeer.TransmitBytes == nil {
 			break
 		}
 
-		return e.complexity.ForeignPeer.TransmitBytes(childComplexity), true
+		return e.ComplexityRoot.ForeignPeer.TransmitBytes(childComplexity), true
 
 	case "ForeignServer.backend":
-		if e.complexity.ForeignServer.Backend == nil {
+		if e.ComplexityRoot.ForeignServer.Backend == nil {
 			break
 		}
 
-		return e.complexity.ForeignServer.Backend(childComplexity), true
+		return e.ComplexityRoot.ForeignServer.Backend(childComplexity), true
 	case "ForeignServer.firewallMark":
-		if e.complexity.ForeignServer.FirewallMark == nil {
+		if e.ComplexityRoot.ForeignServer.FirewallMark == nil {
 			break
 		}
 
-		return e.complexity.ForeignServer.FirewallMark(childComplexity), true
+		return e.ComplexityRoot.ForeignServer.FirewallMark(childComplexity), true
 	case "ForeignServer.foreignInterface":
-		if e.complexity.ForeignServer.ForeignInterface == nil {
+		if e.ComplexityRoot.ForeignServer.ForeignInterface == nil {
 			break
 		}
 
-		return e.complexity.ForeignServer.ForeignInterface(childComplexity), true
+		return e.ComplexityRoot.ForeignServer.ForeignInterface(childComplexity), true
 	case "ForeignServer.listenPort":
-		if e.complexity.ForeignServer.ListenPort == nil {
+		if e.ComplexityRoot.ForeignServer.ListenPort == nil {
 			break
 		}
 
-		return e.complexity.ForeignServer.ListenPort(childComplexity), true
+		return e.ComplexityRoot.ForeignServer.ListenPort(childComplexity), true
 	case "ForeignServer.name":
-		if e.complexity.ForeignServer.Name == nil {
+		if e.ComplexityRoot.ForeignServer.Name == nil {
 			break
 		}
 
-		return e.complexity.ForeignServer.Name(childComplexity), true
+		return e.ComplexityRoot.ForeignServer.Name(childComplexity), true
 	case "ForeignServer.peers":
-		if e.complexity.ForeignServer.Peers == nil {
+		if e.ComplexityRoot.ForeignServer.Peers == nil {
 			break
 		}
 
-		return e.complexity.ForeignServer.Peers(childComplexity), true
+		return e.ComplexityRoot.ForeignServer.Peers(childComplexity), true
 	case "ForeignServer.publicKey":
-		if e.complexity.ForeignServer.PublicKey == nil {
+		if e.ComplexityRoot.ForeignServer.PublicKey == nil {
 			break
 		}
 
-		return e.complexity.ForeignServer.PublicKey(childComplexity), true
+		return e.ComplexityRoot.ForeignServer.PublicKey(childComplexity), true
 	case "ForeignServer.type":
-		if e.complexity.ForeignServer.Type == nil {
+		if e.ComplexityRoot.ForeignServer.Type == nil {
 			break
 		}
 
-		return e.complexity.ForeignServer.Type(childComplexity), true
+		return e.ComplexityRoot.ForeignServer.Type(childComplexity), true
 
 	case "GenerateWireguardKeyPayload.clientMutationId":
-		if e.complexity.GenerateWireguardKeyPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.GenerateWireguardKeyPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.GenerateWireguardKeyPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.GenerateWireguardKeyPayload.ClientMutationID(childComplexity), true
 	case "GenerateWireguardKeyPayload.privateKey":
-		if e.complexity.GenerateWireguardKeyPayload.PrivateKey == nil {
+		if e.ComplexityRoot.GenerateWireguardKeyPayload.PrivateKey == nil {
 			break
 		}
 
-		return e.complexity.GenerateWireguardKeyPayload.PrivateKey(childComplexity), true
+		return e.ComplexityRoot.GenerateWireguardKeyPayload.PrivateKey(childComplexity), true
 	case "GenerateWireguardKeyPayload.publicKey":
-		if e.complexity.GenerateWireguardKeyPayload.PublicKey == nil {
+		if e.ComplexityRoot.GenerateWireguardKeyPayload.PublicKey == nil {
 			break
 		}
 
-		return e.complexity.GenerateWireguardKeyPayload.PublicKey(childComplexity), true
+		return e.ComplexityRoot.GenerateWireguardKeyPayload.PublicKey(childComplexity), true
 
 	case "ImportForeignServerPayload.clientMutationId":
-		if e.complexity.ImportForeignServerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.ImportForeignServerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.ImportForeignServerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.ImportForeignServerPayload.ClientMutationID(childComplexity), true
 	case "ImportForeignServerPayload.server":
-		if e.complexity.ImportForeignServerPayload.Server == nil {
+		if e.ComplexityRoot.ImportForeignServerPayload.Server == nil {
 			break
 		}
 
-		return e.complexity.ImportForeignServerPayload.Server(childComplexity), true
+		return e.ComplexityRoot.ImportForeignServerPayload.Server(childComplexity), true
 
 	case "Mutation.createBackend":
-		if e.complexity.Mutation.CreateBackend == nil {
+		if e.ComplexityRoot.Mutation.CreateBackend == nil {
 			break
 		}
 
@@ -824,9 +808,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateBackend(childComplexity, args["input"].(model.CreateBackendInput)), true
+		return e.ComplexityRoot.Mutation.CreateBackend(childComplexity, args["input"].(model.CreateBackendInput)), true
 	case "Mutation.createPeer":
-		if e.complexity.Mutation.CreatePeer == nil {
+		if e.ComplexityRoot.Mutation.CreatePeer == nil {
 			break
 		}
 
@@ -835,9 +819,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreatePeer(childComplexity, args["input"].(model.CreatePeerInput)), true
+		return e.ComplexityRoot.Mutation.CreatePeer(childComplexity, args["input"].(model.CreatePeerInput)), true
 	case "Mutation.createServer":
-		if e.complexity.Mutation.CreateServer == nil {
+		if e.ComplexityRoot.Mutation.CreateServer == nil {
 			break
 		}
 
@@ -846,9 +830,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateServer(childComplexity, args["input"].(model.CreateServerInput)), true
+		return e.ComplexityRoot.Mutation.CreateServer(childComplexity, args["input"].(model.CreateServerInput)), true
 	case "Mutation.createUser":
-		if e.complexity.Mutation.CreateUser == nil {
+		if e.ComplexityRoot.Mutation.CreateUser == nil {
 			break
 		}
 
@@ -857,9 +841,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(model.CreateUserInput)), true
+		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["input"].(model.CreateUserInput)), true
 	case "Mutation.deleteBackend":
-		if e.complexity.Mutation.DeleteBackend == nil {
+		if e.ComplexityRoot.Mutation.DeleteBackend == nil {
 			break
 		}
 
@@ -868,9 +852,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteBackend(childComplexity, args["input"].(model.DeleteBackendInput)), true
+		return e.ComplexityRoot.Mutation.DeleteBackend(childComplexity, args["input"].(model.DeleteBackendInput)), true
 	case "Mutation.deletePeer":
-		if e.complexity.Mutation.DeletePeer == nil {
+		if e.ComplexityRoot.Mutation.DeletePeer == nil {
 			break
 		}
 
@@ -879,9 +863,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeletePeer(childComplexity, args["input"].(model.DeletePeerInput)), true
+		return e.ComplexityRoot.Mutation.DeletePeer(childComplexity, args["input"].(model.DeletePeerInput)), true
 	case "Mutation.deleteServer":
-		if e.complexity.Mutation.DeleteServer == nil {
+		if e.ComplexityRoot.Mutation.DeleteServer == nil {
 			break
 		}
 
@@ -890,9 +874,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteServer(childComplexity, args["input"].(model.DeleteServerInput)), true
+		return e.ComplexityRoot.Mutation.DeleteServer(childComplexity, args["input"].(model.DeleteServerInput)), true
 	case "Mutation.deleteUser":
-		if e.complexity.Mutation.DeleteUser == nil {
+		if e.ComplexityRoot.Mutation.DeleteUser == nil {
 			break
 		}
 
@@ -901,9 +885,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUser(childComplexity, args["input"].(model.DeleteUserInput)), true
+		return e.ComplexityRoot.Mutation.DeleteUser(childComplexity, args["input"].(model.DeleteUserInput)), true
 	case "Mutation.generateWireguardKey":
-		if e.complexity.Mutation.GenerateWireguardKey == nil {
+		if e.ComplexityRoot.Mutation.GenerateWireguardKey == nil {
 			break
 		}
 
@@ -912,9 +896,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.GenerateWireguardKey(childComplexity, args["input"].(model.GenerateWireguardKeyInput)), true
+		return e.ComplexityRoot.Mutation.GenerateWireguardKey(childComplexity, args["input"].(model.GenerateWireguardKeyInput)), true
 	case "Mutation.importForeignServer":
-		if e.complexity.Mutation.ImportForeignServer == nil {
+		if e.ComplexityRoot.Mutation.ImportForeignServer == nil {
 			break
 		}
 
@@ -923,9 +907,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ImportForeignServer(childComplexity, args["input"].(model.ImportForeignServerInput)), true
+		return e.ComplexityRoot.Mutation.ImportForeignServer(childComplexity, args["input"].(model.ImportForeignServerInput)), true
 	case "Mutation.signIn":
-		if e.complexity.Mutation.SignIn == nil {
+		if e.ComplexityRoot.Mutation.SignIn == nil {
 			break
 		}
 
@@ -934,9 +918,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SignIn(childComplexity, args["input"].(model.SignInInput)), true
+		return e.ComplexityRoot.Mutation.SignIn(childComplexity, args["input"].(model.SignInInput)), true
 	case "Mutation.startServer":
-		if e.complexity.Mutation.StartServer == nil {
+		if e.ComplexityRoot.Mutation.StartServer == nil {
 			break
 		}
 
@@ -945,9 +929,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.StartServer(childComplexity, args["input"].(model.StartServerInput)), true
+		return e.ComplexityRoot.Mutation.StartServer(childComplexity, args["input"].(model.StartServerInput)), true
 	case "Mutation.stopServer":
-		if e.complexity.Mutation.StopServer == nil {
+		if e.ComplexityRoot.Mutation.StopServer == nil {
 			break
 		}
 
@@ -956,9 +940,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.StopServer(childComplexity, args["input"].(model.StopServerInput)), true
+		return e.ComplexityRoot.Mutation.StopServer(childComplexity, args["input"].(model.StopServerInput)), true
 	case "Mutation.updateBackend":
-		if e.complexity.Mutation.UpdateBackend == nil {
+		if e.ComplexityRoot.Mutation.UpdateBackend == nil {
 			break
 		}
 
@@ -967,9 +951,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateBackend(childComplexity, args["input"].(model.UpdateBackendInput)), true
+		return e.ComplexityRoot.Mutation.UpdateBackend(childComplexity, args["input"].(model.UpdateBackendInput)), true
 	case "Mutation.updatePeer":
-		if e.complexity.Mutation.UpdatePeer == nil {
+		if e.ComplexityRoot.Mutation.UpdatePeer == nil {
 			break
 		}
 
@@ -978,9 +962,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdatePeer(childComplexity, args["input"].(model.UpdatePeerInput)), true
+		return e.ComplexityRoot.Mutation.UpdatePeer(childComplexity, args["input"].(model.UpdatePeerInput)), true
 	case "Mutation.updateServer":
-		if e.complexity.Mutation.UpdateServer == nil {
+		if e.ComplexityRoot.Mutation.UpdateServer == nil {
 			break
 		}
 
@@ -989,9 +973,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateServer(childComplexity, args["input"].(model.UpdateServerInput)), true
+		return e.ComplexityRoot.Mutation.UpdateServer(childComplexity, args["input"].(model.UpdateServerInput)), true
 	case "Mutation.updateUser":
-		if e.complexity.Mutation.UpdateUser == nil {
+		if e.ComplexityRoot.Mutation.UpdateUser == nil {
 			break
 		}
 
@@ -1000,194 +984,194 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(model.UpdateUserInput)), true
+		return e.ComplexityRoot.Mutation.UpdateUser(childComplexity, args["input"].(model.UpdateUserInput)), true
 
 	case "Peer.allowedIPs":
-		if e.complexity.Peer.AllowedIPs == nil {
+		if e.ComplexityRoot.Peer.AllowedIPs == nil {
 			break
 		}
 
-		return e.complexity.Peer.AllowedIPs(childComplexity), true
+		return e.ComplexityRoot.Peer.AllowedIPs(childComplexity), true
 	case "Peer.backend":
-		if e.complexity.Peer.Backend == nil {
+		if e.ComplexityRoot.Peer.Backend == nil {
 			break
 		}
 
-		return e.complexity.Peer.Backend(childComplexity), true
+		return e.ComplexityRoot.Peer.Backend(childComplexity), true
 	case "Peer.createUser":
-		if e.complexity.Peer.CreateUser == nil {
+		if e.ComplexityRoot.Peer.CreateUser == nil {
 			break
 		}
 
-		return e.complexity.Peer.CreateUser(childComplexity), true
+		return e.ComplexityRoot.Peer.CreateUser(childComplexity), true
 	case "Peer.createdAt":
-		if e.complexity.Peer.CreatedAt == nil {
+		if e.ComplexityRoot.Peer.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Peer.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Peer.CreatedAt(childComplexity), true
 	case "Peer.deleteUser":
-		if e.complexity.Peer.DeleteUser == nil {
+		if e.ComplexityRoot.Peer.DeleteUser == nil {
 			break
 		}
 
-		return e.complexity.Peer.DeleteUser(childComplexity), true
+		return e.ComplexityRoot.Peer.DeleteUser(childComplexity), true
 	case "Peer.deletedAt":
-		if e.complexity.Peer.DeletedAt == nil {
+		if e.ComplexityRoot.Peer.DeletedAt == nil {
 			break
 		}
 
-		return e.complexity.Peer.DeletedAt(childComplexity), true
+		return e.ComplexityRoot.Peer.DeletedAt(childComplexity), true
 	case "Peer.description":
-		if e.complexity.Peer.Description == nil {
+		if e.ComplexityRoot.Peer.Description == nil {
 			break
 		}
 
-		return e.complexity.Peer.Description(childComplexity), true
+		return e.ComplexityRoot.Peer.Description(childComplexity), true
 	case "Peer.endpoint":
-		if e.complexity.Peer.Endpoint == nil {
+		if e.ComplexityRoot.Peer.Endpoint == nil {
 			break
 		}
 
-		return e.complexity.Peer.Endpoint(childComplexity), true
+		return e.ComplexityRoot.Peer.Endpoint(childComplexity), true
 	case "Peer.hooks":
-		if e.complexity.Peer.Hooks == nil {
+		if e.ComplexityRoot.Peer.Hooks == nil {
 			break
 		}
 
-		return e.complexity.Peer.Hooks(childComplexity), true
+		return e.ComplexityRoot.Peer.Hooks(childComplexity), true
 	case "Peer.id":
-		if e.complexity.Peer.ID == nil {
+		if e.ComplexityRoot.Peer.ID == nil {
 			break
 		}
 
-		return e.complexity.Peer.ID(childComplexity), true
+		return e.ComplexityRoot.Peer.ID(childComplexity), true
 	case "Peer.name":
-		if e.complexity.Peer.Name == nil {
+		if e.ComplexityRoot.Peer.Name == nil {
 			break
 		}
 
-		return e.complexity.Peer.Name(childComplexity), true
+		return e.ComplexityRoot.Peer.Name(childComplexity), true
 	case "Peer.persistentKeepalive":
-		if e.complexity.Peer.PersistentKeepalive == nil {
+		if e.ComplexityRoot.Peer.PersistentKeepalive == nil {
 			break
 		}
 
-		return e.complexity.Peer.PersistentKeepalive(childComplexity), true
+		return e.ComplexityRoot.Peer.PersistentKeepalive(childComplexity), true
 	case "Peer.presharedKey":
-		if e.complexity.Peer.PresharedKey == nil {
+		if e.ComplexityRoot.Peer.PresharedKey == nil {
 			break
 		}
 
-		return e.complexity.Peer.PresharedKey(childComplexity), true
+		return e.ComplexityRoot.Peer.PresharedKey(childComplexity), true
 	case "Peer.publicKey":
-		if e.complexity.Peer.PublicKey == nil {
+		if e.ComplexityRoot.Peer.PublicKey == nil {
 			break
 		}
 
-		return e.complexity.Peer.PublicKey(childComplexity), true
+		return e.ComplexityRoot.Peer.PublicKey(childComplexity), true
 	case "Peer.server":
-		if e.complexity.Peer.Server == nil {
+		if e.ComplexityRoot.Peer.Server == nil {
 			break
 		}
 
-		return e.complexity.Peer.Server(childComplexity), true
+		return e.ComplexityRoot.Peer.Server(childComplexity), true
 	case "Peer.stats":
-		if e.complexity.Peer.Stats == nil {
+		if e.ComplexityRoot.Peer.Stats == nil {
 			break
 		}
 
-		return e.complexity.Peer.Stats(childComplexity), true
+		return e.ComplexityRoot.Peer.Stats(childComplexity), true
 	case "Peer.updateUser":
-		if e.complexity.Peer.UpdateUser == nil {
+		if e.ComplexityRoot.Peer.UpdateUser == nil {
 			break
 		}
 
-		return e.complexity.Peer.UpdateUser(childComplexity), true
+		return e.ComplexityRoot.Peer.UpdateUser(childComplexity), true
 	case "Peer.updatedAt":
-		if e.complexity.Peer.UpdatedAt == nil {
+		if e.ComplexityRoot.Peer.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.Peer.UpdatedAt(childComplexity), true
+		return e.ComplexityRoot.Peer.UpdatedAt(childComplexity), true
 
 	case "PeerChangedEvent.action":
-		if e.complexity.PeerChangedEvent.Action == nil {
+		if e.ComplexityRoot.PeerChangedEvent.Action == nil {
 			break
 		}
 
-		return e.complexity.PeerChangedEvent.Action(childComplexity), true
+		return e.ComplexityRoot.PeerChangedEvent.Action(childComplexity), true
 	case "PeerChangedEvent.node":
-		if e.complexity.PeerChangedEvent.Node == nil {
+		if e.ComplexityRoot.PeerChangedEvent.Node == nil {
 			break
 		}
 
-		return e.complexity.PeerChangedEvent.Node(childComplexity), true
+		return e.ComplexityRoot.PeerChangedEvent.Node(childComplexity), true
 
 	case "PeerHook.command":
-		if e.complexity.PeerHook.Command == nil {
+		if e.ComplexityRoot.PeerHook.Command == nil {
 			break
 		}
 
-		return e.complexity.PeerHook.Command(childComplexity), true
+		return e.ComplexityRoot.PeerHook.Command(childComplexity), true
 	case "PeerHook.runOnCreate":
-		if e.complexity.PeerHook.RunOnCreate == nil {
+		if e.ComplexityRoot.PeerHook.RunOnCreate == nil {
 			break
 		}
 
-		return e.complexity.PeerHook.RunOnCreate(childComplexity), true
+		return e.ComplexityRoot.PeerHook.RunOnCreate(childComplexity), true
 	case "PeerHook.runOnDelete":
-		if e.complexity.PeerHook.RunOnDelete == nil {
+		if e.ComplexityRoot.PeerHook.RunOnDelete == nil {
 			break
 		}
 
-		return e.complexity.PeerHook.RunOnDelete(childComplexity), true
+		return e.ComplexityRoot.PeerHook.RunOnDelete(childComplexity), true
 	case "PeerHook.runOnUpdate":
-		if e.complexity.PeerHook.RunOnUpdate == nil {
+		if e.ComplexityRoot.PeerHook.RunOnUpdate == nil {
 			break
 		}
 
-		return e.complexity.PeerHook.RunOnUpdate(childComplexity), true
+		return e.ComplexityRoot.PeerHook.RunOnUpdate(childComplexity), true
 
 	case "PeerStats.endpoint":
-		if e.complexity.PeerStats.Endpoint == nil {
+		if e.ComplexityRoot.PeerStats.Endpoint == nil {
 			break
 		}
 
-		return e.complexity.PeerStats.Endpoint(childComplexity), true
+		return e.ComplexityRoot.PeerStats.Endpoint(childComplexity), true
 	case "PeerStats.lastHandshakeTime":
-		if e.complexity.PeerStats.LastHandshakeTime == nil {
+		if e.ComplexityRoot.PeerStats.LastHandshakeTime == nil {
 			break
 		}
 
-		return e.complexity.PeerStats.LastHandshakeTime(childComplexity), true
+		return e.ComplexityRoot.PeerStats.LastHandshakeTime(childComplexity), true
 	case "PeerStats.protocolVersion":
-		if e.complexity.PeerStats.ProtocolVersion == nil {
+		if e.ComplexityRoot.PeerStats.ProtocolVersion == nil {
 			break
 		}
 
-		return e.complexity.PeerStats.ProtocolVersion(childComplexity), true
+		return e.ComplexityRoot.PeerStats.ProtocolVersion(childComplexity), true
 	case "PeerStats.receiveBytes":
-		if e.complexity.PeerStats.ReceiveBytes == nil {
+		if e.ComplexityRoot.PeerStats.ReceiveBytes == nil {
 			break
 		}
 
-		return e.complexity.PeerStats.ReceiveBytes(childComplexity), true
+		return e.ComplexityRoot.PeerStats.ReceiveBytes(childComplexity), true
 	case "PeerStats.transmitBytes":
-		if e.complexity.PeerStats.TransmitBytes == nil {
+		if e.ComplexityRoot.PeerStats.TransmitBytes == nil {
 			break
 		}
 
-		return e.complexity.PeerStats.TransmitBytes(childComplexity), true
+		return e.ComplexityRoot.PeerStats.TransmitBytes(childComplexity), true
 
 	case "Query.availableBackends":
-		if e.complexity.Query.AvailableBackends == nil {
+		if e.ComplexityRoot.Query.AvailableBackends == nil {
 			break
 		}
 
-		return e.complexity.Query.AvailableBackends(childComplexity), true
+		return e.ComplexityRoot.Query.AvailableBackends(childComplexity), true
 	case "Query.backends":
-		if e.complexity.Query.Backends == nil {
+		if e.ComplexityRoot.Query.Backends == nil {
 			break
 		}
 
@@ -1196,15 +1180,16 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Backends(childComplexity, args["type"].(*string)), true
+		return e.ComplexityRoot.Query.Backends(childComplexity, args["type"].(*string)), true
 	case "Query.foreignServers":
-		if e.complexity.Query.ForeignServers == nil {
+		if e.ComplexityRoot.Query.ForeignServers == nil {
 			break
 		}
 
-		return e.complexity.Query.ForeignServers(childComplexity), true
+		return e.ComplexityRoot.Query.ForeignServers(childComplexity), true
+
 	case "Query.node":
-		if e.complexity.Query.Node == nil {
+		if e.ComplexityRoot.Query.Node == nil {
 			break
 		}
 
@@ -1213,9 +1198,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Node(childComplexity, args["id"].(model.ID)), true
+		return e.ComplexityRoot.Query.Node(childComplexity, args["id"].(model.ID)), true
 	case "Query.nodes":
-		if e.complexity.Query.Nodes == nil {
+		if e.ComplexityRoot.Query.Nodes == nil {
 			break
 		}
 
@@ -1224,9 +1209,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Nodes(childComplexity, args["ids"].([]*model.ID)), true
+		return e.ComplexityRoot.Query.Nodes(childComplexity, args["ids"].([]*model.ID)), true
 	case "Query.peers":
-		if e.complexity.Query.Peers == nil {
+		if e.ComplexityRoot.Query.Peers == nil {
 			break
 		}
 
@@ -1235,9 +1220,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Peers(childComplexity, args["query"].(*string)), true
+		return e.ComplexityRoot.Query.Peers(childComplexity, args["query"].(*string)), true
 	case "Query.servers":
-		if e.complexity.Query.Servers == nil {
+		if e.ComplexityRoot.Query.Servers == nil {
 			break
 		}
 
@@ -1246,9 +1231,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Servers(childComplexity, args["query"].(*string), args["enabled"].(*bool)), true
+		return e.ComplexityRoot.Query.Servers(childComplexity, args["query"].(*string), args["enabled"].(*bool)), true
 	case "Query.users":
-		if e.complexity.Query.Users == nil {
+		if e.ComplexityRoot.Query.Users == nil {
 			break
 		}
 
@@ -1257,381 +1242,381 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Users(childComplexity, args["query"].(*string)), true
+		return e.ComplexityRoot.Query.Users(childComplexity, args["query"].(*string)), true
 	case "Query.viewer":
-		if e.complexity.Query.Viewer == nil {
+		if e.ComplexityRoot.Query.Viewer == nil {
 			break
 		}
 
-		return e.complexity.Query.Viewer(childComplexity), true
+		return e.ComplexityRoot.Query.Viewer(childComplexity), true
 
 	case "Server.address":
-		if e.complexity.Server.Address == nil {
+		if e.ComplexityRoot.Server.Address == nil {
 			break
 		}
 
-		return e.complexity.Server.Address(childComplexity), true
+		return e.ComplexityRoot.Server.Address(childComplexity), true
 	case "Server.backend":
-		if e.complexity.Server.Backend == nil {
+		if e.ComplexityRoot.Server.Backend == nil {
 			break
 		}
 
-		return e.complexity.Server.Backend(childComplexity), true
+		return e.ComplexityRoot.Server.Backend(childComplexity), true
 	case "Server.createUser":
-		if e.complexity.Server.CreateUser == nil {
+		if e.ComplexityRoot.Server.CreateUser == nil {
 			break
 		}
 
-		return e.complexity.Server.CreateUser(childComplexity), true
+		return e.ComplexityRoot.Server.CreateUser(childComplexity), true
 	case "Server.createdAt":
-		if e.complexity.Server.CreatedAt == nil {
+		if e.ComplexityRoot.Server.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Server.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Server.CreatedAt(childComplexity), true
 	case "Server.dns":
-		if e.complexity.Server.DNS == nil {
+		if e.ComplexityRoot.Server.DNS == nil {
 			break
 		}
 
-		return e.complexity.Server.DNS(childComplexity), true
+		return e.ComplexityRoot.Server.DNS(childComplexity), true
 	case "Server.deleteUser":
-		if e.complexity.Server.DeleteUser == nil {
+		if e.ComplexityRoot.Server.DeleteUser == nil {
 			break
 		}
 
-		return e.complexity.Server.DeleteUser(childComplexity), true
+		return e.ComplexityRoot.Server.DeleteUser(childComplexity), true
 	case "Server.deletedAt":
-		if e.complexity.Server.DeletedAt == nil {
+		if e.ComplexityRoot.Server.DeletedAt == nil {
 			break
 		}
 
-		return e.complexity.Server.DeletedAt(childComplexity), true
+		return e.ComplexityRoot.Server.DeletedAt(childComplexity), true
 	case "Server.description":
-		if e.complexity.Server.Description == nil {
+		if e.ComplexityRoot.Server.Description == nil {
 			break
 		}
 
-		return e.complexity.Server.Description(childComplexity), true
+		return e.ComplexityRoot.Server.Description(childComplexity), true
 	case "Server.enabled":
-		if e.complexity.Server.Enabled == nil {
+		if e.ComplexityRoot.Server.Enabled == nil {
 			break
 		}
 
-		return e.complexity.Server.Enabled(childComplexity), true
+		return e.ComplexityRoot.Server.Enabled(childComplexity), true
 	case "Server.firewallMark":
-		if e.complexity.Server.FirewallMark == nil {
+		if e.ComplexityRoot.Server.FirewallMark == nil {
 			break
 		}
 
-		return e.complexity.Server.FirewallMark(childComplexity), true
+		return e.ComplexityRoot.Server.FirewallMark(childComplexity), true
 	case "Server.hooks":
-		if e.complexity.Server.Hooks == nil {
+		if e.ComplexityRoot.Server.Hooks == nil {
 			break
 		}
 
-		return e.complexity.Server.Hooks(childComplexity), true
+		return e.ComplexityRoot.Server.Hooks(childComplexity), true
 	case "Server.id":
-		if e.complexity.Server.ID == nil {
+		if e.ComplexityRoot.Server.ID == nil {
 			break
 		}
 
-		return e.complexity.Server.ID(childComplexity), true
+		return e.ComplexityRoot.Server.ID(childComplexity), true
 	case "Server.interfaceStats":
-		if e.complexity.Server.InterfaceStats == nil {
+		if e.ComplexityRoot.Server.InterfaceStats == nil {
 			break
 		}
 
-		return e.complexity.Server.InterfaceStats(childComplexity), true
+		return e.ComplexityRoot.Server.InterfaceStats(childComplexity), true
 	case "Server.listenPort":
-		if e.complexity.Server.ListenPort == nil {
+		if e.ComplexityRoot.Server.ListenPort == nil {
 			break
 		}
 
-		return e.complexity.Server.ListenPort(childComplexity), true
+		return e.ComplexityRoot.Server.ListenPort(childComplexity), true
 	case "Server.mtu":
-		if e.complexity.Server.Mtu == nil {
+		if e.ComplexityRoot.Server.Mtu == nil {
 			break
 		}
 
-		return e.complexity.Server.Mtu(childComplexity), true
+		return e.ComplexityRoot.Server.Mtu(childComplexity), true
 	case "Server.name":
-		if e.complexity.Server.Name == nil {
+		if e.ComplexityRoot.Server.Name == nil {
 			break
 		}
 
-		return e.complexity.Server.Name(childComplexity), true
+		return e.ComplexityRoot.Server.Name(childComplexity), true
 	case "Server.peers":
-		if e.complexity.Server.Peers == nil {
+		if e.ComplexityRoot.Server.Peers == nil {
 			break
 		}
 
-		return e.complexity.Server.Peers(childComplexity), true
+		return e.ComplexityRoot.Server.Peers(childComplexity), true
 	case "Server.publicKey":
-		if e.complexity.Server.PublicKey == nil {
+		if e.ComplexityRoot.Server.PublicKey == nil {
 			break
 		}
 
-		return e.complexity.Server.PublicKey(childComplexity), true
+		return e.ComplexityRoot.Server.PublicKey(childComplexity), true
 	case "Server.running":
-		if e.complexity.Server.Running == nil {
+		if e.ComplexityRoot.Server.Running == nil {
 			break
 		}
 
-		return e.complexity.Server.Running(childComplexity), true
+		return e.ComplexityRoot.Server.Running(childComplexity), true
 	case "Server.updateUser":
-		if e.complexity.Server.UpdateUser == nil {
+		if e.ComplexityRoot.Server.UpdateUser == nil {
 			break
 		}
 
-		return e.complexity.Server.UpdateUser(childComplexity), true
+		return e.ComplexityRoot.Server.UpdateUser(childComplexity), true
 	case "Server.updatedAt":
-		if e.complexity.Server.UpdatedAt == nil {
+		if e.ComplexityRoot.Server.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.Server.UpdatedAt(childComplexity), true
+		return e.ComplexityRoot.Server.UpdatedAt(childComplexity), true
 
 	case "ServerChangedEvent.action":
-		if e.complexity.ServerChangedEvent.Action == nil {
+		if e.ComplexityRoot.ServerChangedEvent.Action == nil {
 			break
 		}
 
-		return e.complexity.ServerChangedEvent.Action(childComplexity), true
+		return e.ComplexityRoot.ServerChangedEvent.Action(childComplexity), true
 	case "ServerChangedEvent.node":
-		if e.complexity.ServerChangedEvent.Node == nil {
+		if e.ComplexityRoot.ServerChangedEvent.Node == nil {
 			break
 		}
 
-		return e.complexity.ServerChangedEvent.Node(childComplexity), true
+		return e.ComplexityRoot.ServerChangedEvent.Node(childComplexity), true
 
 	case "ServerHook.command":
-		if e.complexity.ServerHook.Command == nil {
+		if e.ComplexityRoot.ServerHook.Command == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.Command(childComplexity), true
+		return e.ComplexityRoot.ServerHook.Command(childComplexity), true
 	case "ServerHook.runOnPostDown":
-		if e.complexity.ServerHook.RunOnPostDown == nil {
+		if e.ComplexityRoot.ServerHook.RunOnPostDown == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.RunOnPostDown(childComplexity), true
+		return e.ComplexityRoot.ServerHook.RunOnPostDown(childComplexity), true
 	case "ServerHook.runOnPostUp":
-		if e.complexity.ServerHook.RunOnPostUp == nil {
+		if e.ComplexityRoot.ServerHook.RunOnPostUp == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.RunOnPostUp(childComplexity), true
+		return e.ComplexityRoot.ServerHook.RunOnPostUp(childComplexity), true
 	case "ServerHook.runOnPreDown":
-		if e.complexity.ServerHook.RunOnPreDown == nil {
+		if e.ComplexityRoot.ServerHook.RunOnPreDown == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.RunOnPreDown(childComplexity), true
+		return e.ComplexityRoot.ServerHook.RunOnPreDown(childComplexity), true
 	case "ServerHook.runOnPreUp":
-		if e.complexity.ServerHook.RunOnPreUp == nil {
+		if e.ComplexityRoot.ServerHook.RunOnPreUp == nil {
 			break
 		}
 
-		return e.complexity.ServerHook.RunOnPreUp(childComplexity), true
+		return e.ComplexityRoot.ServerHook.RunOnPreUp(childComplexity), true
 
 	case "ServerInterfaceStats.rxBytes":
-		if e.complexity.ServerInterfaceStats.RxBytes == nil {
+		if e.ComplexityRoot.ServerInterfaceStats.RxBytes == nil {
 			break
 		}
 
-		return e.complexity.ServerInterfaceStats.RxBytes(childComplexity), true
+		return e.ComplexityRoot.ServerInterfaceStats.RxBytes(childComplexity), true
 	case "ServerInterfaceStats.txBytes":
-		if e.complexity.ServerInterfaceStats.TxBytes == nil {
+		if e.ComplexityRoot.ServerInterfaceStats.TxBytes == nil {
 			break
 		}
 
-		return e.complexity.ServerInterfaceStats.TxBytes(childComplexity), true
+		return e.ComplexityRoot.ServerInterfaceStats.TxBytes(childComplexity), true
 
 	case "SignInPayload.clientMutationId":
-		if e.complexity.SignInPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.SignInPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.SignInPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.SignInPayload.ClientMutationID(childComplexity), true
 	case "SignInPayload.expiresAt":
-		if e.complexity.SignInPayload.ExpiresAt == nil {
+		if e.ComplexityRoot.SignInPayload.ExpiresAt == nil {
 			break
 		}
 
-		return e.complexity.SignInPayload.ExpiresAt(childComplexity), true
+		return e.ComplexityRoot.SignInPayload.ExpiresAt(childComplexity), true
 	case "SignInPayload.expiresIn":
-		if e.complexity.SignInPayload.ExpiresIn == nil {
+		if e.ComplexityRoot.SignInPayload.ExpiresIn == nil {
 			break
 		}
 
-		return e.complexity.SignInPayload.ExpiresIn(childComplexity), true
+		return e.ComplexityRoot.SignInPayload.ExpiresIn(childComplexity), true
 	case "SignInPayload.token":
-		if e.complexity.SignInPayload.Token == nil {
+		if e.ComplexityRoot.SignInPayload.Token == nil {
 			break
 		}
 
-		return e.complexity.SignInPayload.Token(childComplexity), true
+		return e.ComplexityRoot.SignInPayload.Token(childComplexity), true
 
 	case "StartServerPayload.clientMutationId":
-		if e.complexity.StartServerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.StartServerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.StartServerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.StartServerPayload.ClientMutationID(childComplexity), true
 	case "StartServerPayload.server":
-		if e.complexity.StartServerPayload.Server == nil {
+		if e.ComplexityRoot.StartServerPayload.Server == nil {
 			break
 		}
 
-		return e.complexity.StartServerPayload.Server(childComplexity), true
+		return e.ComplexityRoot.StartServerPayload.Server(childComplexity), true
 
 	case "StopServerPayload.clientMutationId":
-		if e.complexity.StopServerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.StopServerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.StopServerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.StopServerPayload.ClientMutationID(childComplexity), true
 	case "StopServerPayload.server":
-		if e.complexity.StopServerPayload.Server == nil {
+		if e.ComplexityRoot.StopServerPayload.Server == nil {
 			break
 		}
 
-		return e.complexity.StopServerPayload.Server(childComplexity), true
+		return e.ComplexityRoot.StopServerPayload.Server(childComplexity), true
 
 	case "Subscription.backendChanged":
-		if e.complexity.Subscription.BackendChanged == nil {
+		if e.ComplexityRoot.Subscription.BackendChanged == nil {
 			break
 		}
 
-		return e.complexity.Subscription.BackendChanged(childComplexity), true
+		return e.ComplexityRoot.Subscription.BackendChanged(childComplexity), true
 	case "Subscription.nodeChanged":
-		if e.complexity.Subscription.NodeChanged == nil {
+		if e.ComplexityRoot.Subscription.NodeChanged == nil {
 			break
 		}
 
-		return e.complexity.Subscription.NodeChanged(childComplexity), true
+		return e.ComplexityRoot.Subscription.NodeChanged(childComplexity), true
 	case "Subscription.peerChanged":
-		if e.complexity.Subscription.PeerChanged == nil {
+		if e.ComplexityRoot.Subscription.PeerChanged == nil {
 			break
 		}
 
-		return e.complexity.Subscription.PeerChanged(childComplexity), true
+		return e.ComplexityRoot.Subscription.PeerChanged(childComplexity), true
 	case "Subscription.serverChanged":
-		if e.complexity.Subscription.ServerChanged == nil {
+		if e.ComplexityRoot.Subscription.ServerChanged == nil {
 			break
 		}
 
-		return e.complexity.Subscription.ServerChanged(childComplexity), true
+		return e.ComplexityRoot.Subscription.ServerChanged(childComplexity), true
 	case "Subscription.userChanged":
-		if e.complexity.Subscription.UserChanged == nil {
+		if e.ComplexityRoot.Subscription.UserChanged == nil {
 			break
 		}
 
-		return e.complexity.Subscription.UserChanged(childComplexity), true
+		return e.ComplexityRoot.Subscription.UserChanged(childComplexity), true
 
 	case "UpdateBackendPayload.backend":
-		if e.complexity.UpdateBackendPayload.Backend == nil {
+		if e.ComplexityRoot.UpdateBackendPayload.Backend == nil {
 			break
 		}
 
-		return e.complexity.UpdateBackendPayload.Backend(childComplexity), true
+		return e.ComplexityRoot.UpdateBackendPayload.Backend(childComplexity), true
 	case "UpdateBackendPayload.clientMutationId":
-		if e.complexity.UpdateBackendPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.UpdateBackendPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.UpdateBackendPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.UpdateBackendPayload.ClientMutationID(childComplexity), true
 
 	case "UpdatePeerPayload.clientMutationId":
-		if e.complexity.UpdatePeerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.UpdatePeerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.UpdatePeerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.UpdatePeerPayload.ClientMutationID(childComplexity), true
 	case "UpdatePeerPayload.peer":
-		if e.complexity.UpdatePeerPayload.Peer == nil {
+		if e.ComplexityRoot.UpdatePeerPayload.Peer == nil {
 			break
 		}
 
-		return e.complexity.UpdatePeerPayload.Peer(childComplexity), true
+		return e.ComplexityRoot.UpdatePeerPayload.Peer(childComplexity), true
 
 	case "UpdateServerPayload.clientMutationId":
-		if e.complexity.UpdateServerPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.UpdateServerPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.UpdateServerPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.UpdateServerPayload.ClientMutationID(childComplexity), true
 	case "UpdateServerPayload.server":
-		if e.complexity.UpdateServerPayload.Server == nil {
+		if e.ComplexityRoot.UpdateServerPayload.Server == nil {
 			break
 		}
 
-		return e.complexity.UpdateServerPayload.Server(childComplexity), true
+		return e.ComplexityRoot.UpdateServerPayload.Server(childComplexity), true
 
 	case "UpdateUserPayload.clientMutationId":
-		if e.complexity.UpdateUserPayload.ClientMutationID == nil {
+		if e.ComplexityRoot.UpdateUserPayload.ClientMutationID == nil {
 			break
 		}
 
-		return e.complexity.UpdateUserPayload.ClientMutationID(childComplexity), true
+		return e.ComplexityRoot.UpdateUserPayload.ClientMutationID(childComplexity), true
 	case "UpdateUserPayload.user":
-		if e.complexity.UpdateUserPayload.User == nil {
+		if e.ComplexityRoot.UpdateUserPayload.User == nil {
 			break
 		}
 
-		return e.complexity.UpdateUserPayload.User(childComplexity), true
+		return e.ComplexityRoot.UpdateUserPayload.User(childComplexity), true
 
 	case "User.createdAt":
-		if e.complexity.User.CreatedAt == nil {
+		if e.ComplexityRoot.User.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.User.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.User.CreatedAt(childComplexity), true
 	case "User.email":
-		if e.complexity.User.Email == nil {
+		if e.ComplexityRoot.User.Email == nil {
 			break
 		}
 
-		return e.complexity.User.Email(childComplexity), true
+		return e.ComplexityRoot.User.Email(childComplexity), true
 	case "User.id":
-		if e.complexity.User.ID == nil {
+		if e.ComplexityRoot.User.ID == nil {
 			break
 		}
 
-		return e.complexity.User.ID(childComplexity), true
+		return e.ComplexityRoot.User.ID(childComplexity), true
 	case "User.peers":
-		if e.complexity.User.Peers == nil {
+		if e.ComplexityRoot.User.Peers == nil {
 			break
 		}
 
-		return e.complexity.User.Peers(childComplexity), true
+		return e.ComplexityRoot.User.Peers(childComplexity), true
 	case "User.servers":
-		if e.complexity.User.Servers == nil {
+		if e.ComplexityRoot.User.Servers == nil {
 			break
 		}
 
-		return e.complexity.User.Servers(childComplexity), true
+		return e.ComplexityRoot.User.Servers(childComplexity), true
 	case "User.updatedAt":
-		if e.complexity.User.UpdatedAt == nil {
+		if e.ComplexityRoot.User.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.User.UpdatedAt(childComplexity), true
+		return e.ComplexityRoot.User.UpdatedAt(childComplexity), true
 
 	case "UserChangedEvent.action":
-		if e.complexity.UserChangedEvent.Action == nil {
+		if e.ComplexityRoot.UserChangedEvent.Action == nil {
 			break
 		}
 
-		return e.complexity.UserChangedEvent.Action(childComplexity), true
+		return e.ComplexityRoot.UserChangedEvent.Action(childComplexity), true
 	case "UserChangedEvent.node":
-		if e.complexity.UserChangedEvent.Node == nil {
+		if e.ComplexityRoot.UserChangedEvent.Node == nil {
 			break
 		}
 
-		return e.complexity.UserChangedEvent.Node(childComplexity), true
+		return e.ComplexityRoot.UserChangedEvent.Node(childComplexity), true
 
 	}
 	return 0, false
@@ -1639,7 +1624,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
-	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
+	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCreateBackendInput,
 		ec.unmarshalInputCreatePeerInput,
@@ -1673,9 +1658,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
 				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
-				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
-					result := <-ec.deferredResults
-					atomic.AddInt32(&ec.pendingDeferred, -1)
+				if atomic.LoadInt32(&ec.PendingDeferred) > 0 {
+					result := <-ec.DeferredResults
+					atomic.AddInt32(&ec.PendingDeferred, -1)
 					data = result.Result
 					response.Path = result.Path
 					response.Label = result.Label
@@ -1687,8 +1672,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 			response.Data = buf.Bytes()
-			if atomic.LoadInt32(&ec.deferred) > 0 {
-				hasNext := atomic.LoadInt32(&ec.pendingDeferred) > 0
+			if atomic.LoadInt32(&ec.Deferred) > 0 {
+				hasNext := atomic.LoadInt32(&ec.PendingDeferred) > 0
 				response.HasNext = &hasNext
 			}
 
@@ -1733,44 +1718,22 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 }
 
 type executionContext struct {
-	*graphql.OperationContext
-	*executableSchema
-	deferred        int32
-	pendingDeferred int32
-	deferredResults chan graphql.DeferredResult
+	*graphql.ExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 }
 
-func (ec *executionContext) processDeferredGroup(dg graphql.DeferredGroup) {
-	atomic.AddInt32(&ec.pendingDeferred, 1)
-	go func() {
-		ctx := graphql.WithFreshResponseContext(dg.Context)
-		dg.FieldSet.Dispatch(ctx)
-		ds := graphql.DeferredResult{
-			Path:   dg.Path,
-			Label:  dg.Label,
-			Result: dg.FieldSet,
-			Errors: graphql.GetErrors(ctx),
-		}
-		// null fields should bubble up
-		if dg.FieldSet.Invalids > 0 {
-			ds.Result = graphql.Null
-		}
-		ec.deferredResults <- ds
-	}()
-}
-
-func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
+func newExecutionContext(
+	opCtx *graphql.OperationContext,
+	execSchema *executableSchema,
+	deferredResults chan graphql.DeferredResult,
+) executionContext {
+	return executionContext{
+		ExecutionContextState: graphql.NewExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot](
+			opCtx,
+			(*graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot])(execSchema),
+			parsedSchema,
+			deferredResults,
+		),
 	}
-	return introspection.WrapSchema(ec.Schema()), nil
-}
-
-func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
-	}
-	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 var sources = []*ast.Source{
@@ -2968,7 +2931,7 @@ func (ec *executionContext) _Backend_supported(ctx context.Context, field graphq
 		field,
 		ec.fieldContext_Backend_supported,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Backend().Supported(ctx, obj)
+			return ec.Resolvers.Backend().Supported(ctx, obj)
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -2998,17 +2961,17 @@ func (ec *executionContext) _Backend_servers(ctx context.Context, field graphql.
 		ec.fieldContext_Backend_servers,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Backend().Servers(ctx, obj, fc.Args["query"].(*string), fc.Args["enabled"].(*bool))
+			return ec.Resolvers.Backend().Servers(ctx, obj, fc.Args["query"].(*string), fc.Args["enabled"].(*bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.Server
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -3096,17 +3059,17 @@ func (ec *executionContext) _Backend_peers(ctx context.Context, field graphql.Co
 		ec.fieldContext_Backend_peers,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Backend().Peers(ctx, obj, fc.Args["query"].(*string))
+			return ec.Resolvers.Backend().Peers(ctx, obj, fc.Args["query"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.Peer
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -3187,17 +3150,17 @@ func (ec *executionContext) _Backend_foreignServers(ctx context.Context, field g
 		field,
 		ec.fieldContext_Backend_foreignServers,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Backend().ForeignServers(ctx, obj)
+			return ec.Resolvers.Backend().ForeignServers(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.ForeignServer
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -3247,17 +3210,17 @@ func (ec *executionContext) _Backend_createUser(ctx context.Context, field graph
 		field,
 		ec.fieldContext_Backend_createUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Backend().CreateUser(ctx, obj)
+			return ec.Resolvers.Backend().CreateUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -3303,17 +3266,17 @@ func (ec *executionContext) _Backend_updateUser(ctx context.Context, field graph
 		field,
 		ec.fieldContext_Backend_updateUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Backend().UpdateUser(ctx, obj)
+			return ec.Resolvers.Backend().UpdateUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -3359,17 +3322,17 @@ func (ec *executionContext) _Backend_deleteUser(ctx context.Context, field graph
 		field,
 		ec.fieldContext_Backend_deleteUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Backend().DeleteUser(ctx, obj)
+			return ec.Resolvers.Backend().DeleteUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -4860,17 +4823,17 @@ func (ec *executionContext) _ForeignServer_backend(ctx context.Context, field gr
 		field,
 		ec.fieldContext_ForeignServer_backend,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.ForeignServer().Backend(ctx, obj)
+			return ec.Resolvers.ForeignServer().Backend(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.Backend
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -5124,7 +5087,7 @@ func (ec *executionContext) _Mutation_signIn(ctx context.Context, field graphql.
 		ec.fieldContext_Mutation_signIn,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SignIn(ctx, fc.Args["input"].(model.SignInInput))
+			return ec.Resolvers.Mutation().SignIn(ctx, fc.Args["input"].(model.SignInInput))
 		},
 		nil,
 		ec.marshalOSignInPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐSignInPayload,
@@ -5175,17 +5138,17 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_createUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateUser(ctx, fc.Args["input"].(model.CreateUserInput))
+			return ec.Resolvers.Mutation().CreateUser(ctx, fc.Args["input"].(model.CreateUserInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.CreateUserPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5235,17 +5198,17 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_updateUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateUser(ctx, fc.Args["input"].(model.UpdateUserInput))
+			return ec.Resolvers.Mutation().UpdateUser(ctx, fc.Args["input"].(model.UpdateUserInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.UpdateUserPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5295,17 +5258,17 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_deleteUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteUser(ctx, fc.Args["input"].(model.DeleteUserInput))
+			return ec.Resolvers.Mutation().DeleteUser(ctx, fc.Args["input"].(model.DeleteUserInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.DeleteUserPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5355,17 +5318,17 @@ func (ec *executionContext) _Mutation_generateWireguardKey(ctx context.Context, 
 		ec.fieldContext_Mutation_generateWireguardKey,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().GenerateWireguardKey(ctx, fc.Args["input"].(model.GenerateWireguardKeyInput))
+			return ec.Resolvers.Mutation().GenerateWireguardKey(ctx, fc.Args["input"].(model.GenerateWireguardKeyInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.GenerateWireguardKeyPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5417,17 +5380,17 @@ func (ec *executionContext) _Mutation_createServer(ctx context.Context, field gr
 		ec.fieldContext_Mutation_createServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateServer(ctx, fc.Args["input"].(model.CreateServerInput))
+			return ec.Resolvers.Mutation().CreateServer(ctx, fc.Args["input"].(model.CreateServerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.CreateServerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5477,17 +5440,17 @@ func (ec *executionContext) _Mutation_updateServer(ctx context.Context, field gr
 		ec.fieldContext_Mutation_updateServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateServer(ctx, fc.Args["input"].(model.UpdateServerInput))
+			return ec.Resolvers.Mutation().UpdateServer(ctx, fc.Args["input"].(model.UpdateServerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.UpdateServerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5537,17 +5500,17 @@ func (ec *executionContext) _Mutation_deleteServer(ctx context.Context, field gr
 		ec.fieldContext_Mutation_deleteServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteServer(ctx, fc.Args["input"].(model.DeleteServerInput))
+			return ec.Resolvers.Mutation().DeleteServer(ctx, fc.Args["input"].(model.DeleteServerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.DeleteServerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5597,17 +5560,17 @@ func (ec *executionContext) _Mutation_startServer(ctx context.Context, field gra
 		ec.fieldContext_Mutation_startServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().StartServer(ctx, fc.Args["input"].(model.StartServerInput))
+			return ec.Resolvers.Mutation().StartServer(ctx, fc.Args["input"].(model.StartServerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.StartServerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5657,17 +5620,17 @@ func (ec *executionContext) _Mutation_stopServer(ctx context.Context, field grap
 		ec.fieldContext_Mutation_stopServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().StopServer(ctx, fc.Args["input"].(model.StopServerInput))
+			return ec.Resolvers.Mutation().StopServer(ctx, fc.Args["input"].(model.StopServerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.StopServerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5717,17 +5680,17 @@ func (ec *executionContext) _Mutation_createPeer(ctx context.Context, field grap
 		ec.fieldContext_Mutation_createPeer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreatePeer(ctx, fc.Args["input"].(model.CreatePeerInput))
+			return ec.Resolvers.Mutation().CreatePeer(ctx, fc.Args["input"].(model.CreatePeerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.CreatePeerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5777,17 +5740,17 @@ func (ec *executionContext) _Mutation_updatePeer(ctx context.Context, field grap
 		ec.fieldContext_Mutation_updatePeer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdatePeer(ctx, fc.Args["input"].(model.UpdatePeerInput))
+			return ec.Resolvers.Mutation().UpdatePeer(ctx, fc.Args["input"].(model.UpdatePeerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.UpdatePeerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5837,17 +5800,17 @@ func (ec *executionContext) _Mutation_deletePeer(ctx context.Context, field grap
 		ec.fieldContext_Mutation_deletePeer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeletePeer(ctx, fc.Args["input"].(model.DeletePeerInput))
+			return ec.Resolvers.Mutation().DeletePeer(ctx, fc.Args["input"].(model.DeletePeerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.DeletePeerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5897,17 +5860,17 @@ func (ec *executionContext) _Mutation_importForeignServer(ctx context.Context, f
 		ec.fieldContext_Mutation_importForeignServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ImportForeignServer(ctx, fc.Args["input"].(model.ImportForeignServerInput))
+			return ec.Resolvers.Mutation().ImportForeignServer(ctx, fc.Args["input"].(model.ImportForeignServerInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.ImportForeignServerPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -5957,17 +5920,17 @@ func (ec *executionContext) _Mutation_createBackend(ctx context.Context, field g
 		ec.fieldContext_Mutation_createBackend,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateBackend(ctx, fc.Args["input"].(model.CreateBackendInput))
+			return ec.Resolvers.Mutation().CreateBackend(ctx, fc.Args["input"].(model.CreateBackendInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.CreateBackendPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6017,17 +5980,17 @@ func (ec *executionContext) _Mutation_updateBackend(ctx context.Context, field g
 		ec.fieldContext_Mutation_updateBackend,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateBackend(ctx, fc.Args["input"].(model.UpdateBackendInput))
+			return ec.Resolvers.Mutation().UpdateBackend(ctx, fc.Args["input"].(model.UpdateBackendInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.UpdateBackendPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6077,17 +6040,17 @@ func (ec *executionContext) _Mutation_deleteBackend(ctx context.Context, field g
 		ec.fieldContext_Mutation_deleteBackend,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteBackend(ctx, fc.Args["input"].(model.DeleteBackendInput))
+			return ec.Resolvers.Mutation().DeleteBackend(ctx, fc.Args["input"].(model.DeleteBackendInput))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.DeleteBackendPayload
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -6165,17 +6128,17 @@ func (ec *executionContext) _Peer_server(ctx context.Context, field graphql.Coll
 		field,
 		ec.fieldContext_Peer_server,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Peer().Server(ctx, obj)
+			return ec.Resolvers.Peer().Server(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.Server
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -6251,17 +6214,17 @@ func (ec *executionContext) _Peer_backend(ctx context.Context, field graphql.Col
 		field,
 		ec.fieldContext_Peer_backend,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Peer().Backend(ctx, obj)
+			return ec.Resolvers.Peer().Backend(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.Backend
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -6567,17 +6530,17 @@ func (ec *executionContext) _Peer_stats(ctx context.Context, field graphql.Colle
 		field,
 		ec.fieldContext_Peer_stats,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Peer().Stats(ctx, obj)
+			return ec.Resolvers.Peer().Stats(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.PeerStats
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -6621,17 +6584,17 @@ func (ec *executionContext) _Peer_createUser(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_Peer_createUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Peer().CreateUser(ctx, obj)
+			return ec.Resolvers.Peer().CreateUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -6677,17 +6640,17 @@ func (ec *executionContext) _Peer_updateUser(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_Peer_updateUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Peer().UpdateUser(ctx, obj)
+			return ec.Resolvers.Peer().UpdateUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -6733,17 +6696,17 @@ func (ec *executionContext) _Peer_deleteUser(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_Peer_deleteUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Peer().DeleteUser(ctx, obj)
+			return ec.Resolvers.Peer().DeleteUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -7233,17 +7196,17 @@ func (ec *executionContext) _Query_viewer(ctx context.Context, field graphql.Col
 		field,
 		ec.fieldContext_Query_viewer,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Viewer(ctx)
+			return ec.Resolvers.Query().Viewer(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7290,17 +7253,17 @@ func (ec *executionContext) _Query_node(ctx context.Context, field graphql.Colle
 		ec.fieldContext_Query_node,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Node(ctx, fc.Args["id"].(model.ID))
+			return ec.Resolvers.Query().Node(ctx, fc.Args["id"].(model.ID))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal model.Node
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7344,17 +7307,17 @@ func (ec *executionContext) _Query_nodes(ctx context.Context, field graphql.Coll
 		ec.fieldContext_Query_nodes,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Nodes(ctx, fc.Args["ids"].([]*model.ID))
+			return ec.Resolvers.Query().Nodes(ctx, fc.Args["ids"].([]*model.ID))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []model.Node
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7398,17 +7361,17 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 		ec.fieldContext_Query_users,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Users(ctx, fc.Args["query"].(*string))
+			return ec.Resolvers.Query().Users(ctx, fc.Args["query"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7465,17 +7428,17 @@ func (ec *executionContext) _Query_availableBackends(ctx context.Context, field 
 		field,
 		ec.fieldContext_Query_availableBackends,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().AvailableBackends(ctx)
+			return ec.Resolvers.Query().AvailableBackends(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.AvailableBackend
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7516,17 +7479,17 @@ func (ec *executionContext) _Query_backends(ctx context.Context, field graphql.C
 		ec.fieldContext_Query_backends,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Backends(ctx, fc.Args["type"].(*string))
+			return ec.Resolvers.Query().Backends(ctx, fc.Args["type"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.Backend
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7602,17 +7565,17 @@ func (ec *executionContext) _Query_servers(ctx context.Context, field graphql.Co
 		ec.fieldContext_Query_servers,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Servers(ctx, fc.Args["query"].(*string), fc.Args["enabled"].(*bool))
+			return ec.Resolvers.Query().Servers(ctx, fc.Args["query"].(*string), fc.Args["enabled"].(*bool))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.Server
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7700,17 +7663,17 @@ func (ec *executionContext) _Query_peers(ctx context.Context, field graphql.Coll
 		ec.fieldContext_Query_peers,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Peers(ctx, fc.Args["query"].(*string))
+			return ec.Resolvers.Query().Peers(ctx, fc.Args["query"].(*string))
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.Peer
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7791,17 +7754,17 @@ func (ec *executionContext) _Query_foreignServers(ctx context.Context, field gra
 		field,
 		ec.fieldContext_Query_foreignServers,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().ForeignServers(ctx)
+			return ec.Resolvers.Query().ForeignServers(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.ForeignServer
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -7852,7 +7815,7 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 		ec.fieldContext_Query___type,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.introspectType(fc.Args["name"].(string))
+			return ec.IntrospectType(fc.Args["name"].(string))
 		},
 		nil,
 		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
@@ -7916,7 +7879,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Query___schema,
 		func(ctx context.Context) (any, error) {
-			return ec.introspectSchema()
+			return ec.IntrospectSchema()
 		},
 		nil,
 		ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema,
@@ -8046,17 +8009,17 @@ func (ec *executionContext) _Server_backend(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Server_backend,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Server().Backend(ctx, obj)
+			return ec.Resolvers.Server().Backend(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.Backend
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -8393,17 +8356,17 @@ func (ec *executionContext) _Server_peers(ctx context.Context, field graphql.Col
 		field,
 		ec.fieldContext_Server_peers,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Server().Peers(ctx, obj)
+			return ec.Resolvers.Server().Peers(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.Peer
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -8479,11 +8442,11 @@ func (ec *executionContext) _Server_interfaceStats(ctx context.Context, field gr
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.ServerInterfaceStats
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -8521,17 +8484,17 @@ func (ec *executionContext) _Server_createUser(ctx context.Context, field graphq
 		field,
 		ec.fieldContext_Server_createUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Server().CreateUser(ctx, obj)
+			return ec.Resolvers.Server().CreateUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -8577,17 +8540,17 @@ func (ec *executionContext) _Server_updateUser(ctx context.Context, field graphq
 		field,
 		ec.fieldContext_Server_updateUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Server().UpdateUser(ctx, obj)
+			return ec.Resolvers.Server().UpdateUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -8633,17 +8596,17 @@ func (ec *executionContext) _Server_deleteUser(ctx context.Context, field graphq
 		field,
 		ec.fieldContext_Server_deleteUser,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Server().DeleteUser(ctx, obj)
+			return ec.Resolvers.Server().DeleteUser(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.User
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -9401,17 +9364,17 @@ func (ec *executionContext) _Subscription_backendChanged(ctx context.Context, fi
 		field,
 		ec.fieldContext_Subscription_backendChanged,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Subscription().BackendChanged(ctx)
+			return ec.Resolvers.Subscription().BackendChanged(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.BackendChangedEvent
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -9449,17 +9412,17 @@ func (ec *executionContext) _Subscription_userChanged(ctx context.Context, field
 		field,
 		ec.fieldContext_Subscription_userChanged,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Subscription().UserChanged(ctx)
+			return ec.Resolvers.Subscription().UserChanged(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.UserChangedEvent
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -9497,17 +9460,17 @@ func (ec *executionContext) _Subscription_serverChanged(ctx context.Context, fie
 		field,
 		ec.fieldContext_Subscription_serverChanged,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Subscription().ServerChanged(ctx)
+			return ec.Resolvers.Subscription().ServerChanged(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.ServerChangedEvent
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -9545,17 +9508,17 @@ func (ec *executionContext) _Subscription_peerChanged(ctx context.Context, field
 		field,
 		ec.fieldContext_Subscription_peerChanged,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Subscription().PeerChanged(ctx)
+			return ec.Resolvers.Subscription().PeerChanged(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal *model.PeerChangedEvent
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -9593,17 +9556,17 @@ func (ec *executionContext) _Subscription_nodeChanged(ctx context.Context, field
 		field,
 		ec.fieldContext_Subscription_nodeChanged,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Subscription().NodeChanged(ctx)
+			return ec.Resolvers.Subscription().NodeChanged(ctx)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal model.NodeChangedEvent
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, nil, directive0)
+				return ec.Directives.Authenticated(ctx, nil, directive0)
 			}
 
 			next = directive1
@@ -10053,17 +10016,17 @@ func (ec *executionContext) _User_servers(ctx context.Context, field graphql.Col
 		field,
 		ec.fieldContext_User_servers,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.User().Servers(ctx, obj)
+			return ec.Resolvers.User().Servers(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.Server
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -10139,17 +10102,17 @@ func (ec *executionContext) _User_peers(ctx context.Context, field graphql.Colle
 		field,
 		ec.fieldContext_User_peers,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.User().Peers(ctx, obj)
+			return ec.Resolvers.User().Peers(ctx, obj)
 		},
 		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
 			directive0 := next
 
 			directive1 := func(ctx context.Context) (any, error) {
-				if ec.directives.Authenticated == nil {
+				if ec.Directives.Authenticated == nil {
 					var zeroVal []*model.Peer
 					return zeroVal, errors.New("directive authenticated is not implemented")
 				}
-				return ec.directives.Authenticated(ctx, obj, directive0)
+				return ec.Directives.Authenticated(ctx, obj, directive0)
 			}
 
 			next = directive1
@@ -11790,6 +11753,10 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 func (ec *executionContext) unmarshalInputCreateBackendInput(ctx context.Context, obj any) (model.CreateBackendInput, error) {
 	var it model.CreateBackendInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -11839,12 +11806,15 @@ func (ec *executionContext) unmarshalInputCreateBackendInput(ctx context.Context
 			it.Enabled = graphql.OmittableOf(data)
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, obj any) (model.CreatePeerInput, error) {
 	var it model.CreatePeerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -11929,12 +11899,15 @@ func (ec *executionContext) unmarshalInputCreatePeerInput(ctx context.Context, o
 			it.Hooks = graphql.OmittableOf(data)
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context, obj any) (model.CreateServerInput, error) {
 	var it model.CreateServerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12040,12 +12013,15 @@ func (ec *executionContext) unmarshalInputCreateServerInput(ctx context.Context,
 			it.Hooks = graphql.OmittableOf(data)
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, obj any) (model.CreateUserInput, error) {
 	var it model.CreateUserInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12081,12 +12057,15 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 			it.Password = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputDeleteBackendInput(ctx context.Context, obj any) (model.DeleteBackendInput, error) {
 	var it model.DeleteBackendInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12115,12 +12094,15 @@ func (ec *executionContext) unmarshalInputDeleteBackendInput(ctx context.Context
 			it.ID = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputDeletePeerInput(ctx context.Context, obj any) (model.DeletePeerInput, error) {
 	var it model.DeletePeerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12149,12 +12131,15 @@ func (ec *executionContext) unmarshalInputDeletePeerInput(ctx context.Context, o
 			it.ID = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputDeleteServerInput(ctx context.Context, obj any) (model.DeleteServerInput, error) {
 	var it model.DeleteServerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12183,12 +12168,15 @@ func (ec *executionContext) unmarshalInputDeleteServerInput(ctx context.Context,
 			it.ID = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputDeleteUserInput(ctx context.Context, obj any) (model.DeleteUserInput, error) {
 	var it model.DeleteUserInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12217,12 +12205,15 @@ func (ec *executionContext) unmarshalInputDeleteUserInput(ctx context.Context, o
 			it.ID = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputGenerateWireguardKeyInput(ctx context.Context, obj any) (model.GenerateWireguardKeyInput, error) {
 	var it model.GenerateWireguardKeyInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12244,12 +12235,15 @@ func (ec *executionContext) unmarshalInputGenerateWireguardKeyInput(ctx context.
 			it.ClientMutationID = graphql.OmittableOf(data)
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputImportForeignServerInput(ctx context.Context, obj any) (model.ImportForeignServerInput, error) {
 	var it model.ImportForeignServerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12285,12 +12279,15 @@ func (ec *executionContext) unmarshalInputImportForeignServerInput(ctx context.C
 			it.Name = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputPeerHookInput(ctx context.Context, obj any) (model.PeerHookInput, error) {
 	var it model.PeerHookInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12333,12 +12330,15 @@ func (ec *executionContext) unmarshalInputPeerHookInput(ctx context.Context, obj
 			it.RunOnDelete = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, obj any) (model.ServerHookInput, error) {
 	var it model.ServerHookInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12388,12 +12388,15 @@ func (ec *executionContext) unmarshalInputServerHookInput(ctx context.Context, o
 			it.RunOnPostDown = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputSignInInput(ctx context.Context, obj any) (model.SignInInput, error) {
 	var it model.SignInInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12429,12 +12432,15 @@ func (ec *executionContext) unmarshalInputSignInInput(ctx context.Context, obj a
 			it.Password = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputStartServerInput(ctx context.Context, obj any) (model.StartServerInput, error) {
 	var it model.StartServerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12463,12 +12469,15 @@ func (ec *executionContext) unmarshalInputStartServerInput(ctx context.Context, 
 			it.ID = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputStopServerInput(ctx context.Context, obj any) (model.StopServerInput, error) {
 	var it model.StopServerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12497,12 +12506,15 @@ func (ec *executionContext) unmarshalInputStopServerInput(ctx context.Context, o
 			it.ID = data
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputUpdateBackendInput(ctx context.Context, obj any) (model.UpdateBackendInput, error) {
 	var it model.UpdateBackendInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12559,12 +12571,15 @@ func (ec *executionContext) unmarshalInputUpdateBackendInput(ctx context.Context
 			it.Enabled = graphql.OmittableOf(data)
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, obj any) (model.UpdatePeerInput, error) {
 	var it model.UpdatePeerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12649,12 +12664,15 @@ func (ec *executionContext) unmarshalInputUpdatePeerInput(ctx context.Context, o
 			it.Hooks = graphql.OmittableOf(data)
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context, obj any) (model.UpdateServerInput, error) {
 	var it model.UpdateServerInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12753,12 +12771,15 @@ func (ec *executionContext) unmarshalInputUpdateServerInput(ctx context.Context,
 			it.Hooks = graphql.OmittableOf(data)
 		}
 	}
-
 	return it, nil
 }
 
 func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, obj any) (model.UpdateUserInput, error) {
 	var it model.UpdateUserInput
+	if obj == nil {
+		return it, nil
+	}
+
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12801,7 +12822,6 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 			it.Password = graphql.OmittableOf(data)
 		}
 	}
-
 	return it, nil
 }
 
@@ -12923,10 +12943,10 @@ func (ec *executionContext) _AvailableBackend(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13237,10 +13257,10 @@ func (ec *executionContext) _Backend(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13281,10 +13301,10 @@ func (ec *executionContext) _BackendChangedEvent(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13322,10 +13342,10 @@ func (ec *executionContext) _CreateBackendPayload(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13360,10 +13380,10 @@ func (ec *executionContext) _CreatePeerPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13398,10 +13418,10 @@ func (ec *executionContext) _CreateServerPayload(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13439,10 +13459,10 @@ func (ec *executionContext) _CreateUserPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13480,10 +13500,10 @@ func (ec *executionContext) _DeleteBackendPayload(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13518,10 +13538,10 @@ func (ec *executionContext) _DeletePeerPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13556,10 +13576,10 @@ func (ec *executionContext) _DeleteServerPayload(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13594,10 +13614,10 @@ func (ec *executionContext) _DeleteUserPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13643,10 +13663,10 @@ func (ec *executionContext) _ForeignInterface(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13708,10 +13728,10 @@ func (ec *executionContext) _ForeignPeer(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13813,10 +13833,10 @@ func (ec *executionContext) _ForeignServer(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13859,10 +13879,10 @@ func (ec *executionContext) _GenerateWireguardKeyPayload(ctx context.Context, se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -13897,10 +13917,10 @@ func (ec *executionContext) _ImportForeignServerPayload(ctx context.Context, sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -14055,10 +14075,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -14341,10 +14361,10 @@ func (ec *executionContext) _Peer(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -14385,10 +14405,10 @@ func (ec *executionContext) _PeerChangedEvent(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -14439,10 +14459,10 @@ func (ec *executionContext) _PeerHook(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -14492,10 +14512,10 @@ func (ec *executionContext) _PeerStats(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -14737,10 +14757,10 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15001,10 +15021,10 @@ func (ec *executionContext) _Server(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15045,10 +15065,10 @@ func (ec *executionContext) _ServerChangedEvent(ctx context.Context, sel ast.Sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15104,10 +15124,10 @@ func (ec *executionContext) _ServerHook(ctx context.Context, sel ast.SelectionSe
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15148,10 +15168,10 @@ func (ec *executionContext) _ServerInterfaceStats(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15199,10 +15219,10 @@ func (ec *executionContext) _SignInPayload(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15240,10 +15260,10 @@ func (ec *executionContext) _StartServerPayload(ctx context.Context, sel ast.Sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15278,10 +15298,10 @@ func (ec *executionContext) _StopServerPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15347,10 +15367,10 @@ func (ec *executionContext) _UpdateBackendPayload(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15385,10 +15405,10 @@ func (ec *executionContext) _UpdatePeerPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15423,10 +15443,10 @@ func (ec *executionContext) _UpdateServerPayload(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15464,10 +15484,10 @@ func (ec *executionContext) _UpdateUserPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15584,10 +15604,10 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15628,10 +15648,10 @@ func (ec *executionContext) _UserChangedEvent(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15684,10 +15704,10 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15732,10 +15752,10 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15790,10 +15810,10 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15845,10 +15865,10 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15900,10 +15920,10 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15959,10 +15979,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -15978,39 +15998,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // region    ***************************** type.gotpl *****************************
 
 func (ec *executionContext) marshalNAvailableBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackendᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AvailableBackend) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAvailableBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackend(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNAvailableBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackend(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -16036,39 +16028,11 @@ func (ec *executionContext) marshalNBackend2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋ
 }
 
 func (ec *executionContext) marshalNBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Backend) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -16314,39 +16278,11 @@ func (ec *executionContext) marshalNForeignInterface2ᚖgithubᚗcomᚋUnAfraid�
 }
 
 func (ec *executionContext) marshalNForeignPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignPeerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ForeignPeer) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNForeignPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignPeer(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNForeignPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignPeer(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -16368,39 +16304,11 @@ func (ec *executionContext) marshalNForeignPeer2ᚖgithubᚗcomᚋUnAfraidᚋwg�
 }
 
 func (ec *executionContext) marshalNForeignServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignServerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ForeignServer) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNForeignServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignServer(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNForeignServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignServer(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -16532,39 +16440,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 }
 
 func (ec *executionContext) marshalNNode2ᚕgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNode(ctx context.Context, sel ast.SelectionSet, v []model.Node) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalONode2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNode(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalONode2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNode(ctx, sel, v[i])
+	})
 
 	return ret
 }
@@ -16580,39 +16460,11 @@ func (ec *executionContext) marshalNNodeChangedEvent2githubᚗcomᚋUnAfraidᚋw
 }
 
 func (ec *executionContext) marshalNPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Peer) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -16667,39 +16519,11 @@ func (ec *executionContext) marshalNServer2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋp
 }
 
 func (ec *executionContext) marshalNServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Server) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -16919,39 +16743,11 @@ func (ec *executionContext) marshalNUser2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkg
 }
 
 func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -16991,39 +16787,11 @@ func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlge
 }
 
 func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17066,39 +16834,11 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx conte
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17122,39 +16862,11 @@ func (ec *executionContext) marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlg
 }
 
 func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17170,39 +16882,11 @@ func (ec *executionContext) marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 }
 
 func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17316,39 +17000,11 @@ func (ec *executionContext) marshalOPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑui
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17370,39 +17026,11 @@ func (ec *executionContext) marshalOPeerHook2ᚕᚖgithubᚗcomᚋUnAfraidᚋwg�
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPeerHook2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerHook(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNPeerHook2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerHook(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17442,39 +17070,11 @@ func (ec *executionContext) marshalOServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑ
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17496,39 +17096,11 @@ func (ec *executionContext) marshalOServerHook2ᚕᚖgithubᚗcomᚋUnAfraidᚋw
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNServerHook2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerHook(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNServerHook2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerHook(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17636,39 +17208,11 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17683,39 +17227,11 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17730,39 +17246,11 @@ func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -17784,39 +17272,11 @@ func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
