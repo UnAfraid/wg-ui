@@ -1,4 +1,3 @@
-"use client";
 
 import { useMemo, useState } from "react";
 import { Copy, Download, QrCode } from "lucide-react";

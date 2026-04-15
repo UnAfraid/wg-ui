@@ -1,4 +1,3 @@
-"use client";
 
 import { useQuery, useMutation } from "@apollo/client";
 import { Import, Loader2, Globe } from "lucide-react";

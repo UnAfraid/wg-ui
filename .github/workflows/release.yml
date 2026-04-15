@@ -66,10 +66,8 @@ jobs:
       - name: Build Frontend
         working-directory: www
         run: |
-          GITIGNORE_CONTENTS=$(cat out/.gitignore)
           pnpm install
           pnpm run build
-          echo "$GITIGNORE_CONTENTS" > out/.gitignore
 
       - name: Download dependencies
         run: go mod download
@@ -153,10 +151,8 @@ jobs:
       - name: Build Frontend
         working-directory: www
         run: |
-          GITIGNORE_CONTENTS=$(cat out/.gitignore)
           pnpm install
           pnpm run build
-          echo "$GITIGNORE_CONTENTS" > out/.gitignore
 
       - name: Build and push image to GHCR
         uses: docker/build-push-action@v6

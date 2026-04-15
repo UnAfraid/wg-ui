@@ -1,4 +1,3 @@
-"use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@apollo/client";

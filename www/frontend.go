@@ -7,11 +7,11 @@ import (
 	"os"
 )
 
-//go:embed out/*
+//go:embed dist/*
 var content embed.FS
 
 func HasContent() bool {
-	files, err := content.ReadDir("out")
+	files, err := content.ReadDir("dist")
 	if err != nil {
 		return false
 	}
@@ -19,7 +19,7 @@ func HasContent() bool {
 }
 
 func Handler() http.Handler {
-	appFs, err := fs.Sub(content, "out")
+	appFs, err := fs.Sub(content, "dist")
 	if err != nil {
 		panic(err)
 	}

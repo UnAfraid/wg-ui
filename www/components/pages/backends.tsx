@@ -1,4 +1,3 @@
-"use client";
 
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client";

@@ -1,4 +1,3 @@
-"use client";
 
 import { useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";

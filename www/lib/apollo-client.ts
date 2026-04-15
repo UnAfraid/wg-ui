@@ -13,10 +13,9 @@ import { createClient } from "graphql-ws";
 import { getToken } from "@/lib/auth";
 
 const GRAPHQL_URL =
-  process.env.NEXT_PUBLIC_GRAPHQL_URL || "/query";
+  import.meta.env.VITE_GRAPHQL_URL || "/query";
 
 function getWsUrl() {
-  if (typeof window === "undefined") return "";
   const url = new URL(GRAPHQL_URL, window.location.origin);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   return url.toString();
@@ -73,11 +72,6 @@ function createWsLink() {
 
 function createLink() {
   const httpChain = from([authLink, errorLink, httpLink]);
-
-  if (typeof window === "undefined") {
-    return httpChain;
-  }
-
   const wsLink = createWsLink();
 
   return split(
@@ -105,11 +99,10 @@ export function makeApolloClient() {
           fetchPolicy: "cache-and-network",
         },
       },
-      ssrMode: typeof window === "undefined",
+      ssrMode: false,
     });
   }
   return _client;
 }
 
-// For backward compatibility
-export const apolloClient = typeof window !== "undefined" ? makeApolloClient() : (null as unknown as ApolloClient<unknown>);
+export const apolloClient = makeApolloClient();
