@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -1725,8 +1726,8 @@ func newExecutionContext(
 	opCtx *graphql.OperationContext,
 	execSchema *executableSchema,
 	deferredResults chan graphql.DeferredResult,
-) executionContext {
-	return executionContext{
+) *executionContext {
+	return &executionContext{
 		ExecutionContextState: graphql.NewExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot](
 			opCtx,
 			(*graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot])(execSchema),
@@ -2340,6 +2341,606 @@ scalar DateTime
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
+// childFields_* functions provide shared child field context lookups.
+// Each function is generated once per unique object type, deduplicating the
+// switch statements that were previously inlined in every fieldContext_* function.
+
+func (ec *executionContext) childFields_AvailableBackend(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "type":
+		return ec.fieldContext_AvailableBackend_type(ctx, field)
+	case "supported":
+		return ec.fieldContext_AvailableBackend_supported(ctx, field)
+	case "registered":
+		return ec.fieldContext_AvailableBackend_registered(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AvailableBackend", field.Name)
+}
+
+func (ec *executionContext) childFields_Backend(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Backend_id(ctx, field)
+	case "name":
+		return ec.fieldContext_Backend_name(ctx, field)
+	case "description":
+		return ec.fieldContext_Backend_description(ctx, field)
+	case "url":
+		return ec.fieldContext_Backend_url(ctx, field)
+	case "enabled":
+		return ec.fieldContext_Backend_enabled(ctx, field)
+	case "supported":
+		return ec.fieldContext_Backend_supported(ctx, field)
+	case "servers":
+		return ec.fieldContext_Backend_servers(ctx, field)
+	case "peers":
+		return ec.fieldContext_Backend_peers(ctx, field)
+	case "foreignServers":
+		return ec.fieldContext_Backend_foreignServers(ctx, field)
+	case "createUser":
+		return ec.fieldContext_Backend_createUser(ctx, field)
+	case "updateUser":
+		return ec.fieldContext_Backend_updateUser(ctx, field)
+	case "deleteUser":
+		return ec.fieldContext_Backend_deleteUser(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Backend_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_Backend_updatedAt(ctx, field)
+	case "deletedAt":
+		return ec.fieldContext_Backend_deletedAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+}
+
+func (ec *executionContext) childFields_BackendChangedEvent(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "action":
+		return ec.fieldContext_BackendChangedEvent_action(ctx, field)
+	case "node":
+		return ec.fieldContext_BackendChangedEvent_node(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type BackendChangedEvent", field.Name)
+}
+
+func (ec *executionContext) childFields_CreateBackendPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_CreateBackendPayload_clientMutationId(ctx, field)
+	case "backend":
+		return ec.fieldContext_CreateBackendPayload_backend(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CreateBackendPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_CreatePeerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_CreatePeerPayload_clientMutationId(ctx, field)
+	case "peer":
+		return ec.fieldContext_CreatePeerPayload_peer(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CreatePeerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_CreateServerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_CreateServerPayload_clientMutationId(ctx, field)
+	case "server":
+		return ec.fieldContext_CreateServerPayload_server(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CreateServerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_CreateUserPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_CreateUserPayload_clientMutationId(ctx, field)
+	case "user":
+		return ec.fieldContext_CreateUserPayload_user(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CreateUserPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_DeleteBackendPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_DeleteBackendPayload_clientMutationId(ctx, field)
+	case "backend":
+		return ec.fieldContext_DeleteBackendPayload_backend(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DeleteBackendPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_DeletePeerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_DeletePeerPayload_clientMutationId(ctx, field)
+	case "peer":
+		return ec.fieldContext_DeletePeerPayload_peer(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DeletePeerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_DeleteServerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_DeleteServerPayload_clientMutationId(ctx, field)
+	case "server":
+		return ec.fieldContext_DeleteServerPayload_server(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DeleteServerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_DeleteUserPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_DeleteUserPayload_clientMutationId(ctx, field)
+	case "user":
+		return ec.fieldContext_DeleteUserPayload_user(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DeleteUserPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_ForeignInterface(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext_ForeignInterface_name(ctx, field)
+	case "addresses":
+		return ec.fieldContext_ForeignInterface_addresses(ctx, field)
+	case "mtu":
+		return ec.fieldContext_ForeignInterface_mtu(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ForeignInterface", field.Name)
+}
+
+func (ec *executionContext) childFields_ForeignPeer(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "publicKey":
+		return ec.fieldContext_ForeignPeer_publicKey(ctx, field)
+	case "endpoint":
+		return ec.fieldContext_ForeignPeer_endpoint(ctx, field)
+	case "allowedIps":
+		return ec.fieldContext_ForeignPeer_allowedIps(ctx, field)
+	case "persistentKeepAliveInterval":
+		return ec.fieldContext_ForeignPeer_persistentKeepAliveInterval(ctx, field)
+	case "lastHandshakeTime":
+		return ec.fieldContext_ForeignPeer_lastHandshakeTime(ctx, field)
+	case "receiveBytes":
+		return ec.fieldContext_ForeignPeer_receiveBytes(ctx, field)
+	case "transmitBytes":
+		return ec.fieldContext_ForeignPeer_transmitBytes(ctx, field)
+	case "protocolVersion":
+		return ec.fieldContext_ForeignPeer_protocolVersion(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ForeignPeer", field.Name)
+}
+
+func (ec *executionContext) childFields_ForeignServer(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "foreignInterface":
+		return ec.fieldContext_ForeignServer_foreignInterface(ctx, field)
+	case "name":
+		return ec.fieldContext_ForeignServer_name(ctx, field)
+	case "type":
+		return ec.fieldContext_ForeignServer_type(ctx, field)
+	case "publicKey":
+		return ec.fieldContext_ForeignServer_publicKey(ctx, field)
+	case "listenPort":
+		return ec.fieldContext_ForeignServer_listenPort(ctx, field)
+	case "firewallMark":
+		return ec.fieldContext_ForeignServer_firewallMark(ctx, field)
+	case "peers":
+		return ec.fieldContext_ForeignServer_peers(ctx, field)
+	case "backend":
+		return ec.fieldContext_ForeignServer_backend(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ForeignServer", field.Name)
+}
+
+func (ec *executionContext) childFields_GenerateWireguardKeyPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_GenerateWireguardKeyPayload_clientMutationId(ctx, field)
+	case "privateKey":
+		return ec.fieldContext_GenerateWireguardKeyPayload_privateKey(ctx, field)
+	case "publicKey":
+		return ec.fieldContext_GenerateWireguardKeyPayload_publicKey(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type GenerateWireguardKeyPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_ImportForeignServerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_ImportForeignServerPayload_clientMutationId(ctx, field)
+	case "server":
+		return ec.fieldContext_ImportForeignServerPayload_server(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ImportForeignServerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_Peer(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Peer_id(ctx, field)
+	case "server":
+		return ec.fieldContext_Peer_server(ctx, field)
+	case "backend":
+		return ec.fieldContext_Peer_backend(ctx, field)
+	case "name":
+		return ec.fieldContext_Peer_name(ctx, field)
+	case "description":
+		return ec.fieldContext_Peer_description(ctx, field)
+	case "publicKey":
+		return ec.fieldContext_Peer_publicKey(ctx, field)
+	case "allowedIPs":
+		return ec.fieldContext_Peer_allowedIPs(ctx, field)
+	case "endpoint":
+		return ec.fieldContext_Peer_endpoint(ctx, field)
+	case "presharedKey":
+		return ec.fieldContext_Peer_presharedKey(ctx, field)
+	case "persistentKeepalive":
+		return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
+	case "hooks":
+		return ec.fieldContext_Peer_hooks(ctx, field)
+	case "stats":
+		return ec.fieldContext_Peer_stats(ctx, field)
+	case "createUser":
+		return ec.fieldContext_Peer_createUser(ctx, field)
+	case "updateUser":
+		return ec.fieldContext_Peer_updateUser(ctx, field)
+	case "deleteUser":
+		return ec.fieldContext_Peer_deleteUser(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Peer_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_Peer_updatedAt(ctx, field)
+	case "deletedAt":
+		return ec.fieldContext_Peer_deletedAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+}
+
+func (ec *executionContext) childFields_PeerChangedEvent(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "node":
+		return ec.fieldContext_PeerChangedEvent_node(ctx, field)
+	case "action":
+		return ec.fieldContext_PeerChangedEvent_action(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type PeerChangedEvent", field.Name)
+}
+
+func (ec *executionContext) childFields_PeerHook(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "command":
+		return ec.fieldContext_PeerHook_command(ctx, field)
+	case "runOnCreate":
+		return ec.fieldContext_PeerHook_runOnCreate(ctx, field)
+	case "runOnUpdate":
+		return ec.fieldContext_PeerHook_runOnUpdate(ctx, field)
+	case "runOnDelete":
+		return ec.fieldContext_PeerHook_runOnDelete(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type PeerHook", field.Name)
+}
+
+func (ec *executionContext) childFields_PeerStats(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "endpoint":
+		return ec.fieldContext_PeerStats_endpoint(ctx, field)
+	case "lastHandshakeTime":
+		return ec.fieldContext_PeerStats_lastHandshakeTime(ctx, field)
+	case "receiveBytes":
+		return ec.fieldContext_PeerStats_receiveBytes(ctx, field)
+	case "transmitBytes":
+		return ec.fieldContext_PeerStats_transmitBytes(ctx, field)
+	case "protocolVersion":
+		return ec.fieldContext_PeerStats_protocolVersion(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type PeerStats", field.Name)
+}
+
+func (ec *executionContext) childFields_Server(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Server_id(ctx, field)
+	case "name":
+		return ec.fieldContext_Server_name(ctx, field)
+	case "description":
+		return ec.fieldContext_Server_description(ctx, field)
+	case "backend":
+		return ec.fieldContext_Server_backend(ctx, field)
+	case "enabled":
+		return ec.fieldContext_Server_enabled(ctx, field)
+	case "running":
+		return ec.fieldContext_Server_running(ctx, field)
+	case "publicKey":
+		return ec.fieldContext_Server_publicKey(ctx, field)
+	case "listenPort":
+		return ec.fieldContext_Server_listenPort(ctx, field)
+	case "firewallMark":
+		return ec.fieldContext_Server_firewallMark(ctx, field)
+	case "address":
+		return ec.fieldContext_Server_address(ctx, field)
+	case "dns":
+		return ec.fieldContext_Server_dns(ctx, field)
+	case "mtu":
+		return ec.fieldContext_Server_mtu(ctx, field)
+	case "hooks":
+		return ec.fieldContext_Server_hooks(ctx, field)
+	case "peers":
+		return ec.fieldContext_Server_peers(ctx, field)
+	case "interfaceStats":
+		return ec.fieldContext_Server_interfaceStats(ctx, field)
+	case "createUser":
+		return ec.fieldContext_Server_createUser(ctx, field)
+	case "updateUser":
+		return ec.fieldContext_Server_updateUser(ctx, field)
+	case "deleteUser":
+		return ec.fieldContext_Server_deleteUser(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Server_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_Server_updatedAt(ctx, field)
+	case "deletedAt":
+		return ec.fieldContext_Server_deletedAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+}
+
+func (ec *executionContext) childFields_ServerChangedEvent(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "node":
+		return ec.fieldContext_ServerChangedEvent_node(ctx, field)
+	case "action":
+		return ec.fieldContext_ServerChangedEvent_action(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ServerChangedEvent", field.Name)
+}
+
+func (ec *executionContext) childFields_ServerHook(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "command":
+		return ec.fieldContext_ServerHook_command(ctx, field)
+	case "runOnPreUp":
+		return ec.fieldContext_ServerHook_runOnPreUp(ctx, field)
+	case "runOnPostUp":
+		return ec.fieldContext_ServerHook_runOnPostUp(ctx, field)
+	case "runOnPreDown":
+		return ec.fieldContext_ServerHook_runOnPreDown(ctx, field)
+	case "runOnPostDown":
+		return ec.fieldContext_ServerHook_runOnPostDown(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ServerHook", field.Name)
+}
+
+func (ec *executionContext) childFields_ServerInterfaceStats(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "rxBytes":
+		return ec.fieldContext_ServerInterfaceStats_rxBytes(ctx, field)
+	case "txBytes":
+		return ec.fieldContext_ServerInterfaceStats_txBytes(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ServerInterfaceStats", field.Name)
+}
+
+func (ec *executionContext) childFields_SignInPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_SignInPayload_clientMutationId(ctx, field)
+	case "token":
+		return ec.fieldContext_SignInPayload_token(ctx, field)
+	case "expiresAt":
+		return ec.fieldContext_SignInPayload_expiresAt(ctx, field)
+	case "expiresIn":
+		return ec.fieldContext_SignInPayload_expiresIn(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type SignInPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_StartServerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_StartServerPayload_clientMutationId(ctx, field)
+	case "server":
+		return ec.fieldContext_StartServerPayload_server(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type StartServerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_StopServerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_StopServerPayload_clientMutationId(ctx, field)
+	case "server":
+		return ec.fieldContext_StopServerPayload_server(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type StopServerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_UpdateBackendPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_UpdateBackendPayload_clientMutationId(ctx, field)
+	case "backend":
+		return ec.fieldContext_UpdateBackendPayload_backend(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UpdateBackendPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_UpdatePeerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_UpdatePeerPayload_clientMutationId(ctx, field)
+	case "peer":
+		return ec.fieldContext_UpdatePeerPayload_peer(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UpdatePeerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_UpdateServerPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_UpdateServerPayload_clientMutationId(ctx, field)
+	case "server":
+		return ec.fieldContext_UpdateServerPayload_server(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UpdateServerPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_UpdateUserPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "clientMutationId":
+		return ec.fieldContext_UpdateUserPayload_clientMutationId(ctx, field)
+	case "user":
+		return ec.fieldContext_UpdateUserPayload_user(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UpdateUserPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_User(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_User_id(ctx, field)
+	case "email":
+		return ec.fieldContext_User_email(ctx, field)
+	case "servers":
+		return ec.fieldContext_User_servers(ctx, field)
+	case "peers":
+		return ec.fieldContext_User_peers(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_User_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_User_updatedAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+}
+
+func (ec *executionContext) childFields_UserChangedEvent(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "node":
+		return ec.fieldContext_UserChangedEvent_node(ctx, field)
+	case "action":
+		return ec.fieldContext_UserChangedEvent_action(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UserChangedEvent", field.Name)
+}
+
+func (ec *executionContext) childFields___Directive(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext___Directive_name(ctx, field)
+	case "description":
+		return ec.fieldContext___Directive_description(ctx, field)
+	case "isRepeatable":
+		return ec.fieldContext___Directive_isRepeatable(ctx, field)
+	case "locations":
+		return ec.fieldContext___Directive_locations(ctx, field)
+	case "args":
+		return ec.fieldContext___Directive_args(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __Directive", field.Name)
+}
+
+func (ec *executionContext) childFields___EnumValue(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext___EnumValue_name(ctx, field)
+	case "description":
+		return ec.fieldContext___EnumValue_description(ctx, field)
+	case "isDeprecated":
+		return ec.fieldContext___EnumValue_isDeprecated(ctx, field)
+	case "deprecationReason":
+		return ec.fieldContext___EnumValue_deprecationReason(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __EnumValue", field.Name)
+}
+
+func (ec *executionContext) childFields___Field(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext___Field_name(ctx, field)
+	case "description":
+		return ec.fieldContext___Field_description(ctx, field)
+	case "args":
+		return ec.fieldContext___Field_args(ctx, field)
+	case "type":
+		return ec.fieldContext___Field_type(ctx, field)
+	case "isDeprecated":
+		return ec.fieldContext___Field_isDeprecated(ctx, field)
+	case "deprecationReason":
+		return ec.fieldContext___Field_deprecationReason(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __Field", field.Name)
+}
+
+func (ec *executionContext) childFields___InputValue(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext___InputValue_name(ctx, field)
+	case "description":
+		return ec.fieldContext___InputValue_description(ctx, field)
+	case "type":
+		return ec.fieldContext___InputValue_type(ctx, field)
+	case "defaultValue":
+		return ec.fieldContext___InputValue_defaultValue(ctx, field)
+	case "isDeprecated":
+		return ec.fieldContext___InputValue_isDeprecated(ctx, field)
+	case "deprecationReason":
+		return ec.fieldContext___InputValue_deprecationReason(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
+}
+
+func (ec *executionContext) childFields___Schema(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "description":
+		return ec.fieldContext___Schema_description(ctx, field)
+	case "types":
+		return ec.fieldContext___Schema_types(ctx, field)
+	case "queryType":
+		return ec.fieldContext___Schema_queryType(ctx, field)
+	case "mutationType":
+		return ec.fieldContext___Schema_mutationType(ctx, field)
+	case "subscriptionType":
+		return ec.fieldContext___Schema_subscriptionType(ctx, field)
+	case "directives":
+		return ec.fieldContext___Schema_directives(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+}
+
+func (ec *executionContext) childFields___Type(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "kind":
+		return ec.fieldContext___Type_kind(ctx, field)
+	case "name":
+		return ec.fieldContext___Type_name(ctx, field)
+	case "description":
+		return ec.fieldContext___Type_description(ctx, field)
+	case "specifiedByURL":
+		return ec.fieldContext___Type_specifiedByURL(ctx, field)
+	case "fields":
+		return ec.fieldContext___Type_fields(ctx, field)
+	case "interfaces":
+		return ec.fieldContext___Type_interfaces(ctx, field)
+	case "possibleTypes":
+		return ec.fieldContext___Type_possibleTypes(ctx, field)
+	case "enumValues":
+		return ec.fieldContext___Type_enumValues(ctx, field)
+	case "inputFields":
+		return ec.fieldContext___Type_inputFields(ctx, field)
+	case "ofType":
+		return ec.fieldContext___Type_ofType(ctx, field)
+	case "isOneOf":
+		return ec.fieldContext___Type_isOneOf(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+}
+
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
@@ -2347,7 +2948,10 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Backend_peers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query", ec.unmarshalOString2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2358,12 +2962,18 @@ func (ec *executionContext) field_Backend_peers_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Backend_servers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query", ec.unmarshalOString2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["query"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "enabled", ec.unmarshalOBoolean2ᚖbool)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "enabled",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2374,7 +2984,10 @@ func (ec *executionContext) field_Backend_servers_args(ctx context.Context, rawA
 func (ec *executionContext) field_Mutation_createBackend_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateBackendInput, error) {
+			return ec.unmarshalNCreateBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2385,7 +2998,10 @@ func (ec *executionContext) field_Mutation_createBackend_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_createPeer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreatePeerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreatePeerInput, error) {
+			return ec.unmarshalNCreatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreatePeerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2396,7 +3012,10 @@ func (ec *executionContext) field_Mutation_createPeer_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_createServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateServerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateServerInput, error) {
+			return ec.unmarshalNCreateServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateServerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2407,7 +3026,10 @@ func (ec *executionContext) field_Mutation_createServer_args(ctx context.Context
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateUserInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateUserInput, error) {
+			return ec.unmarshalNCreateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateUserInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2418,7 +3040,10 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_deleteBackend_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNDeleteBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.DeleteBackendInput, error) {
+			return ec.unmarshalNDeleteBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2429,7 +3054,10 @@ func (ec *executionContext) field_Mutation_deleteBackend_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_deletePeer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNDeletePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeletePeerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.DeletePeerInput, error) {
+			return ec.unmarshalNDeletePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeletePeerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2440,7 +3068,10 @@ func (ec *executionContext) field_Mutation_deletePeer_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_deleteServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNDeleteServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteServerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.DeleteServerInput, error) {
+			return ec.unmarshalNDeleteServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteServerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2451,7 +3082,10 @@ func (ec *executionContext) field_Mutation_deleteServer_args(ctx context.Context
 func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNDeleteUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteUserInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.DeleteUserInput, error) {
+			return ec.unmarshalNDeleteUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteUserInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2462,7 +3096,10 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_generateWireguardKey_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNGenerateWireguardKeyInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐGenerateWireguardKeyInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.GenerateWireguardKeyInput, error) {
+			return ec.unmarshalNGenerateWireguardKeyInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐGenerateWireguardKeyInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2473,7 +3110,10 @@ func (ec *executionContext) field_Mutation_generateWireguardKey_args(ctx context
 func (ec *executionContext) field_Mutation_importForeignServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNImportForeignServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐImportForeignServerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.ImportForeignServerInput, error) {
+			return ec.unmarshalNImportForeignServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐImportForeignServerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2484,7 +3124,10 @@ func (ec *executionContext) field_Mutation_importForeignServer_args(ctx context.
 func (ec *executionContext) field_Mutation_signIn_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSignInInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐSignInInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.SignInInput, error) {
+			return ec.unmarshalNSignInInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐSignInInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2495,7 +3138,10 @@ func (ec *executionContext) field_Mutation_signIn_args(ctx context.Context, rawA
 func (ec *executionContext) field_Mutation_startServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNStartServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStartServerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.StartServerInput, error) {
+			return ec.unmarshalNStartServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStartServerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2506,7 +3152,10 @@ func (ec *executionContext) field_Mutation_startServer_args(ctx context.Context,
 func (ec *executionContext) field_Mutation_stopServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNStopServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStopServerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.StopServerInput, error) {
+			return ec.unmarshalNStopServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStopServerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2517,7 +3166,10 @@ func (ec *executionContext) field_Mutation_stopServer_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_updateBackend_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdateBackendInput, error) {
+			return ec.unmarshalNUpdateBackendInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2528,7 +3180,10 @@ func (ec *executionContext) field_Mutation_updateBackend_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_updatePeer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdatePeerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdatePeerInput, error) {
+			return ec.unmarshalNUpdatePeerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdatePeerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2539,7 +3194,10 @@ func (ec *executionContext) field_Mutation_updatePeer_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_updateServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateServerInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdateServerInput, error) {
+			return ec.unmarshalNUpdateServerInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateServerInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2550,7 +3208,10 @@ func (ec *executionContext) field_Mutation_updateServer_args(ctx context.Context
 func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateUserInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdateUserInput, error) {
+			return ec.unmarshalNUpdateUserInput2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateUserInput(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2561,7 +3222,10 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2572,7 +3236,10 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_backends_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "type", ec.unmarshalOString2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "type",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2583,7 +3250,10 @@ func (ec *executionContext) field_Query_backends_args(ctx context.Context, rawAr
 func (ec *executionContext) field_Query_node_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (model.ID, error) {
+			return ec.unmarshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2594,7 +3264,10 @@ func (ec *executionContext) field_Query_node_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_Query_nodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "ids", ec.unmarshalNID2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐIDᚄ)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "ids",
+		func(ctx context.Context, v any) ([]*model.ID, error) {
+			return ec.unmarshalNID2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐIDᚄ(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2605,7 +3278,10 @@ func (ec *executionContext) field_Query_nodes_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_peers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query", ec.unmarshalOString2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2616,12 +3292,18 @@ func (ec *executionContext) field_Query_peers_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_servers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query", ec.unmarshalOString2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
 	args["query"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "enabled", ec.unmarshalOBoolean2ᚖbool)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "enabled",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2632,7 +3314,10 @@ func (ec *executionContext) field_Query_servers_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query", ec.unmarshalOString2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "query",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2643,7 +3328,10 @@ func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field___Directive_args_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated", ec.unmarshalOBoolean2ᚖbool)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2654,7 +3342,10 @@ func (ec *executionContext) field___Directive_args_args(ctx context.Context, raw
 func (ec *executionContext) field___Field_args_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated", ec.unmarshalOBoolean2ᚖbool)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2665,7 +3356,10 @@ func (ec *executionContext) field___Field_args_args(ctx context.Context, rawArgs
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated", ec.unmarshalOBoolean2bool)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated",
+		func(ctx context.Context, v any) (bool, error) {
+			return ec.unmarshalOBoolean2bool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2676,7 +3370,10 @@ func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, ra
 func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated", ec.unmarshalOBoolean2bool)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeDeprecated",
+		func(ctx context.Context, v any) (bool, error) {
+			return ec.unmarshalOBoolean2bool(ctx, v)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -2697,28 +3394,22 @@ func (ec *executionContext) _AvailableBackend_type(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_AvailableBackend_type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AvailableBackend_type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_AvailableBackend_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AvailableBackend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("AvailableBackend", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _AvailableBackend_supported(ctx context.Context, field graphql.CollectedField, obj *model.AvailableBackend) (ret graphql.Marshaler) {
@@ -2726,28 +3417,22 @@ func (ec *executionContext) _AvailableBackend_supported(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_AvailableBackend_supported,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AvailableBackend_supported(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Supported, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_AvailableBackend_supported(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AvailableBackend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("AvailableBackend", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _AvailableBackend_registered(ctx context.Context, field graphql.CollectedField, obj *model.AvailableBackend) (ret graphql.Marshaler) {
@@ -2755,28 +3440,22 @@ func (ec *executionContext) _AvailableBackend_registered(ctx context.Context, fi
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_AvailableBackend_registered,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AvailableBackend_registered(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Registered, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_AvailableBackend_registered(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AvailableBackend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("AvailableBackend", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_id(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -2784,28 +3463,22 @@ func (ec *executionContext) _Backend_id(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID,
+		func(ctx context.Context, selections ast.SelectionSet, v model.ID) graphql.Marshaler {
+			return ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_name(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -2813,28 +3486,22 @@ func (ec *executionContext) _Backend_name(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_description(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -2842,28 +3509,22 @@ func (ec *executionContext) _Backend_description(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_url(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -2871,28 +3532,22 @@ func (ec *executionContext) _Backend_url(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_url,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_url(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.URL, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_enabled(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -2900,28 +3555,22 @@ func (ec *executionContext) _Backend_enabled(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_enabled,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_enabled(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Enabled, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_supported(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -2929,28 +3578,22 @@ func (ec *executionContext) _Backend_supported(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_supported,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_supported(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Backend().Supported(ctx, obj)
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_supported(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_servers(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -2958,7 +3601,9 @@ func (ec *executionContext) _Backend_servers(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_servers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_servers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Backend().Servers(ctx, obj, fc.Args["query"].(*string), fc.Args["enabled"].(*bool))
@@ -2977,12 +3622,13 @@ func (ec *executionContext) _Backend_servers(ctx context.Context, field graphql.
 			next = directive1
 			return next
 		},
-		ec.marshalNServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Server) graphql.Marshaler {
+			return ec.marshalNServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_servers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Backend",
@@ -2990,51 +3636,7 @@ func (ec *executionContext) fieldContext_Backend_servers(ctx context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	defer func() {
@@ -3056,7 +3658,9 @@ func (ec *executionContext) _Backend_peers(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_peers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_peers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Backend().Peers(ctx, obj, fc.Args["query"].(*string))
@@ -3075,12 +3679,13 @@ func (ec *executionContext) _Backend_peers(ctx context.Context, field graphql.Co
 			next = directive1
 			return next
 		},
-		ec.marshalNPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Peer) graphql.Marshaler {
+			return ec.marshalNPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_peers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Backend",
@@ -3088,45 +3693,7 @@ func (ec *executionContext) fieldContext_Backend_peers(ctx context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Peer_id(ctx, field)
-			case "server":
-				return ec.fieldContext_Peer_server(ctx, field)
-			case "backend":
-				return ec.fieldContext_Peer_backend(ctx, field)
-			case "name":
-				return ec.fieldContext_Peer_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Peer_description(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Peer_publicKey(ctx, field)
-			case "allowedIPs":
-				return ec.fieldContext_Peer_allowedIPs(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_Peer_endpoint(ctx, field)
-			case "presharedKey":
-				return ec.fieldContext_Peer_presharedKey(ctx, field)
-			case "persistentKeepalive":
-				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Peer_hooks(ctx, field)
-			case "stats":
-				return ec.fieldContext_Peer_stats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Peer_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Peer_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Peer_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Peer_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Peer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Peer_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+			return ec.childFields_Peer(ctx, field)
 		},
 	}
 	defer func() {
@@ -3148,7 +3715,9 @@ func (ec *executionContext) _Backend_foreignServers(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_foreignServers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_foreignServers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Backend().ForeignServers(ctx, obj)
 		},
@@ -3166,12 +3735,13 @@ func (ec *executionContext) _Backend_foreignServers(ctx context.Context, field g
 			next = directive1
 			return next
 		},
-		ec.marshalNForeignServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignServerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.ForeignServer) graphql.Marshaler {
+			return ec.marshalNForeignServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignServerᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_foreignServers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Backend",
@@ -3179,25 +3749,7 @@ func (ec *executionContext) fieldContext_Backend_foreignServers(_ context.Contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "foreignInterface":
-				return ec.fieldContext_ForeignServer_foreignInterface(ctx, field)
-			case "name":
-				return ec.fieldContext_ForeignServer_name(ctx, field)
-			case "type":
-				return ec.fieldContext_ForeignServer_type(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_ForeignServer_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_ForeignServer_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_ForeignServer_firewallMark(ctx, field)
-			case "peers":
-				return ec.fieldContext_ForeignServer_peers(ctx, field)
-			case "backend":
-				return ec.fieldContext_ForeignServer_backend(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ForeignServer", field.Name)
+			return ec.childFields_ForeignServer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3208,7 +3760,9 @@ func (ec *executionContext) _Backend_createUser(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_createUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_createUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Backend().CreateUser(ctx, obj)
 		},
@@ -3226,12 +3780,13 @@ func (ec *executionContext) _Backend_createUser(ctx context.Context, field graph
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_createUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Backend",
@@ -3239,21 +3794,7 @@ func (ec *executionContext) fieldContext_Backend_createUser(_ context.Context, f
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3264,7 +3805,9 @@ func (ec *executionContext) _Backend_updateUser(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_updateUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_updateUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Backend().UpdateUser(ctx, obj)
 		},
@@ -3282,12 +3825,13 @@ func (ec *executionContext) _Backend_updateUser(ctx context.Context, field graph
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_updateUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Backend",
@@ -3295,21 +3839,7 @@ func (ec *executionContext) fieldContext_Backend_updateUser(_ context.Context, f
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3320,7 +3850,9 @@ func (ec *executionContext) _Backend_deleteUser(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_deleteUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_deleteUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Backend().DeleteUser(ctx, obj)
 		},
@@ -3338,12 +3870,13 @@ func (ec *executionContext) _Backend_deleteUser(ctx context.Context, field graph
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_deleteUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Backend",
@@ -3351,21 +3884,7 @@ func (ec *executionContext) fieldContext_Backend_deleteUser(_ context.Context, f
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3376,28 +3895,22 @@ func (ec *executionContext) _Backend_createdAt(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_createdAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_createdAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.CreatedAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -3405,28 +3918,22 @@ func (ec *executionContext) _Backend_updatedAt(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_updatedAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_updatedAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.UpdatedAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _Backend_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Backend) (ret graphql.Marshaler) {
@@ -3434,28 +3941,22 @@ func (ec *executionContext) _Backend_deletedAt(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Backend_deletedAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Backend_deletedAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeletedAt, nil
 		},
 		nil,
-		ec.marshalODateTime2ᚖtimeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalODateTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Backend_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Backend",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Backend", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _BackendChangedEvent_action(ctx context.Context, field graphql.CollectedField, obj *model.BackendChangedEvent) (ret graphql.Marshaler) {
@@ -3463,28 +3964,22 @@ func (ec *executionContext) _BackendChangedEvent_action(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_BackendChangedEvent_action,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BackendChangedEvent_action(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Action, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_BackendChangedEvent_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "BackendChangedEvent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("BackendChangedEvent", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _BackendChangedEvent_node(ctx context.Context, field graphql.CollectedField, obj *model.BackendChangedEvent) (ret graphql.Marshaler) {
@@ -3492,17 +3987,20 @@ func (ec *executionContext) _BackendChangedEvent_node(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_BackendChangedEvent_node,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BackendChangedEvent_node(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Node, nil
 		},
 		nil,
-		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Backend) graphql.Marshaler {
+			return ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_BackendChangedEvent_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BackendChangedEvent",
@@ -3510,39 +4008,7 @@ func (ec *executionContext) fieldContext_BackendChangedEvent_node(_ context.Cont
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Backend_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Backend_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Backend_description(ctx, field)
-			case "url":
-				return ec.fieldContext_Backend_url(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Backend_enabled(ctx, field)
-			case "supported":
-				return ec.fieldContext_Backend_supported(ctx, field)
-			case "servers":
-				return ec.fieldContext_Backend_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_Backend_peers(ctx, field)
-			case "foreignServers":
-				return ec.fieldContext_Backend_foreignServers(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Backend_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Backend_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Backend_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Backend_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Backend_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Backend_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+			return ec.childFields_Backend(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3553,28 +4019,22 @@ func (ec *executionContext) _CreateBackendPayload_clientMutationId(ctx context.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_CreateBackendPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreateBackendPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_CreateBackendPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "CreateBackendPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("CreateBackendPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _CreateBackendPayload_backend(ctx context.Context, field graphql.CollectedField, obj *model.CreateBackendPayload) (ret graphql.Marshaler) {
@@ -3582,17 +4042,20 @@ func (ec *executionContext) _CreateBackendPayload_backend(ctx context.Context, f
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_CreateBackendPayload_backend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreateBackendPayload_backend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Backend, nil
 		},
 		nil,
-		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Backend) graphql.Marshaler {
+			return ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_CreateBackendPayload_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CreateBackendPayload",
@@ -3600,39 +4063,7 @@ func (ec *executionContext) fieldContext_CreateBackendPayload_backend(_ context.
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Backend_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Backend_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Backend_description(ctx, field)
-			case "url":
-				return ec.fieldContext_Backend_url(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Backend_enabled(ctx, field)
-			case "supported":
-				return ec.fieldContext_Backend_supported(ctx, field)
-			case "servers":
-				return ec.fieldContext_Backend_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_Backend_peers(ctx, field)
-			case "foreignServers":
-				return ec.fieldContext_Backend_foreignServers(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Backend_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Backend_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Backend_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Backend_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Backend_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Backend_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+			return ec.childFields_Backend(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3643,28 +4074,22 @@ func (ec *executionContext) _CreatePeerPayload_clientMutationId(ctx context.Cont
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_CreatePeerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreatePeerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_CreatePeerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "CreatePeerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("CreatePeerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _CreatePeerPayload_peer(ctx context.Context, field graphql.CollectedField, obj *model.CreatePeerPayload) (ret graphql.Marshaler) {
@@ -3672,17 +4097,20 @@ func (ec *executionContext) _CreatePeerPayload_peer(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_CreatePeerPayload_peer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreatePeerPayload_peer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Peer, nil
 		},
 		nil,
-		ec.marshalOPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Peer) graphql.Marshaler {
+			return ec.marshalOPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_CreatePeerPayload_peer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CreatePeerPayload",
@@ -3690,45 +4118,7 @@ func (ec *executionContext) fieldContext_CreatePeerPayload_peer(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Peer_id(ctx, field)
-			case "server":
-				return ec.fieldContext_Peer_server(ctx, field)
-			case "backend":
-				return ec.fieldContext_Peer_backend(ctx, field)
-			case "name":
-				return ec.fieldContext_Peer_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Peer_description(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Peer_publicKey(ctx, field)
-			case "allowedIPs":
-				return ec.fieldContext_Peer_allowedIPs(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_Peer_endpoint(ctx, field)
-			case "presharedKey":
-				return ec.fieldContext_Peer_presharedKey(ctx, field)
-			case "persistentKeepalive":
-				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Peer_hooks(ctx, field)
-			case "stats":
-				return ec.fieldContext_Peer_stats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Peer_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Peer_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Peer_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Peer_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Peer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Peer_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+			return ec.childFields_Peer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3739,28 +4129,22 @@ func (ec *executionContext) _CreateServerPayload_clientMutationId(ctx context.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_CreateServerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreateServerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_CreateServerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "CreateServerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("CreateServerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _CreateServerPayload_server(ctx context.Context, field graphql.CollectedField, obj *model.CreateServerPayload) (ret graphql.Marshaler) {
@@ -3768,17 +4152,20 @@ func (ec *executionContext) _CreateServerPayload_server(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_CreateServerPayload_server,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreateServerPayload_server(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Server, nil
 		},
 		nil,
-		ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Server) graphql.Marshaler {
+			return ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_CreateServerPayload_server(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CreateServerPayload",
@@ -3786,51 +4173,7 @@ func (ec *executionContext) fieldContext_CreateServerPayload_server(_ context.Co
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3841,28 +4184,22 @@ func (ec *executionContext) _CreateUserPayload_clientMutationId(ctx context.Cont
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_CreateUserPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreateUserPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_CreateUserPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "CreateUserPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("CreateUserPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _CreateUserPayload_user(ctx context.Context, field graphql.CollectedField, obj *model.CreateUserPayload) (ret graphql.Marshaler) {
@@ -3870,17 +4207,20 @@ func (ec *executionContext) _CreateUserPayload_user(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_CreateUserPayload_user,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreateUserPayload_user(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.User, nil
 		},
 		nil,
-		ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_CreateUserPayload_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CreateUserPayload",
@@ -3888,21 +4228,7 @@ func (ec *executionContext) fieldContext_CreateUserPayload_user(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -3913,28 +4239,22 @@ func (ec *executionContext) _DeleteBackendPayload_clientMutationId(ctx context.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_DeleteBackendPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteBackendPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_DeleteBackendPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeleteBackendPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("DeleteBackendPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _DeleteBackendPayload_backend(ctx context.Context, field graphql.CollectedField, obj *model.DeleteBackendPayload) (ret graphql.Marshaler) {
@@ -3942,17 +4262,20 @@ func (ec *executionContext) _DeleteBackendPayload_backend(ctx context.Context, f
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_DeleteBackendPayload_backend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteBackendPayload_backend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Backend, nil
 		},
 		nil,
-		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Backend) graphql.Marshaler {
+			return ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_DeleteBackendPayload_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DeleteBackendPayload",
@@ -3960,39 +4283,7 @@ func (ec *executionContext) fieldContext_DeleteBackendPayload_backend(_ context.
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Backend_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Backend_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Backend_description(ctx, field)
-			case "url":
-				return ec.fieldContext_Backend_url(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Backend_enabled(ctx, field)
-			case "supported":
-				return ec.fieldContext_Backend_supported(ctx, field)
-			case "servers":
-				return ec.fieldContext_Backend_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_Backend_peers(ctx, field)
-			case "foreignServers":
-				return ec.fieldContext_Backend_foreignServers(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Backend_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Backend_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Backend_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Backend_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Backend_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Backend_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+			return ec.childFields_Backend(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4003,28 +4294,22 @@ func (ec *executionContext) _DeletePeerPayload_clientMutationId(ctx context.Cont
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_DeletePeerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeletePeerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_DeletePeerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeletePeerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("DeletePeerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _DeletePeerPayload_peer(ctx context.Context, field graphql.CollectedField, obj *model.DeletePeerPayload) (ret graphql.Marshaler) {
@@ -4032,17 +4317,20 @@ func (ec *executionContext) _DeletePeerPayload_peer(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_DeletePeerPayload_peer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeletePeerPayload_peer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Peer, nil
 		},
 		nil,
-		ec.marshalOPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Peer) graphql.Marshaler {
+			return ec.marshalOPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_DeletePeerPayload_peer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DeletePeerPayload",
@@ -4050,45 +4338,7 @@ func (ec *executionContext) fieldContext_DeletePeerPayload_peer(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Peer_id(ctx, field)
-			case "server":
-				return ec.fieldContext_Peer_server(ctx, field)
-			case "backend":
-				return ec.fieldContext_Peer_backend(ctx, field)
-			case "name":
-				return ec.fieldContext_Peer_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Peer_description(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Peer_publicKey(ctx, field)
-			case "allowedIPs":
-				return ec.fieldContext_Peer_allowedIPs(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_Peer_endpoint(ctx, field)
-			case "presharedKey":
-				return ec.fieldContext_Peer_presharedKey(ctx, field)
-			case "persistentKeepalive":
-				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Peer_hooks(ctx, field)
-			case "stats":
-				return ec.fieldContext_Peer_stats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Peer_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Peer_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Peer_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Peer_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Peer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Peer_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+			return ec.childFields_Peer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4099,28 +4349,22 @@ func (ec *executionContext) _DeleteServerPayload_clientMutationId(ctx context.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_DeleteServerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteServerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_DeleteServerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeleteServerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("DeleteServerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _DeleteServerPayload_server(ctx context.Context, field graphql.CollectedField, obj *model.DeleteServerPayload) (ret graphql.Marshaler) {
@@ -4128,17 +4372,20 @@ func (ec *executionContext) _DeleteServerPayload_server(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_DeleteServerPayload_server,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteServerPayload_server(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Server, nil
 		},
 		nil,
-		ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Server) graphql.Marshaler {
+			return ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_DeleteServerPayload_server(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DeleteServerPayload",
@@ -4146,51 +4393,7 @@ func (ec *executionContext) fieldContext_DeleteServerPayload_server(_ context.Co
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4201,28 +4404,22 @@ func (ec *executionContext) _DeleteUserPayload_clientMutationId(ctx context.Cont
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_DeleteUserPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteUserPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_DeleteUserPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeleteUserPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("DeleteUserPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _DeleteUserPayload_user(ctx context.Context, field graphql.CollectedField, obj *model.DeleteUserPayload) (ret graphql.Marshaler) {
@@ -4230,17 +4427,20 @@ func (ec *executionContext) _DeleteUserPayload_user(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_DeleteUserPayload_user,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteUserPayload_user(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.User, nil
 		},
 		nil,
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_DeleteUserPayload_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DeleteUserPayload",
@@ -4248,21 +4448,7 @@ func (ec *executionContext) fieldContext_DeleteUserPayload_user(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4273,28 +4459,22 @@ func (ec *executionContext) _ForeignInterface_name(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignInterface_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignInterface_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignInterface_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignInterface",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignInterface", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignInterface_addresses(ctx context.Context, field graphql.CollectedField, obj *model.ForeignInterface) (ret graphql.Marshaler) {
@@ -4302,28 +4482,22 @@ func (ec *executionContext) _ForeignInterface_addresses(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignInterface_addresses,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignInterface_addresses(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Addresses, nil
 		},
 		nil,
-		ec.marshalNString2ᚕstringᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignInterface_addresses(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignInterface",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignInterface", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignInterface_mtu(ctx context.Context, field graphql.CollectedField, obj *model.ForeignInterface) (ret graphql.Marshaler) {
@@ -4331,28 +4505,22 @@ func (ec *executionContext) _ForeignInterface_mtu(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignInterface_mtu,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignInterface_mtu(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Mtu, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignInterface_mtu(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignInterface",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignInterface", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignPeer_publicKey(ctx context.Context, field graphql.CollectedField, obj *model.ForeignPeer) (ret graphql.Marshaler) {
@@ -4360,28 +4528,22 @@ func (ec *executionContext) _ForeignPeer_publicKey(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignPeer_publicKey,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignPeer_publicKey(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PublicKey, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignPeer_publicKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignPeer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignPeer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignPeer_endpoint(ctx context.Context, field graphql.CollectedField, obj *model.ForeignPeer) (ret graphql.Marshaler) {
@@ -4389,28 +4551,22 @@ func (ec *executionContext) _ForeignPeer_endpoint(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignPeer_endpoint,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignPeer_endpoint(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Endpoint, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignPeer_endpoint(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignPeer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignPeer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignPeer_allowedIps(ctx context.Context, field graphql.CollectedField, obj *model.ForeignPeer) (ret graphql.Marshaler) {
@@ -4418,28 +4574,22 @@ func (ec *executionContext) _ForeignPeer_allowedIps(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignPeer_allowedIps,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignPeer_allowedIps(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.AllowedIps, nil
 		},
 		nil,
-		ec.marshalOString2ᚕstringᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalOString2ᚕstringᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignPeer_allowedIps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignPeer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignPeer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignPeer_persistentKeepAliveInterval(ctx context.Context, field graphql.CollectedField, obj *model.ForeignPeer) (ret graphql.Marshaler) {
@@ -4447,28 +4597,22 @@ func (ec *executionContext) _ForeignPeer_persistentKeepAliveInterval(ctx context
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignPeer_persistentKeepAliveInterval,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignPeer_persistentKeepAliveInterval(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PersistentKeepAliveInterval, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignPeer_persistentKeepAliveInterval(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignPeer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignPeer", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignPeer_lastHandshakeTime(ctx context.Context, field graphql.CollectedField, obj *model.ForeignPeer) (ret graphql.Marshaler) {
@@ -4476,28 +4620,22 @@ func (ec *executionContext) _ForeignPeer_lastHandshakeTime(ctx context.Context, 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignPeer_lastHandshakeTime,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignPeer_lastHandshakeTime(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.LastHandshakeTime, nil
 		},
 		nil,
-		ec.marshalODateTime2ᚖtimeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalODateTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignPeer_lastHandshakeTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignPeer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignPeer", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignPeer_receiveBytes(ctx context.Context, field graphql.CollectedField, obj *model.ForeignPeer) (ret graphql.Marshaler) {
@@ -4505,28 +4643,22 @@ func (ec *executionContext) _ForeignPeer_receiveBytes(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignPeer_receiveBytes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignPeer_receiveBytes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ReceiveBytes, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignPeer_receiveBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignPeer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignPeer", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignPeer_transmitBytes(ctx context.Context, field graphql.CollectedField, obj *model.ForeignPeer) (ret graphql.Marshaler) {
@@ -4534,28 +4666,22 @@ func (ec *executionContext) _ForeignPeer_transmitBytes(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignPeer_transmitBytes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignPeer_transmitBytes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.TransmitBytes, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignPeer_transmitBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignPeer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignPeer", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignPeer_protocolVersion(ctx context.Context, field graphql.CollectedField, obj *model.ForeignPeer) (ret graphql.Marshaler) {
@@ -4563,28 +4689,22 @@ func (ec *executionContext) _ForeignPeer_protocolVersion(ctx context.Context, fi
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignPeer_protocolVersion,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignPeer_protocolVersion(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ProtocolVersion, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignPeer_protocolVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignPeer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignPeer", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignServer_foreignInterface(ctx context.Context, field graphql.CollectedField, obj *model.ForeignServer) (ret graphql.Marshaler) {
@@ -4592,17 +4712,20 @@ func (ec *executionContext) _ForeignServer_foreignInterface(ctx context.Context,
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignServer_foreignInterface,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignServer_foreignInterface(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ForeignInterface, nil
 		},
 		nil,
-		ec.marshalNForeignInterface2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignInterface,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.ForeignInterface) graphql.Marshaler {
+			return ec.marshalNForeignInterface2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignInterface(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignServer_foreignInterface(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ForeignServer",
@@ -4610,15 +4733,7 @@ func (ec *executionContext) fieldContext_ForeignServer_foreignInterface(_ contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext_ForeignInterface_name(ctx, field)
-			case "addresses":
-				return ec.fieldContext_ForeignInterface_addresses(ctx, field)
-			case "mtu":
-				return ec.fieldContext_ForeignInterface_mtu(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ForeignInterface", field.Name)
+			return ec.childFields_ForeignInterface(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4629,28 +4744,22 @@ func (ec *executionContext) _ForeignServer_name(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignServer_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignServer_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignServer_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignServer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignServer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignServer_type(ctx context.Context, field graphql.CollectedField, obj *model.ForeignServer) (ret graphql.Marshaler) {
@@ -4658,28 +4767,22 @@ func (ec *executionContext) _ForeignServer_type(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignServer_type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignServer_type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignServer_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignServer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignServer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignServer_publicKey(ctx context.Context, field graphql.CollectedField, obj *model.ForeignServer) (ret graphql.Marshaler) {
@@ -4687,28 +4790,22 @@ func (ec *executionContext) _ForeignServer_publicKey(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignServer_publicKey,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignServer_publicKey(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PublicKey, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignServer_publicKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignServer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignServer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignServer_listenPort(ctx context.Context, field graphql.CollectedField, obj *model.ForeignServer) (ret graphql.Marshaler) {
@@ -4716,28 +4813,22 @@ func (ec *executionContext) _ForeignServer_listenPort(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignServer_listenPort,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignServer_listenPort(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ListenPort, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignServer_listenPort(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignServer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignServer", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignServer_firewallMark(ctx context.Context, field graphql.CollectedField, obj *model.ForeignServer) (ret graphql.Marshaler) {
@@ -4745,28 +4836,22 @@ func (ec *executionContext) _ForeignServer_firewallMark(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignServer_firewallMark,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignServer_firewallMark(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.FirewallMark, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignServer_firewallMark(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ForeignServer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ForeignServer", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _ForeignServer_peers(ctx context.Context, field graphql.CollectedField, obj *model.ForeignServer) (ret graphql.Marshaler) {
@@ -4774,17 +4859,20 @@ func (ec *executionContext) _ForeignServer_peers(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignServer_peers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignServer_peers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Peers, nil
 		},
 		nil,
-		ec.marshalNForeignPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignPeerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.ForeignPeer) graphql.Marshaler {
+			return ec.marshalNForeignPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignPeerᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignServer_peers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ForeignServer",
@@ -4792,25 +4880,7 @@ func (ec *executionContext) fieldContext_ForeignServer_peers(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "publicKey":
-				return ec.fieldContext_ForeignPeer_publicKey(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_ForeignPeer_endpoint(ctx, field)
-			case "allowedIps":
-				return ec.fieldContext_ForeignPeer_allowedIps(ctx, field)
-			case "persistentKeepAliveInterval":
-				return ec.fieldContext_ForeignPeer_persistentKeepAliveInterval(ctx, field)
-			case "lastHandshakeTime":
-				return ec.fieldContext_ForeignPeer_lastHandshakeTime(ctx, field)
-			case "receiveBytes":
-				return ec.fieldContext_ForeignPeer_receiveBytes(ctx, field)
-			case "transmitBytes":
-				return ec.fieldContext_ForeignPeer_transmitBytes(ctx, field)
-			case "protocolVersion":
-				return ec.fieldContext_ForeignPeer_protocolVersion(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ForeignPeer", field.Name)
+			return ec.childFields_ForeignPeer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4821,7 +4891,9 @@ func (ec *executionContext) _ForeignServer_backend(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ForeignServer_backend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ForeignServer_backend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.ForeignServer().Backend(ctx, obj)
 		},
@@ -4839,12 +4911,13 @@ func (ec *executionContext) _ForeignServer_backend(ctx context.Context, field gr
 			next = directive1
 			return next
 		},
-		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Backend) graphql.Marshaler {
+			return ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ForeignServer_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ForeignServer",
@@ -4852,39 +4925,7 @@ func (ec *executionContext) fieldContext_ForeignServer_backend(_ context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Backend_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Backend_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Backend_description(ctx, field)
-			case "url":
-				return ec.fieldContext_Backend_url(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Backend_enabled(ctx, field)
-			case "supported":
-				return ec.fieldContext_Backend_supported(ctx, field)
-			case "servers":
-				return ec.fieldContext_Backend_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_Backend_peers(ctx, field)
-			case "foreignServers":
-				return ec.fieldContext_Backend_foreignServers(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Backend_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Backend_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Backend_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Backend_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Backend_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Backend_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+			return ec.childFields_Backend(ctx, field)
 		},
 	}
 	return fc, nil
@@ -4895,28 +4936,22 @@ func (ec *executionContext) _GenerateWireguardKeyPayload_clientMutationId(ctx co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_GenerateWireguardKeyPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_GenerateWireguardKeyPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_GenerateWireguardKeyPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GenerateWireguardKeyPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("GenerateWireguardKeyPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _GenerateWireguardKeyPayload_privateKey(ctx context.Context, field graphql.CollectedField, obj *model.GenerateWireguardKeyPayload) (ret graphql.Marshaler) {
@@ -4924,28 +4959,22 @@ func (ec *executionContext) _GenerateWireguardKeyPayload_privateKey(ctx context.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_GenerateWireguardKeyPayload_privateKey,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_GenerateWireguardKeyPayload_privateKey(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PrivateKey, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_GenerateWireguardKeyPayload_privateKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GenerateWireguardKeyPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("GenerateWireguardKeyPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _GenerateWireguardKeyPayload_publicKey(ctx context.Context, field graphql.CollectedField, obj *model.GenerateWireguardKeyPayload) (ret graphql.Marshaler) {
@@ -4953,28 +4982,22 @@ func (ec *executionContext) _GenerateWireguardKeyPayload_publicKey(ctx context.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_GenerateWireguardKeyPayload_publicKey,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_GenerateWireguardKeyPayload_publicKey(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PublicKey, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_GenerateWireguardKeyPayload_publicKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GenerateWireguardKeyPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("GenerateWireguardKeyPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ImportForeignServerPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.ImportForeignServerPayload) (ret graphql.Marshaler) {
@@ -4982,28 +5005,22 @@ func (ec *executionContext) _ImportForeignServerPayload_clientMutationId(ctx con
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ImportForeignServerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ImportForeignServerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ImportForeignServerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ImportForeignServerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ImportForeignServerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ImportForeignServerPayload_server(ctx context.Context, field graphql.CollectedField, obj *model.ImportForeignServerPayload) (ret graphql.Marshaler) {
@@ -5011,17 +5028,20 @@ func (ec *executionContext) _ImportForeignServerPayload_server(ctx context.Conte
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ImportForeignServerPayload_server,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ImportForeignServerPayload_server(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Server, nil
 		},
 		nil,
-		ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Server) graphql.Marshaler {
+			return ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_ImportForeignServerPayload_server(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ImportForeignServerPayload",
@@ -5029,51 +5049,7 @@ func (ec *executionContext) fieldContext_ImportForeignServerPayload_server(_ con
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -5084,18 +5060,21 @@ func (ec *executionContext) _Mutation_signIn(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_signIn,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_signIn(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().SignIn(ctx, fc.Args["input"].(model.SignInInput))
 		},
 		nil,
-		ec.marshalOSignInPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐSignInPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.SignInPayload) graphql.Marshaler {
+			return ec.marshalOSignInPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐSignInPayload(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_signIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5103,17 +5082,7 @@ func (ec *executionContext) fieldContext_Mutation_signIn(ctx context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_SignInPayload_clientMutationId(ctx, field)
-			case "token":
-				return ec.fieldContext_SignInPayload_token(ctx, field)
-			case "expiresAt":
-				return ec.fieldContext_SignInPayload_expiresAt(ctx, field)
-			case "expiresIn":
-				return ec.fieldContext_SignInPayload_expiresIn(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SignInPayload", field.Name)
+			return ec.childFields_SignInPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5135,7 +5104,9 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().CreateUser(ctx, fc.Args["input"].(model.CreateUserInput))
@@ -5154,12 +5125,13 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 			next = directive1
 			return next
 		},
-		ec.marshalNCreateUserPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateUserPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CreateUserPayload) graphql.Marshaler {
+			return ec.marshalNCreateUserPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateUserPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5167,13 +5139,7 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_CreateUserPayload_clientMutationId(ctx, field)
-			case "user":
-				return ec.fieldContext_CreateUserPayload_user(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CreateUserPayload", field.Name)
+			return ec.childFields_CreateUserPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5195,7 +5161,9 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().UpdateUser(ctx, fc.Args["input"].(model.UpdateUserInput))
@@ -5214,12 +5182,13 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 			next = directive1
 			return next
 		},
-		ec.marshalNUpdateUserPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateUserPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.UpdateUserPayload) graphql.Marshaler {
+			return ec.marshalNUpdateUserPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateUserPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5227,13 +5196,7 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_UpdateUserPayload_clientMutationId(ctx, field)
-			case "user":
-				return ec.fieldContext_UpdateUserPayload_user(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UpdateUserPayload", field.Name)
+			return ec.childFields_UpdateUserPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5255,7 +5218,9 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().DeleteUser(ctx, fc.Args["input"].(model.DeleteUserInput))
@@ -5274,12 +5239,13 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 			next = directive1
 			return next
 		},
-		ec.marshalNDeleteUserPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteUserPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.DeleteUserPayload) graphql.Marshaler {
+			return ec.marshalNDeleteUserPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteUserPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5287,13 +5253,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_DeleteUserPayload_clientMutationId(ctx, field)
-			case "user":
-				return ec.fieldContext_DeleteUserPayload_user(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DeleteUserPayload", field.Name)
+			return ec.childFields_DeleteUserPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5315,7 +5275,9 @@ func (ec *executionContext) _Mutation_generateWireguardKey(ctx context.Context, 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_generateWireguardKey,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_generateWireguardKey(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().GenerateWireguardKey(ctx, fc.Args["input"].(model.GenerateWireguardKeyInput))
@@ -5334,12 +5296,13 @@ func (ec *executionContext) _Mutation_generateWireguardKey(ctx context.Context, 
 			next = directive1
 			return next
 		},
-		ec.marshalNGenerateWireguardKeyPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐGenerateWireguardKeyPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.GenerateWireguardKeyPayload) graphql.Marshaler {
+			return ec.marshalNGenerateWireguardKeyPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐGenerateWireguardKeyPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_generateWireguardKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5347,15 +5310,7 @@ func (ec *executionContext) fieldContext_Mutation_generateWireguardKey(ctx conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_GenerateWireguardKeyPayload_clientMutationId(ctx, field)
-			case "privateKey":
-				return ec.fieldContext_GenerateWireguardKeyPayload_privateKey(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_GenerateWireguardKeyPayload_publicKey(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type GenerateWireguardKeyPayload", field.Name)
+			return ec.childFields_GenerateWireguardKeyPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5377,7 +5332,9 @@ func (ec *executionContext) _Mutation_createServer(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createServer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createServer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().CreateServer(ctx, fc.Args["input"].(model.CreateServerInput))
@@ -5396,12 +5353,13 @@ func (ec *executionContext) _Mutation_createServer(ctx context.Context, field gr
 			next = directive1
 			return next
 		},
-		ec.marshalNCreateServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateServerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CreateServerPayload) graphql.Marshaler {
+			return ec.marshalNCreateServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateServerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_createServer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5409,13 +5367,7 @@ func (ec *executionContext) fieldContext_Mutation_createServer(ctx context.Conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_CreateServerPayload_clientMutationId(ctx, field)
-			case "server":
-				return ec.fieldContext_CreateServerPayload_server(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CreateServerPayload", field.Name)
+			return ec.childFields_CreateServerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5437,7 +5389,9 @@ func (ec *executionContext) _Mutation_updateServer(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateServer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateServer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().UpdateServer(ctx, fc.Args["input"].(model.UpdateServerInput))
@@ -5456,12 +5410,13 @@ func (ec *executionContext) _Mutation_updateServer(ctx context.Context, field gr
 			next = directive1
 			return next
 		},
-		ec.marshalNUpdateServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateServerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.UpdateServerPayload) graphql.Marshaler {
+			return ec.marshalNUpdateServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateServerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_updateServer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5469,13 +5424,7 @@ func (ec *executionContext) fieldContext_Mutation_updateServer(ctx context.Conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_UpdateServerPayload_clientMutationId(ctx, field)
-			case "server":
-				return ec.fieldContext_UpdateServerPayload_server(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UpdateServerPayload", field.Name)
+			return ec.childFields_UpdateServerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5497,7 +5446,9 @@ func (ec *executionContext) _Mutation_deleteServer(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteServer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteServer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().DeleteServer(ctx, fc.Args["input"].(model.DeleteServerInput))
@@ -5516,12 +5467,13 @@ func (ec *executionContext) _Mutation_deleteServer(ctx context.Context, field gr
 			next = directive1
 			return next
 		},
-		ec.marshalNDeleteServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteServerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.DeleteServerPayload) graphql.Marshaler {
+			return ec.marshalNDeleteServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteServerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_deleteServer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5529,13 +5481,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteServer(ctx context.Conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_DeleteServerPayload_clientMutationId(ctx, field)
-			case "server":
-				return ec.fieldContext_DeleteServerPayload_server(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DeleteServerPayload", field.Name)
+			return ec.childFields_DeleteServerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5557,7 +5503,9 @@ func (ec *executionContext) _Mutation_startServer(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_startServer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_startServer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().StartServer(ctx, fc.Args["input"].(model.StartServerInput))
@@ -5576,12 +5524,13 @@ func (ec *executionContext) _Mutation_startServer(ctx context.Context, field gra
 			next = directive1
 			return next
 		},
-		ec.marshalNStartServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStartServerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.StartServerPayload) graphql.Marshaler {
+			return ec.marshalNStartServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStartServerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_startServer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5589,13 +5538,7 @@ func (ec *executionContext) fieldContext_Mutation_startServer(ctx context.Contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_StartServerPayload_clientMutationId(ctx, field)
-			case "server":
-				return ec.fieldContext_StartServerPayload_server(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type StartServerPayload", field.Name)
+			return ec.childFields_StartServerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5617,7 +5560,9 @@ func (ec *executionContext) _Mutation_stopServer(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_stopServer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_stopServer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().StopServer(ctx, fc.Args["input"].(model.StopServerInput))
@@ -5636,12 +5581,13 @@ func (ec *executionContext) _Mutation_stopServer(ctx context.Context, field grap
 			next = directive1
 			return next
 		},
-		ec.marshalNStopServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStopServerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.StopServerPayload) graphql.Marshaler {
+			return ec.marshalNStopServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐStopServerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_stopServer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5649,13 +5595,7 @@ func (ec *executionContext) fieldContext_Mutation_stopServer(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_StopServerPayload_clientMutationId(ctx, field)
-			case "server":
-				return ec.fieldContext_StopServerPayload_server(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type StopServerPayload", field.Name)
+			return ec.childFields_StopServerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5677,7 +5617,9 @@ func (ec *executionContext) _Mutation_createPeer(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createPeer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createPeer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().CreatePeer(ctx, fc.Args["input"].(model.CreatePeerInput))
@@ -5696,12 +5638,13 @@ func (ec *executionContext) _Mutation_createPeer(ctx context.Context, field grap
 			next = directive1
 			return next
 		},
-		ec.marshalNCreatePeerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreatePeerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CreatePeerPayload) graphql.Marshaler {
+			return ec.marshalNCreatePeerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreatePeerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_createPeer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5709,13 +5652,7 @@ func (ec *executionContext) fieldContext_Mutation_createPeer(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_CreatePeerPayload_clientMutationId(ctx, field)
-			case "peer":
-				return ec.fieldContext_CreatePeerPayload_peer(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CreatePeerPayload", field.Name)
+			return ec.childFields_CreatePeerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5737,7 +5674,9 @@ func (ec *executionContext) _Mutation_updatePeer(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updatePeer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updatePeer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().UpdatePeer(ctx, fc.Args["input"].(model.UpdatePeerInput))
@@ -5756,12 +5695,13 @@ func (ec *executionContext) _Mutation_updatePeer(ctx context.Context, field grap
 			next = directive1
 			return next
 		},
-		ec.marshalNUpdatePeerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdatePeerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.UpdatePeerPayload) graphql.Marshaler {
+			return ec.marshalNUpdatePeerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdatePeerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_updatePeer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5769,13 +5709,7 @@ func (ec *executionContext) fieldContext_Mutation_updatePeer(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_UpdatePeerPayload_clientMutationId(ctx, field)
-			case "peer":
-				return ec.fieldContext_UpdatePeerPayload_peer(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UpdatePeerPayload", field.Name)
+			return ec.childFields_UpdatePeerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5797,7 +5731,9 @@ func (ec *executionContext) _Mutation_deletePeer(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deletePeer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deletePeer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().DeletePeer(ctx, fc.Args["input"].(model.DeletePeerInput))
@@ -5816,12 +5752,13 @@ func (ec *executionContext) _Mutation_deletePeer(ctx context.Context, field grap
 			next = directive1
 			return next
 		},
-		ec.marshalNDeletePeerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeletePeerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.DeletePeerPayload) graphql.Marshaler {
+			return ec.marshalNDeletePeerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeletePeerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_deletePeer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5829,13 +5766,7 @@ func (ec *executionContext) fieldContext_Mutation_deletePeer(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_DeletePeerPayload_clientMutationId(ctx, field)
-			case "peer":
-				return ec.fieldContext_DeletePeerPayload_peer(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DeletePeerPayload", field.Name)
+			return ec.childFields_DeletePeerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5857,7 +5788,9 @@ func (ec *executionContext) _Mutation_importForeignServer(ctx context.Context, f
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_importForeignServer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_importForeignServer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().ImportForeignServer(ctx, fc.Args["input"].(model.ImportForeignServerInput))
@@ -5876,12 +5809,13 @@ func (ec *executionContext) _Mutation_importForeignServer(ctx context.Context, f
 			next = directive1
 			return next
 		},
-		ec.marshalNImportForeignServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐImportForeignServerPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.ImportForeignServerPayload) graphql.Marshaler {
+			return ec.marshalNImportForeignServerPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐImportForeignServerPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_importForeignServer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5889,13 +5823,7 @@ func (ec *executionContext) fieldContext_Mutation_importForeignServer(ctx contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_ImportForeignServerPayload_clientMutationId(ctx, field)
-			case "server":
-				return ec.fieldContext_ImportForeignServerPayload_server(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ImportForeignServerPayload", field.Name)
+			return ec.childFields_ImportForeignServerPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5917,7 +5845,9 @@ func (ec *executionContext) _Mutation_createBackend(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createBackend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createBackend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().CreateBackend(ctx, fc.Args["input"].(model.CreateBackendInput))
@@ -5936,12 +5866,13 @@ func (ec *executionContext) _Mutation_createBackend(ctx context.Context, field g
 			next = directive1
 			return next
 		},
-		ec.marshalNCreateBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CreateBackendPayload) graphql.Marshaler {
+			return ec.marshalNCreateBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐCreateBackendPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_createBackend(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -5949,13 +5880,7 @@ func (ec *executionContext) fieldContext_Mutation_createBackend(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_CreateBackendPayload_clientMutationId(ctx, field)
-			case "backend":
-				return ec.fieldContext_CreateBackendPayload_backend(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CreateBackendPayload", field.Name)
+			return ec.childFields_CreateBackendPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -5977,7 +5902,9 @@ func (ec *executionContext) _Mutation_updateBackend(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateBackend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateBackend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().UpdateBackend(ctx, fc.Args["input"].(model.UpdateBackendInput))
@@ -5996,12 +5923,13 @@ func (ec *executionContext) _Mutation_updateBackend(ctx context.Context, field g
 			next = directive1
 			return next
 		},
-		ec.marshalNUpdateBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.UpdateBackendPayload) graphql.Marshaler {
+			return ec.marshalNUpdateBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUpdateBackendPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_updateBackend(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -6009,13 +5937,7 @@ func (ec *executionContext) fieldContext_Mutation_updateBackend(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_UpdateBackendPayload_clientMutationId(ctx, field)
-			case "backend":
-				return ec.fieldContext_UpdateBackendPayload_backend(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UpdateBackendPayload", field.Name)
+			return ec.childFields_UpdateBackendPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -6037,7 +5959,9 @@ func (ec *executionContext) _Mutation_deleteBackend(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteBackend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteBackend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Mutation().DeleteBackend(ctx, fc.Args["input"].(model.DeleteBackendInput))
@@ -6056,12 +5980,13 @@ func (ec *executionContext) _Mutation_deleteBackend(ctx context.Context, field g
 			next = directive1
 			return next
 		},
-		ec.marshalNDeleteBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendPayload,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.DeleteBackendPayload) graphql.Marshaler {
+			return ec.marshalNDeleteBackendPayload2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐDeleteBackendPayload(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Mutation_deleteBackend(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
@@ -6069,13 +5994,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteBackend(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientMutationId":
-				return ec.fieldContext_DeleteBackendPayload_clientMutationId(ctx, field)
-			case "backend":
-				return ec.fieldContext_DeleteBackendPayload_backend(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DeleteBackendPayload", field.Name)
+			return ec.childFields_DeleteBackendPayload(ctx, field)
 		},
 	}
 	defer func() {
@@ -6097,28 +6016,22 @@ func (ec *executionContext) _Peer_id(ctx context.Context, field graphql.Collecte
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID,
+		func(ctx context.Context, selections ast.SelectionSet, v model.ID) graphql.Marshaler {
+			return ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_server(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6126,7 +6039,9 @@ func (ec *executionContext) _Peer_server(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_server,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_server(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Peer().Server(ctx, obj)
 		},
@@ -6144,12 +6059,13 @@ func (ec *executionContext) _Peer_server(ctx context.Context, field graphql.Coll
 			next = directive1
 			return next
 		},
-		ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Server) graphql.Marshaler {
+			return ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_server(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Peer",
@@ -6157,51 +6073,7 @@ func (ec *executionContext) fieldContext_Peer_server(_ context.Context, field gr
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -6212,7 +6084,9 @@ func (ec *executionContext) _Peer_backend(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_backend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_backend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Peer().Backend(ctx, obj)
 		},
@@ -6230,12 +6104,13 @@ func (ec *executionContext) _Peer_backend(ctx context.Context, field graphql.Col
 			next = directive1
 			return next
 		},
-		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Backend) graphql.Marshaler {
+			return ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Peer",
@@ -6243,39 +6118,7 @@ func (ec *executionContext) fieldContext_Peer_backend(_ context.Context, field g
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Backend_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Backend_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Backend_description(ctx, field)
-			case "url":
-				return ec.fieldContext_Backend_url(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Backend_enabled(ctx, field)
-			case "supported":
-				return ec.fieldContext_Backend_supported(ctx, field)
-			case "servers":
-				return ec.fieldContext_Backend_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_Backend_peers(ctx, field)
-			case "foreignServers":
-				return ec.fieldContext_Backend_foreignServers(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Backend_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Backend_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Backend_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Backend_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Backend_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Backend_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+			return ec.childFields_Backend(ctx, field)
 		},
 	}
 	return fc, nil
@@ -6286,28 +6129,22 @@ func (ec *executionContext) _Peer_name(ctx context.Context, field graphql.Collec
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_description(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6315,28 +6152,22 @@ func (ec *executionContext) _Peer_description(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_publicKey(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6344,28 +6175,22 @@ func (ec *executionContext) _Peer_publicKey(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_publicKey,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_publicKey(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PublicKey, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_publicKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_allowedIPs(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6373,28 +6198,22 @@ func (ec *executionContext) _Peer_allowedIPs(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_allowedIPs,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_allowedIPs(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.AllowedIPs, nil
 		},
 		nil,
-		ec.marshalOString2ᚕstringᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalOString2ᚕstringᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_allowedIPs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_endpoint(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6402,28 +6221,22 @@ func (ec *executionContext) _Peer_endpoint(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_endpoint,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_endpoint(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Endpoint, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_endpoint(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_presharedKey(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6431,28 +6244,22 @@ func (ec *executionContext) _Peer_presharedKey(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_presharedKey,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_presharedKey(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PresharedKey, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_presharedKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_persistentKeepalive(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6460,28 +6267,22 @@ func (ec *executionContext) _Peer_persistentKeepalive(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_persistentKeepalive,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PersistentKeepalive, nil
 		},
 		nil,
-		ec.marshalOInt2ᚖint,
+		func(ctx context.Context, selections ast.SelectionSet, v *int) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_persistentKeepalive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_hooks(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6489,17 +6290,20 @@ func (ec *executionContext) _Peer_hooks(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_hooks,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_hooks(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Hooks, nil
 		},
 		nil,
-		ec.marshalOPeerHook2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerHookᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.PeerHook) graphql.Marshaler {
+			return ec.marshalOPeerHook2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerHookᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_hooks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Peer",
@@ -6507,17 +6311,7 @@ func (ec *executionContext) fieldContext_Peer_hooks(_ context.Context, field gra
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "command":
-				return ec.fieldContext_PeerHook_command(ctx, field)
-			case "runOnCreate":
-				return ec.fieldContext_PeerHook_runOnCreate(ctx, field)
-			case "runOnUpdate":
-				return ec.fieldContext_PeerHook_runOnUpdate(ctx, field)
-			case "runOnDelete":
-				return ec.fieldContext_PeerHook_runOnDelete(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PeerHook", field.Name)
+			return ec.childFields_PeerHook(ctx, field)
 		},
 	}
 	return fc, nil
@@ -6528,7 +6322,9 @@ func (ec *executionContext) _Peer_stats(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_stats,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_stats(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Peer().Stats(ctx, obj)
 		},
@@ -6546,12 +6342,13 @@ func (ec *executionContext) _Peer_stats(ctx context.Context, field graphql.Colle
 			next = directive1
 			return next
 		},
-		ec.marshalOPeerStats2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerStats,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.PeerStats) graphql.Marshaler {
+			return ec.marshalOPeerStats2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerStats(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_stats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Peer",
@@ -6559,19 +6356,7 @@ func (ec *executionContext) fieldContext_Peer_stats(_ context.Context, field gra
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "endpoint":
-				return ec.fieldContext_PeerStats_endpoint(ctx, field)
-			case "lastHandshakeTime":
-				return ec.fieldContext_PeerStats_lastHandshakeTime(ctx, field)
-			case "receiveBytes":
-				return ec.fieldContext_PeerStats_receiveBytes(ctx, field)
-			case "transmitBytes":
-				return ec.fieldContext_PeerStats_transmitBytes(ctx, field)
-			case "protocolVersion":
-				return ec.fieldContext_PeerStats_protocolVersion(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PeerStats", field.Name)
+			return ec.childFields_PeerStats(ctx, field)
 		},
 	}
 	return fc, nil
@@ -6582,7 +6367,9 @@ func (ec *executionContext) _Peer_createUser(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_createUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_createUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Peer().CreateUser(ctx, obj)
 		},
@@ -6600,12 +6387,13 @@ func (ec *executionContext) _Peer_createUser(ctx context.Context, field graphql.
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_createUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Peer",
@@ -6613,21 +6401,7 @@ func (ec *executionContext) fieldContext_Peer_createUser(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -6638,7 +6412,9 @@ func (ec *executionContext) _Peer_updateUser(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_updateUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_updateUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Peer().UpdateUser(ctx, obj)
 		},
@@ -6656,12 +6432,13 @@ func (ec *executionContext) _Peer_updateUser(ctx context.Context, field graphql.
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_updateUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Peer",
@@ -6669,21 +6446,7 @@ func (ec *executionContext) fieldContext_Peer_updateUser(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -6694,7 +6457,9 @@ func (ec *executionContext) _Peer_deleteUser(ctx context.Context, field graphql.
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_deleteUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_deleteUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Peer().DeleteUser(ctx, obj)
 		},
@@ -6712,12 +6477,13 @@ func (ec *executionContext) _Peer_deleteUser(ctx context.Context, field graphql.
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_deleteUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Peer",
@@ -6725,21 +6491,7 @@ func (ec *executionContext) fieldContext_Peer_deleteUser(_ context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -6750,28 +6502,22 @@ func (ec *executionContext) _Peer_createdAt(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_createdAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_createdAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.CreatedAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6779,28 +6525,22 @@ func (ec *executionContext) _Peer_updatedAt(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_updatedAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_updatedAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.UpdatedAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _Peer_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Peer) (ret graphql.Marshaler) {
@@ -6808,28 +6548,22 @@ func (ec *executionContext) _Peer_deletedAt(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Peer_deletedAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Peer_deletedAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeletedAt, nil
 		},
 		nil,
-		ec.marshalODateTime2ᚖtimeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalODateTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Peer_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Peer",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Peer", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _PeerChangedEvent_node(ctx context.Context, field graphql.CollectedField, obj *model.PeerChangedEvent) (ret graphql.Marshaler) {
@@ -6837,17 +6571,20 @@ func (ec *executionContext) _PeerChangedEvent_node(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerChangedEvent_node,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerChangedEvent_node(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Node, nil
 		},
 		nil,
-		ec.marshalNPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Peer) graphql.Marshaler {
+			return ec.marshalNPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerChangedEvent_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PeerChangedEvent",
@@ -6855,45 +6592,7 @@ func (ec *executionContext) fieldContext_PeerChangedEvent_node(_ context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Peer_id(ctx, field)
-			case "server":
-				return ec.fieldContext_Peer_server(ctx, field)
-			case "backend":
-				return ec.fieldContext_Peer_backend(ctx, field)
-			case "name":
-				return ec.fieldContext_Peer_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Peer_description(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Peer_publicKey(ctx, field)
-			case "allowedIPs":
-				return ec.fieldContext_Peer_allowedIPs(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_Peer_endpoint(ctx, field)
-			case "presharedKey":
-				return ec.fieldContext_Peer_presharedKey(ctx, field)
-			case "persistentKeepalive":
-				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Peer_hooks(ctx, field)
-			case "stats":
-				return ec.fieldContext_Peer_stats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Peer_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Peer_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Peer_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Peer_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Peer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Peer_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+			return ec.childFields_Peer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -6904,28 +6603,22 @@ func (ec *executionContext) _PeerChangedEvent_action(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerChangedEvent_action,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerChangedEvent_action(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Action, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerChangedEvent_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerChangedEvent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerChangedEvent", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _PeerHook_command(ctx context.Context, field graphql.CollectedField, obj *model.PeerHook) (ret graphql.Marshaler) {
@@ -6933,28 +6626,22 @@ func (ec *executionContext) _PeerHook_command(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerHook_command,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerHook_command(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Command, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerHook_command(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerHook", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _PeerHook_runOnCreate(ctx context.Context, field graphql.CollectedField, obj *model.PeerHook) (ret graphql.Marshaler) {
@@ -6962,28 +6649,22 @@ func (ec *executionContext) _PeerHook_runOnCreate(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerHook_runOnCreate,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerHook_runOnCreate(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.RunOnCreate, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerHook_runOnCreate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerHook", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _PeerHook_runOnUpdate(ctx context.Context, field graphql.CollectedField, obj *model.PeerHook) (ret graphql.Marshaler) {
@@ -6991,28 +6672,22 @@ func (ec *executionContext) _PeerHook_runOnUpdate(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerHook_runOnUpdate,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerHook_runOnUpdate(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.RunOnUpdate, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerHook_runOnUpdate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerHook", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _PeerHook_runOnDelete(ctx context.Context, field graphql.CollectedField, obj *model.PeerHook) (ret graphql.Marshaler) {
@@ -7020,28 +6695,22 @@ func (ec *executionContext) _PeerHook_runOnDelete(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerHook_runOnDelete,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerHook_runOnDelete(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.RunOnDelete, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerHook_runOnDelete(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerHook", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _PeerStats_endpoint(ctx context.Context, field graphql.CollectedField, obj *model.PeerStats) (ret graphql.Marshaler) {
@@ -7049,28 +6718,22 @@ func (ec *executionContext) _PeerStats_endpoint(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerStats_endpoint,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerStats_endpoint(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Endpoint, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerStats_endpoint(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerStats",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerStats", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _PeerStats_lastHandshakeTime(ctx context.Context, field graphql.CollectedField, obj *model.PeerStats) (ret graphql.Marshaler) {
@@ -7078,28 +6741,22 @@ func (ec *executionContext) _PeerStats_lastHandshakeTime(ctx context.Context, fi
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerStats_lastHandshakeTime,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerStats_lastHandshakeTime(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.LastHandshakeTime, nil
 		},
 		nil,
-		ec.marshalODateTime2ᚖtimeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalODateTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerStats_lastHandshakeTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerStats",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerStats", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _PeerStats_receiveBytes(ctx context.Context, field graphql.CollectedField, obj *model.PeerStats) (ret graphql.Marshaler) {
@@ -7107,28 +6764,22 @@ func (ec *executionContext) _PeerStats_receiveBytes(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerStats_receiveBytes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerStats_receiveBytes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ReceiveBytes, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerStats_receiveBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerStats",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerStats", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _PeerStats_transmitBytes(ctx context.Context, field graphql.CollectedField, obj *model.PeerStats) (ret graphql.Marshaler) {
@@ -7136,28 +6787,22 @@ func (ec *executionContext) _PeerStats_transmitBytes(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerStats_transmitBytes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerStats_transmitBytes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.TransmitBytes, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerStats_transmitBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerStats",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerStats", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _PeerStats_protocolVersion(ctx context.Context, field graphql.CollectedField, obj *model.PeerStats) (ret graphql.Marshaler) {
@@ -7165,28 +6810,22 @@ func (ec *executionContext) _PeerStats_protocolVersion(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_PeerStats_protocolVersion,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PeerStats_protocolVersion(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ProtocolVersion, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_PeerStats_protocolVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PeerStats",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("PeerStats", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Query_viewer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7194,7 +6833,9 @@ func (ec *executionContext) _Query_viewer(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_viewer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_viewer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Query().Viewer(ctx)
 		},
@@ -7212,12 +6853,13 @@ func (ec *executionContext) _Query_viewer(ctx context.Context, field graphql.Col
 			next = directive1
 			return next
 		},
-		ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_viewer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7225,21 +6867,7 @@ func (ec *executionContext) fieldContext_Query_viewer(_ context.Context, field g
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7250,7 +6878,9 @@ func (ec *executionContext) _Query_node(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_node,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_node(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Query().Node(ctx, fc.Args["id"].(model.ID))
@@ -7269,12 +6899,13 @@ func (ec *executionContext) _Query_node(ctx context.Context, field graphql.Colle
 			next = directive1
 			return next
 		},
-		ec.marshalONode2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNode,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Node) graphql.Marshaler {
+			return ec.marshalONode2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNode(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_node(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7304,7 +6935,9 @@ func (ec *executionContext) _Query_nodes(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_nodes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_nodes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Query().Nodes(ctx, fc.Args["ids"].([]*model.ID))
@@ -7323,12 +6956,13 @@ func (ec *executionContext) _Query_nodes(ctx context.Context, field graphql.Coll
 			next = directive1
 			return next
 		},
-		ec.marshalNNode2ᚕgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNode,
+		func(ctx context.Context, selections ast.SelectionSet, v []model.Node) graphql.Marshaler {
+			return ec.marshalNNode2ᚕgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNode(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_nodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7358,7 +6992,9 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_users,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_users(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Query().Users(ctx, fc.Args["query"].(*string))
@@ -7377,12 +7013,13 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 			next = directive1
 			return next
 		},
-		ec.marshalNUser2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUserᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUserᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7390,21 +7027,7 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	defer func() {
@@ -7426,7 +7049,9 @@ func (ec *executionContext) _Query_availableBackends(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_availableBackends,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_availableBackends(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Query().AvailableBackends(ctx)
 		},
@@ -7444,12 +7069,13 @@ func (ec *executionContext) _Query_availableBackends(ctx context.Context, field 
 			next = directive1
 			return next
 		},
-		ec.marshalNAvailableBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackendᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.AvailableBackend) graphql.Marshaler {
+			return ec.marshalNAvailableBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐAvailableBackendᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_availableBackends(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7457,15 +7083,7 @@ func (ec *executionContext) fieldContext_Query_availableBackends(_ context.Conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "type":
-				return ec.fieldContext_AvailableBackend_type(ctx, field)
-			case "supported":
-				return ec.fieldContext_AvailableBackend_supported(ctx, field)
-			case "registered":
-				return ec.fieldContext_AvailableBackend_registered(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type AvailableBackend", field.Name)
+			return ec.childFields_AvailableBackend(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7476,7 +7094,9 @@ func (ec *executionContext) _Query_backends(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_backends,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_backends(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Query().Backends(ctx, fc.Args["type"].(*string))
@@ -7495,12 +7115,13 @@ func (ec *executionContext) _Query_backends(ctx context.Context, field graphql.C
 			next = directive1
 			return next
 		},
-		ec.marshalNBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Backend) graphql.Marshaler {
+			return ec.marshalNBackend2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_backends(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7508,39 +7129,7 @@ func (ec *executionContext) fieldContext_Query_backends(ctx context.Context, fie
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Backend_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Backend_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Backend_description(ctx, field)
-			case "url":
-				return ec.fieldContext_Backend_url(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Backend_enabled(ctx, field)
-			case "supported":
-				return ec.fieldContext_Backend_supported(ctx, field)
-			case "servers":
-				return ec.fieldContext_Backend_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_Backend_peers(ctx, field)
-			case "foreignServers":
-				return ec.fieldContext_Backend_foreignServers(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Backend_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Backend_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Backend_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Backend_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Backend_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Backend_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+			return ec.childFields_Backend(ctx, field)
 		},
 	}
 	defer func() {
@@ -7562,7 +7151,9 @@ func (ec *executionContext) _Query_servers(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_servers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_servers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Query().Servers(ctx, fc.Args["query"].(*string), fc.Args["enabled"].(*bool))
@@ -7581,12 +7172,13 @@ func (ec *executionContext) _Query_servers(ctx context.Context, field graphql.Co
 			next = directive1
 			return next
 		},
-		ec.marshalNServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Server) graphql.Marshaler {
+			return ec.marshalNServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_servers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7594,51 +7186,7 @@ func (ec *executionContext) fieldContext_Query_servers(ctx context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	defer func() {
@@ -7660,7 +7208,9 @@ func (ec *executionContext) _Query_peers(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_peers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_peers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Query().Peers(ctx, fc.Args["query"].(*string))
@@ -7679,12 +7229,13 @@ func (ec *executionContext) _Query_peers(ctx context.Context, field graphql.Coll
 			next = directive1
 			return next
 		},
-		ec.marshalNPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Peer) graphql.Marshaler {
+			return ec.marshalNPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_peers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7692,45 +7243,7 @@ func (ec *executionContext) fieldContext_Query_peers(ctx context.Context, field 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Peer_id(ctx, field)
-			case "server":
-				return ec.fieldContext_Peer_server(ctx, field)
-			case "backend":
-				return ec.fieldContext_Peer_backend(ctx, field)
-			case "name":
-				return ec.fieldContext_Peer_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Peer_description(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Peer_publicKey(ctx, field)
-			case "allowedIPs":
-				return ec.fieldContext_Peer_allowedIPs(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_Peer_endpoint(ctx, field)
-			case "presharedKey":
-				return ec.fieldContext_Peer_presharedKey(ctx, field)
-			case "persistentKeepalive":
-				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Peer_hooks(ctx, field)
-			case "stats":
-				return ec.fieldContext_Peer_stats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Peer_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Peer_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Peer_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Peer_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Peer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Peer_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+			return ec.childFields_Peer(ctx, field)
 		},
 	}
 	defer func() {
@@ -7752,7 +7265,9 @@ func (ec *executionContext) _Query_foreignServers(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_foreignServers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_foreignServers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Query().ForeignServers(ctx)
 		},
@@ -7770,12 +7285,13 @@ func (ec *executionContext) _Query_foreignServers(ctx context.Context, field gra
 			next = directive1
 			return next
 		},
-		ec.marshalNForeignServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignServerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.ForeignServer) graphql.Marshaler {
+			return ec.marshalNForeignServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐForeignServerᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query_foreignServers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7783,25 +7299,7 @@ func (ec *executionContext) fieldContext_Query_foreignServers(_ context.Context,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "foreignInterface":
-				return ec.fieldContext_ForeignServer_foreignInterface(ctx, field)
-			case "name":
-				return ec.fieldContext_ForeignServer_name(ctx, field)
-			case "type":
-				return ec.fieldContext_ForeignServer_type(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_ForeignServer_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_ForeignServer_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_ForeignServer_firewallMark(ctx, field)
-			case "peers":
-				return ec.fieldContext_ForeignServer_peers(ctx, field)
-			case "backend":
-				return ec.fieldContext_ForeignServer_backend(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ForeignServer", field.Name)
+			return ec.childFields_ForeignServer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7812,18 +7310,21 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query___type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query___type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return ec.IntrospectType(fc.Args["name"].(string))
 		},
 		nil,
-		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7831,31 +7332,7 @@ func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	defer func() {
@@ -7877,17 +7354,20 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query___schema,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query___schema(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.IntrospectSchema()
 		},
 		nil,
-		ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Schema) graphql.Marshaler {
+			return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
@@ -7895,21 +7375,7 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "description":
-				return ec.fieldContext___Schema_description(ctx, field)
-			case "types":
-				return ec.fieldContext___Schema_types(ctx, field)
-			case "queryType":
-				return ec.fieldContext___Schema_queryType(ctx, field)
-			case "mutationType":
-				return ec.fieldContext___Schema_mutationType(ctx, field)
-			case "subscriptionType":
-				return ec.fieldContext___Schema_subscriptionType(ctx, field)
-			case "directives":
-				return ec.fieldContext___Schema_directives(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+			return ec.childFields___Schema(ctx, field)
 		},
 	}
 	return fc, nil
@@ -7920,28 +7386,22 @@ func (ec *executionContext) _Server_id(ctx context.Context, field graphql.Collec
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID,
+		func(ctx context.Context, selections ast.SelectionSet, v model.ID) graphql.Marshaler {
+			return ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _Server_name(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -7949,28 +7409,22 @@ func (ec *executionContext) _Server_name(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Server_description(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -7978,28 +7432,22 @@ func (ec *executionContext) _Server_description(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Server_backend(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8007,7 +7455,9 @@ func (ec *executionContext) _Server_backend(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_backend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_backend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Server().Backend(ctx, obj)
 		},
@@ -8025,12 +7475,13 @@ func (ec *executionContext) _Server_backend(ctx context.Context, field graphql.C
 			next = directive1
 			return next
 		},
-		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Backend) graphql.Marshaler {
+			return ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Server",
@@ -8038,39 +7489,7 @@ func (ec *executionContext) fieldContext_Server_backend(_ context.Context, field
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Backend_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Backend_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Backend_description(ctx, field)
-			case "url":
-				return ec.fieldContext_Backend_url(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Backend_enabled(ctx, field)
-			case "supported":
-				return ec.fieldContext_Backend_supported(ctx, field)
-			case "servers":
-				return ec.fieldContext_Backend_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_Backend_peers(ctx, field)
-			case "foreignServers":
-				return ec.fieldContext_Backend_foreignServers(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Backend_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Backend_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Backend_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Backend_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Backend_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Backend_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+			return ec.childFields_Backend(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8081,28 +7500,22 @@ func (ec *executionContext) _Server_enabled(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_enabled,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_enabled(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Enabled, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Server_running(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8110,28 +7523,22 @@ func (ec *executionContext) _Server_running(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_running,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_running(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Running, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_running(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Server_publicKey(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8139,28 +7546,22 @@ func (ec *executionContext) _Server_publicKey(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_publicKey,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_publicKey(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PublicKey, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_publicKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Server_listenPort(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8168,28 +7569,22 @@ func (ec *executionContext) _Server_listenPort(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_listenPort,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_listenPort(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ListenPort, nil
 		},
 		nil,
-		ec.marshalOInt2ᚖint,
+		func(ctx context.Context, selections ast.SelectionSet, v *int) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_listenPort(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Server_firewallMark(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8197,28 +7592,22 @@ func (ec *executionContext) _Server_firewallMark(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_firewallMark,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_firewallMark(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.FirewallMark, nil
 		},
 		nil,
-		ec.marshalOInt2ᚖint,
+		func(ctx context.Context, selections ast.SelectionSet, v *int) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_firewallMark(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Server_address(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8226,28 +7615,22 @@ func (ec *executionContext) _Server_address(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_address,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_address(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Address, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_address(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Server_dns(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8255,28 +7638,22 @@ func (ec *executionContext) _Server_dns(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_dns,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_dns(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DNS, nil
 		},
 		nil,
-		ec.marshalOString2ᚕstringᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalOString2ᚕstringᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_dns(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Server_mtu(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8284,28 +7661,22 @@ func (ec *executionContext) _Server_mtu(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_mtu,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_mtu(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Mtu, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_mtu(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Server_hooks(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8313,17 +7684,20 @@ func (ec *executionContext) _Server_hooks(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_hooks,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_hooks(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Hooks, nil
 		},
 		nil,
-		ec.marshalOServerHook2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerHookᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.ServerHook) graphql.Marshaler {
+			return ec.marshalOServerHook2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerHookᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_hooks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Server",
@@ -8331,19 +7705,7 @@ func (ec *executionContext) fieldContext_Server_hooks(_ context.Context, field g
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "command":
-				return ec.fieldContext_ServerHook_command(ctx, field)
-			case "runOnPreUp":
-				return ec.fieldContext_ServerHook_runOnPreUp(ctx, field)
-			case "runOnPostUp":
-				return ec.fieldContext_ServerHook_runOnPostUp(ctx, field)
-			case "runOnPreDown":
-				return ec.fieldContext_ServerHook_runOnPreDown(ctx, field)
-			case "runOnPostDown":
-				return ec.fieldContext_ServerHook_runOnPostDown(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ServerHook", field.Name)
+			return ec.childFields_ServerHook(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8354,7 +7716,9 @@ func (ec *executionContext) _Server_peers(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_peers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_peers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Server().Peers(ctx, obj)
 		},
@@ -8372,12 +7736,13 @@ func (ec *executionContext) _Server_peers(ctx context.Context, field graphql.Col
 			next = directive1
 			return next
 		},
-		ec.marshalOPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Peer) graphql.Marshaler {
+			return ec.marshalOPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_peers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Server",
@@ -8385,45 +7750,7 @@ func (ec *executionContext) fieldContext_Server_peers(_ context.Context, field g
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Peer_id(ctx, field)
-			case "server":
-				return ec.fieldContext_Peer_server(ctx, field)
-			case "backend":
-				return ec.fieldContext_Peer_backend(ctx, field)
-			case "name":
-				return ec.fieldContext_Peer_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Peer_description(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Peer_publicKey(ctx, field)
-			case "allowedIPs":
-				return ec.fieldContext_Peer_allowedIPs(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_Peer_endpoint(ctx, field)
-			case "presharedKey":
-				return ec.fieldContext_Peer_presharedKey(ctx, field)
-			case "persistentKeepalive":
-				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Peer_hooks(ctx, field)
-			case "stats":
-				return ec.fieldContext_Peer_stats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Peer_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Peer_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Peer_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Peer_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Peer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Peer_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+			return ec.childFields_Peer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8434,7 +7761,9 @@ func (ec *executionContext) _Server_interfaceStats(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_interfaceStats,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_interfaceStats(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.InterfaceStats, nil
 		},
@@ -8452,12 +7781,13 @@ func (ec *executionContext) _Server_interfaceStats(ctx context.Context, field gr
 			next = directive1
 			return next
 		},
-		ec.marshalOServerInterfaceStats2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerInterfaceStats,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.ServerInterfaceStats) graphql.Marshaler {
+			return ec.marshalOServerInterfaceStats2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerInterfaceStats(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_interfaceStats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Server",
@@ -8465,13 +7795,7 @@ func (ec *executionContext) fieldContext_Server_interfaceStats(_ context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "rxBytes":
-				return ec.fieldContext_ServerInterfaceStats_rxBytes(ctx, field)
-			case "txBytes":
-				return ec.fieldContext_ServerInterfaceStats_txBytes(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ServerInterfaceStats", field.Name)
+			return ec.childFields_ServerInterfaceStats(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8482,7 +7806,9 @@ func (ec *executionContext) _Server_createUser(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_createUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_createUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Server().CreateUser(ctx, obj)
 		},
@@ -8500,12 +7826,13 @@ func (ec *executionContext) _Server_createUser(ctx context.Context, field graphq
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_createUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Server",
@@ -8513,21 +7840,7 @@ func (ec *executionContext) fieldContext_Server_createUser(_ context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8538,7 +7851,9 @@ func (ec *executionContext) _Server_updateUser(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_updateUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_updateUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Server().UpdateUser(ctx, obj)
 		},
@@ -8556,12 +7871,13 @@ func (ec *executionContext) _Server_updateUser(ctx context.Context, field graphq
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_updateUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Server",
@@ -8569,21 +7885,7 @@ func (ec *executionContext) fieldContext_Server_updateUser(_ context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8594,7 +7896,9 @@ func (ec *executionContext) _Server_deleteUser(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_deleteUser,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_deleteUser(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Server().DeleteUser(ctx, obj)
 		},
@@ -8612,12 +7916,13 @@ func (ec *executionContext) _Server_deleteUser(ctx context.Context, field graphq
 			next = directive1
 			return next
 		},
-		ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalOUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_deleteUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Server",
@@ -8625,21 +7930,7 @@ func (ec *executionContext) fieldContext_Server_deleteUser(_ context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8650,28 +7941,22 @@ func (ec *executionContext) _Server_createdAt(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_createdAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_createdAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.CreatedAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _Server_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8679,28 +7964,22 @@ func (ec *executionContext) _Server_updatedAt(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_updatedAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_updatedAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.UpdatedAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _Server_deletedAt(ctx context.Context, field graphql.CollectedField, obj *model.Server) (ret graphql.Marshaler) {
@@ -8708,28 +7987,22 @@ func (ec *executionContext) _Server_deletedAt(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Server_deletedAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Server_deletedAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeletedAt, nil
 		},
 		nil,
-		ec.marshalODateTime2ᚖtimeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalODateTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_Server_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Server",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Server", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _ServerChangedEvent_node(ctx context.Context, field graphql.CollectedField, obj *model.ServerChangedEvent) (ret graphql.Marshaler) {
@@ -8737,17 +8010,20 @@ func (ec *executionContext) _ServerChangedEvent_node(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerChangedEvent_node,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerChangedEvent_node(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Node, nil
 		},
 		nil,
-		ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Server) graphql.Marshaler {
+			return ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerChangedEvent_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServerChangedEvent",
@@ -8755,51 +8031,7 @@ func (ec *executionContext) fieldContext_ServerChangedEvent_node(_ context.Conte
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8810,28 +8042,22 @@ func (ec *executionContext) _ServerChangedEvent_action(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerChangedEvent_action,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerChangedEvent_action(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Action, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerChangedEvent_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerChangedEvent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ServerChangedEvent", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ServerHook_command(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
@@ -8839,28 +8065,22 @@ func (ec *executionContext) _ServerHook_command(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_command,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerHook_command(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Command, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerHook_command(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ServerHook", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ServerHook_runOnPreUp(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
@@ -8868,28 +8088,22 @@ func (ec *executionContext) _ServerHook_runOnPreUp(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_runOnPreUp,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerHook_runOnPreUp(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.RunOnPreUp, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerHook_runOnPreUp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ServerHook", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _ServerHook_runOnPostUp(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
@@ -8897,28 +8111,22 @@ func (ec *executionContext) _ServerHook_runOnPostUp(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_runOnPostUp,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerHook_runOnPostUp(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.RunOnPostUp, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerHook_runOnPostUp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ServerHook", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _ServerHook_runOnPreDown(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
@@ -8926,28 +8134,22 @@ func (ec *executionContext) _ServerHook_runOnPreDown(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_runOnPreDown,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerHook_runOnPreDown(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.RunOnPreDown, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerHook_runOnPreDown(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ServerHook", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _ServerHook_runOnPostDown(ctx context.Context, field graphql.CollectedField, obj *model.ServerHook) (ret graphql.Marshaler) {
@@ -8955,28 +8157,22 @@ func (ec *executionContext) _ServerHook_runOnPostDown(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerHook_runOnPostDown,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerHook_runOnPostDown(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.RunOnPostDown, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerHook_runOnPostDown(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerHook",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ServerHook", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _ServerInterfaceStats_rxBytes(ctx context.Context, field graphql.CollectedField, obj *model.ServerInterfaceStats) (ret graphql.Marshaler) {
@@ -8984,28 +8180,22 @@ func (ec *executionContext) _ServerInterfaceStats_rxBytes(ctx context.Context, f
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerInterfaceStats_rxBytes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerInterfaceStats_rxBytes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.RxBytes, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerInterfaceStats_rxBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerInterfaceStats",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ServerInterfaceStats", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _ServerInterfaceStats_txBytes(ctx context.Context, field graphql.CollectedField, obj *model.ServerInterfaceStats) (ret graphql.Marshaler) {
@@ -9013,28 +8203,22 @@ func (ec *executionContext) _ServerInterfaceStats_txBytes(ctx context.Context, f
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ServerInterfaceStats_txBytes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ServerInterfaceStats_txBytes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.TxBytes, nil
 		},
 		nil,
-		ec.marshalNFloat2float64,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_ServerInterfaceStats_txBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ServerInterfaceStats",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("ServerInterfaceStats", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _SignInPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.SignInPayload) (ret graphql.Marshaler) {
@@ -9042,28 +8226,22 @@ func (ec *executionContext) _SignInPayload_clientMutationId(ctx context.Context,
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SignInPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SignInPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_SignInPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SignInPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SignInPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _SignInPayload_token(ctx context.Context, field graphql.CollectedField, obj *model.SignInPayload) (ret graphql.Marshaler) {
@@ -9071,28 +8249,22 @@ func (ec *executionContext) _SignInPayload_token(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SignInPayload_token,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SignInPayload_token(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Token, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SignInPayload_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SignInPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SignInPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _SignInPayload_expiresAt(ctx context.Context, field graphql.CollectedField, obj *model.SignInPayload) (ret graphql.Marshaler) {
@@ -9100,28 +8272,22 @@ func (ec *executionContext) _SignInPayload_expiresAt(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SignInPayload_expiresAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SignInPayload_expiresAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ExpiresAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SignInPayload_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SignInPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SignInPayload", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _SignInPayload_expiresIn(ctx context.Context, field graphql.CollectedField, obj *model.SignInPayload) (ret graphql.Marshaler) {
@@ -9129,28 +8295,22 @@ func (ec *executionContext) _SignInPayload_expiresIn(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_SignInPayload_expiresIn,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SignInPayload_expiresIn(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ExpiresIn, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_SignInPayload_expiresIn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SignInPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("SignInPayload", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _StartServerPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.StartServerPayload) (ret graphql.Marshaler) {
@@ -9158,28 +8318,22 @@ func (ec *executionContext) _StartServerPayload_clientMutationId(ctx context.Con
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_StartServerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StartServerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_StartServerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "StartServerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("StartServerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _StartServerPayload_server(ctx context.Context, field graphql.CollectedField, obj *model.StartServerPayload) (ret graphql.Marshaler) {
@@ -9187,17 +8341,20 @@ func (ec *executionContext) _StartServerPayload_server(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_StartServerPayload_server,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StartServerPayload_server(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Server, nil
 		},
 		nil,
-		ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Server) graphql.Marshaler {
+			return ec.marshalNServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_StartServerPayload_server(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StartServerPayload",
@@ -9205,51 +8362,7 @@ func (ec *executionContext) fieldContext_StartServerPayload_server(_ context.Con
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9260,28 +8373,22 @@ func (ec *executionContext) _StopServerPayload_clientMutationId(ctx context.Cont
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_StopServerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StopServerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_StopServerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "StopServerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("StopServerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _StopServerPayload_server(ctx context.Context, field graphql.CollectedField, obj *model.StopServerPayload) (ret graphql.Marshaler) {
@@ -9289,17 +8396,20 @@ func (ec *executionContext) _StopServerPayload_server(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_StopServerPayload_server,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StopServerPayload_server(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Server, nil
 		},
 		nil,
-		ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Server) graphql.Marshaler {
+			return ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_StopServerPayload_server(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StopServerPayload",
@@ -9307,51 +8417,7 @@ func (ec *executionContext) fieldContext_StopServerPayload_server(_ context.Cont
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9362,7 +8428,9 @@ func (ec *executionContext) _Subscription_backendChanged(ctx context.Context, fi
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Subscription_backendChanged,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_backendChanged(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Subscription().BackendChanged(ctx)
 		},
@@ -9380,12 +8448,13 @@ func (ec *executionContext) _Subscription_backendChanged(ctx context.Context, fi
 			next = directive1
 			return next
 		},
-		ec.marshalNBackendChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendChangedEvent,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.BackendChangedEvent) graphql.Marshaler {
+			return ec.marshalNBackendChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackendChangedEvent(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Subscription_backendChanged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
@@ -9393,13 +8462,7 @@ func (ec *executionContext) fieldContext_Subscription_backendChanged(_ context.C
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "action":
-				return ec.fieldContext_BackendChangedEvent_action(ctx, field)
-			case "node":
-				return ec.fieldContext_BackendChangedEvent_node(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type BackendChangedEvent", field.Name)
+			return ec.childFields_BackendChangedEvent(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9410,7 +8473,9 @@ func (ec *executionContext) _Subscription_userChanged(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Subscription_userChanged,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_userChanged(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Subscription().UserChanged(ctx)
 		},
@@ -9428,12 +8493,13 @@ func (ec *executionContext) _Subscription_userChanged(ctx context.Context, field
 			next = directive1
 			return next
 		},
-		ec.marshalNUserChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUserChangedEvent,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.UserChangedEvent) graphql.Marshaler {
+			return ec.marshalNUserChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUserChangedEvent(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Subscription_userChanged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
@@ -9441,13 +8507,7 @@ func (ec *executionContext) fieldContext_Subscription_userChanged(_ context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "node":
-				return ec.fieldContext_UserChangedEvent_node(ctx, field)
-			case "action":
-				return ec.fieldContext_UserChangedEvent_action(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UserChangedEvent", field.Name)
+			return ec.childFields_UserChangedEvent(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9458,7 +8518,9 @@ func (ec *executionContext) _Subscription_serverChanged(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Subscription_serverChanged,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_serverChanged(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Subscription().ServerChanged(ctx)
 		},
@@ -9476,12 +8538,13 @@ func (ec *executionContext) _Subscription_serverChanged(ctx context.Context, fie
 			next = directive1
 			return next
 		},
-		ec.marshalNServerChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerChangedEvent,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.ServerChangedEvent) graphql.Marshaler {
+			return ec.marshalNServerChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerChangedEvent(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Subscription_serverChanged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
@@ -9489,13 +8552,7 @@ func (ec *executionContext) fieldContext_Subscription_serverChanged(_ context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "node":
-				return ec.fieldContext_ServerChangedEvent_node(ctx, field)
-			case "action":
-				return ec.fieldContext_ServerChangedEvent_action(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ServerChangedEvent", field.Name)
+			return ec.childFields_ServerChangedEvent(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9506,7 +8563,9 @@ func (ec *executionContext) _Subscription_peerChanged(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Subscription_peerChanged,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_peerChanged(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Subscription().PeerChanged(ctx)
 		},
@@ -9524,12 +8583,13 @@ func (ec *executionContext) _Subscription_peerChanged(ctx context.Context, field
 			next = directive1
 			return next
 		},
-		ec.marshalNPeerChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerChangedEvent,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.PeerChangedEvent) graphql.Marshaler {
+			return ec.marshalNPeerChangedEvent2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerChangedEvent(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Subscription_peerChanged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
@@ -9537,13 +8597,7 @@ func (ec *executionContext) fieldContext_Subscription_peerChanged(_ context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "node":
-				return ec.fieldContext_PeerChangedEvent_node(ctx, field)
-			case "action":
-				return ec.fieldContext_PeerChangedEvent_action(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PeerChangedEvent", field.Name)
+			return ec.childFields_PeerChangedEvent(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9554,7 +8608,9 @@ func (ec *executionContext) _Subscription_nodeChanged(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Subscription_nodeChanged,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_nodeChanged(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.Subscription().NodeChanged(ctx)
 		},
@@ -9572,23 +8628,15 @@ func (ec *executionContext) _Subscription_nodeChanged(ctx context.Context, field
 			next = directive1
 			return next
 		},
-		ec.marshalNNodeChangedEvent2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNodeChangedEvent,
+		func(ctx context.Context, selections ast.SelectionSet, v model.NodeChangedEvent) graphql.Marshaler {
+			return ec.marshalNNodeChangedEvent2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐNodeChangedEvent(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_Subscription_nodeChanged(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Subscription",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type NodeChangedEvent does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("Subscription", field, true, true, errors.New("field of type NodeChangedEvent does not have child fields"))
 }
 
 func (ec *executionContext) _UpdateBackendPayload_clientMutationId(ctx context.Context, field graphql.CollectedField, obj *model.UpdateBackendPayload) (ret graphql.Marshaler) {
@@ -9596,28 +8644,22 @@ func (ec *executionContext) _UpdateBackendPayload_clientMutationId(ctx context.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UpdateBackendPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdateBackendPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_UpdateBackendPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpdateBackendPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("UpdateBackendPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _UpdateBackendPayload_backend(ctx context.Context, field graphql.CollectedField, obj *model.UpdateBackendPayload) (ret graphql.Marshaler) {
@@ -9625,17 +8667,20 @@ func (ec *executionContext) _UpdateBackendPayload_backend(ctx context.Context, f
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UpdateBackendPayload_backend,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdateBackendPayload_backend(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Backend, nil
 		},
 		nil,
-		ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Backend) graphql.Marshaler {
+			return ec.marshalNBackend2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐBackend(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_UpdateBackendPayload_backend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UpdateBackendPayload",
@@ -9643,39 +8688,7 @@ func (ec *executionContext) fieldContext_UpdateBackendPayload_backend(_ context.
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Backend_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Backend_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Backend_description(ctx, field)
-			case "url":
-				return ec.fieldContext_Backend_url(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Backend_enabled(ctx, field)
-			case "supported":
-				return ec.fieldContext_Backend_supported(ctx, field)
-			case "servers":
-				return ec.fieldContext_Backend_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_Backend_peers(ctx, field)
-			case "foreignServers":
-				return ec.fieldContext_Backend_foreignServers(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Backend_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Backend_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Backend_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Backend_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Backend_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Backend_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Backend", field.Name)
+			return ec.childFields_Backend(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9686,28 +8699,22 @@ func (ec *executionContext) _UpdatePeerPayload_clientMutationId(ctx context.Cont
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UpdatePeerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdatePeerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_UpdatePeerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpdatePeerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("UpdatePeerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _UpdatePeerPayload_peer(ctx context.Context, field graphql.CollectedField, obj *model.UpdatePeerPayload) (ret graphql.Marshaler) {
@@ -9715,17 +8722,20 @@ func (ec *executionContext) _UpdatePeerPayload_peer(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UpdatePeerPayload_peer,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdatePeerPayload_peer(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Peer, nil
 		},
 		nil,
-		ec.marshalOPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Peer) graphql.Marshaler {
+			return ec.marshalOPeer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeer(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_UpdatePeerPayload_peer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UpdatePeerPayload",
@@ -9733,45 +8743,7 @@ func (ec *executionContext) fieldContext_UpdatePeerPayload_peer(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Peer_id(ctx, field)
-			case "server":
-				return ec.fieldContext_Peer_server(ctx, field)
-			case "backend":
-				return ec.fieldContext_Peer_backend(ctx, field)
-			case "name":
-				return ec.fieldContext_Peer_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Peer_description(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Peer_publicKey(ctx, field)
-			case "allowedIPs":
-				return ec.fieldContext_Peer_allowedIPs(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_Peer_endpoint(ctx, field)
-			case "presharedKey":
-				return ec.fieldContext_Peer_presharedKey(ctx, field)
-			case "persistentKeepalive":
-				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Peer_hooks(ctx, field)
-			case "stats":
-				return ec.fieldContext_Peer_stats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Peer_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Peer_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Peer_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Peer_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Peer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Peer_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+			return ec.childFields_Peer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9782,28 +8754,22 @@ func (ec *executionContext) _UpdateServerPayload_clientMutationId(ctx context.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UpdateServerPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdateServerPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_UpdateServerPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpdateServerPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("UpdateServerPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _UpdateServerPayload_server(ctx context.Context, field graphql.CollectedField, obj *model.UpdateServerPayload) (ret graphql.Marshaler) {
@@ -9811,17 +8777,20 @@ func (ec *executionContext) _UpdateServerPayload_server(ctx context.Context, fie
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UpdateServerPayload_server,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdateServerPayload_server(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Server, nil
 		},
 		nil,
-		ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Server) graphql.Marshaler {
+			return ec.marshalOServer2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServer(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_UpdateServerPayload_server(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UpdateServerPayload",
@@ -9829,51 +8798,7 @@ func (ec *executionContext) fieldContext_UpdateServerPayload_server(_ context.Co
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9884,28 +8809,22 @@ func (ec *executionContext) _UpdateUserPayload_clientMutationId(ctx context.Cont
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UpdateUserPayload_clientMutationId,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdateUserPayload_clientMutationId(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ClientMutationID, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_UpdateUserPayload_clientMutationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpdateUserPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("UpdateUserPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _UpdateUserPayload_user(ctx context.Context, field graphql.CollectedField, obj *model.UpdateUserPayload) (ret graphql.Marshaler) {
@@ -9913,17 +8832,20 @@ func (ec *executionContext) _UpdateUserPayload_user(ctx context.Context, field g
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UpdateUserPayload_user,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdateUserPayload_user(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.User, nil
 		},
 		nil,
-		ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_UpdateUserPayload_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UpdateUserPayload",
@@ -9931,21 +8853,7 @@ func (ec *executionContext) fieldContext_UpdateUserPayload_user(_ context.Contex
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -9956,28 +8864,22 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_id,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_id(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID,
+		func(ctx context.Context, selections ast.SelectionSet, v model.ID) graphql.Marshaler {
+			return ec.marshalNID2githubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐID(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -9985,28 +8887,22 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_email,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_email(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Email, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _User_servers(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -10014,7 +8910,9 @@ func (ec *executionContext) _User_servers(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_servers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_servers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.User().Servers(ctx, obj)
 		},
@@ -10032,12 +8930,13 @@ func (ec *executionContext) _User_servers(ctx context.Context, field graphql.Col
 			next = directive1
 			return next
 		},
-		ec.marshalOServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Server) graphql.Marshaler {
+			return ec.marshalOServer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐServerᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_servers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
@@ -10045,51 +8944,7 @@ func (ec *executionContext) fieldContext_User_servers(_ context.Context, field g
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Server_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Server_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Server_description(ctx, field)
-			case "backend":
-				return ec.fieldContext_Server_backend(ctx, field)
-			case "enabled":
-				return ec.fieldContext_Server_enabled(ctx, field)
-			case "running":
-				return ec.fieldContext_Server_running(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Server_publicKey(ctx, field)
-			case "listenPort":
-				return ec.fieldContext_Server_listenPort(ctx, field)
-			case "firewallMark":
-				return ec.fieldContext_Server_firewallMark(ctx, field)
-			case "address":
-				return ec.fieldContext_Server_address(ctx, field)
-			case "dns":
-				return ec.fieldContext_Server_dns(ctx, field)
-			case "mtu":
-				return ec.fieldContext_Server_mtu(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Server_hooks(ctx, field)
-			case "peers":
-				return ec.fieldContext_Server_peers(ctx, field)
-			case "interfaceStats":
-				return ec.fieldContext_Server_interfaceStats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Server_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Server_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Server_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Server_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Server_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Server_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Server", field.Name)
+			return ec.childFields_Server(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10100,7 +8955,9 @@ func (ec *executionContext) _User_peers(ctx context.Context, field graphql.Colle
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_peers,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_peers(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return ec.Resolvers.User().Peers(ctx, obj)
 		},
@@ -10118,12 +8975,13 @@ func (ec *executionContext) _User_peers(ctx context.Context, field graphql.Colle
 			next = directive1
 			return next
 		},
-		ec.marshalOPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Peer) graphql.Marshaler {
+			return ec.marshalOPeer2ᚕᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐPeerᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_peers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
@@ -10131,45 +8989,7 @@ func (ec *executionContext) fieldContext_User_peers(_ context.Context, field gra
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Peer_id(ctx, field)
-			case "server":
-				return ec.fieldContext_Peer_server(ctx, field)
-			case "backend":
-				return ec.fieldContext_Peer_backend(ctx, field)
-			case "name":
-				return ec.fieldContext_Peer_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Peer_description(ctx, field)
-			case "publicKey":
-				return ec.fieldContext_Peer_publicKey(ctx, field)
-			case "allowedIPs":
-				return ec.fieldContext_Peer_allowedIPs(ctx, field)
-			case "endpoint":
-				return ec.fieldContext_Peer_endpoint(ctx, field)
-			case "presharedKey":
-				return ec.fieldContext_Peer_presharedKey(ctx, field)
-			case "persistentKeepalive":
-				return ec.fieldContext_Peer_persistentKeepalive(ctx, field)
-			case "hooks":
-				return ec.fieldContext_Peer_hooks(ctx, field)
-			case "stats":
-				return ec.fieldContext_Peer_stats(ctx, field)
-			case "createUser":
-				return ec.fieldContext_Peer_createUser(ctx, field)
-			case "updateUser":
-				return ec.fieldContext_Peer_updateUser(ctx, field)
-			case "deleteUser":
-				return ec.fieldContext_Peer_deleteUser(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Peer_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Peer_updatedAt(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_Peer_deletedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Peer", field.Name)
+			return ec.childFields_Peer(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10180,28 +9000,22 @@ func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_createdAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_createdAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.CreatedAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _User_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -10209,28 +9023,22 @@ func (ec *executionContext) _User_updatedAt(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_updatedAt,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_User_updatedAt(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.UpdatedAt, nil
 		},
 		nil,
-		ec.marshalNDateTime2timeᚐTime,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNDateTime2timeᚐTime(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_User_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type DateTime does not have child fields"))
 }
 
 func (ec *executionContext) _UserChangedEvent_node(ctx context.Context, field graphql.CollectedField, obj *model.UserChangedEvent) (ret graphql.Marshaler) {
@@ -10238,17 +9046,20 @@ func (ec *executionContext) _UserChangedEvent_node(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserChangedEvent_node,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserChangedEvent_node(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Node, nil
 		},
 		nil,
-		ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.User) graphql.Marshaler {
+			return ec.marshalNUser2ᚖgithubᚗcomᚋUnAfraidᚋwgᚑuiᚋpkgᚋapiᚋinternalᚋmodelᚐUser(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_UserChangedEvent_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserChangedEvent",
@@ -10256,21 +9067,7 @@ func (ec *executionContext) fieldContext_UserChangedEvent_node(_ context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "servers":
-				return ec.fieldContext_User_servers(ctx, field)
-			case "peers":
-				return ec.fieldContext_User_peers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return ec.childFields_User(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10281,28 +9078,22 @@ func (ec *executionContext) _UserChangedEvent_action(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserChangedEvent_action,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserChangedEvent_action(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Action, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext_UserChangedEvent_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserChangedEvent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("UserChangedEvent", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -10310,28 +9101,22 @@ func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Directive", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -10339,28 +9124,22 @@ func (ec *executionContext) ___Directive_description(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Directive", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -10368,28 +9147,22 @@ func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_isRepeatable,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_isRepeatable(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsRepeatable, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_isRepeatable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Directive", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_locations(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -10397,28 +9170,22 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_locations,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_locations(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Locations, nil
 		},
 		nil,
-		ec.marshalN__DirectiveLocation2ᚕstringᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalN__DirectiveLocation2ᚕstringᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Directive",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type __DirectiveLocation does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Directive", field, false, false, errors.New("field of type __DirectiveLocation does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -10426,17 +9193,20 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Directive_args,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Directive_args(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Args, nil
 		},
 		nil,
-		ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+			return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Directive_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
@@ -10444,21 +9214,7 @@ func (ec *executionContext) fieldContext___Directive_args(ctx context.Context, f
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___InputValue_name(ctx, field)
-			case "description":
-				return ec.fieldContext___InputValue_description(ctx, field)
-			case "type":
-				return ec.fieldContext___InputValue_type(ctx, field)
-			case "defaultValue":
-				return ec.fieldContext___InputValue_defaultValue(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
+			return ec.childFields___InputValue(ctx, field)
 		},
 	}
 	defer func() {
@@ -10480,28 +9236,22 @@ func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___EnumValue_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___EnumValue_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___EnumValue_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__EnumValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__EnumValue", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___EnumValue_description(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -10509,28 +9259,22 @@ func (ec *executionContext) ___EnumValue_description(ctx context.Context, field 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___EnumValue_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___EnumValue_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___EnumValue_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__EnumValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__EnumValue", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -10538,28 +9282,22 @@ func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___EnumValue_isDeprecated,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___EnumValue_isDeprecated(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsDeprecated(), nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___EnumValue_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__EnumValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__EnumValue", field, true, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -10567,28 +9305,22 @@ func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, 
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___EnumValue_deprecationReason,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___EnumValue_deprecationReason(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeprecationReason(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___EnumValue_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__EnumValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__EnumValue", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -10596,28 +9328,22 @@ func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Field",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Field", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Field_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -10625,28 +9351,22 @@ func (ec *executionContext) ___Field_description(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Field",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Field", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -10654,17 +9374,20 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_args,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_args(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Args, nil
 		},
 		nil,
-		ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+			return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
@@ -10672,21 +9395,7 @@ func (ec *executionContext) fieldContext___Field_args(ctx context.Context, field
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___InputValue_name(ctx, field)
-			case "description":
-				return ec.fieldContext___InputValue_description(ctx, field)
-			case "type":
-				return ec.fieldContext___InputValue_type(ctx, field)
-			case "defaultValue":
-				return ec.fieldContext___InputValue_defaultValue(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
+			return ec.childFields___InputValue(ctx, field)
 		},
 	}
 	defer func() {
@@ -10708,17 +9417,20 @@ func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.Col
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
@@ -10726,31 +9438,7 @@ func (ec *executionContext) fieldContext___Field_type(_ context.Context, field g
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10761,28 +9449,22 @@ func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_isDeprecated,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_isDeprecated(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsDeprecated(), nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Field",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Field", field, true, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -10790,28 +9472,22 @@ func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Field_deprecationReason,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Field_deprecationReason(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeprecationReason(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Field_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Field",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Field", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -10819,28 +9495,22 @@ func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_description(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -10848,28 +9518,22 @@ func (ec *executionContext) ___InputValue_description(ctx context.Context, field
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -10877,17 +9541,20 @@ func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_type,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_type(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
@@ -10895,31 +9562,7 @@ func (ec *executionContext) fieldContext___InputValue_type(_ context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -10930,28 +9573,22 @@ func (ec *executionContext) ___InputValue_defaultValue(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_defaultValue,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_defaultValue(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DefaultValue, nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_defaultValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_isDeprecated(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -10959,28 +9596,22 @@ func (ec *executionContext) ___InputValue_isDeprecated(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_isDeprecated,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_isDeprecated(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsDeprecated(), nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, true, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) ___InputValue_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
@@ -10988,28 +9619,22 @@ func (ec *executionContext) ___InputValue_deprecationReason(ctx context.Context,
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___InputValue_deprecationReason,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___InputValue_deprecationReason(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.DeprecationReason(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___InputValue_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__InputValue",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__InputValue", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Schema_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
@@ -11017,28 +9642,22 @@ func (ec *executionContext) ___Schema_description(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Schema",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Schema", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
@@ -11046,17 +9665,20 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_types,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_types(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Types(), nil
 		},
 		nil,
-		ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+			return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_types(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -11064,31 +9686,7 @@ func (ec *executionContext) fieldContext___Schema_types(_ context.Context, field
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11099,17 +9697,20 @@ func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_queryType,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_queryType(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.QueryType(), nil
 		},
 		nil,
-		ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_queryType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -11117,31 +9718,7 @@ func (ec *executionContext) fieldContext___Schema_queryType(_ context.Context, f
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11152,17 +9729,20 @@ func (ec *executionContext) ___Schema_mutationType(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_mutationType,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_mutationType(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.MutationType(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_mutationType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -11170,31 +9750,7 @@ func (ec *executionContext) fieldContext___Schema_mutationType(_ context.Context
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11205,17 +9761,20 @@ func (ec *executionContext) ___Schema_subscriptionType(ctx context.Context, fiel
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_subscriptionType,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_subscriptionType(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.SubscriptionType(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_subscriptionType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -11223,31 +9782,7 @@ func (ec *executionContext) fieldContext___Schema_subscriptionType(_ context.Con
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11258,17 +9793,20 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Schema_directives,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Schema_directives(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Directives(), nil
 		},
 		nil,
-		ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
+			return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Schema_directives(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
@@ -11276,19 +9814,7 @@ func (ec *executionContext) fieldContext___Schema_directives(_ context.Context, 
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___Directive_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Directive_description(ctx, field)
-			case "isRepeatable":
-				return ec.fieldContext___Directive_isRepeatable(ctx, field)
-			case "locations":
-				return ec.fieldContext___Directive_locations(ctx, field)
-			case "args":
-				return ec.fieldContext___Directive_args(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Directive", field.Name)
+			return ec.childFields___Directive(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11299,28 +9825,22 @@ func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_kind,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_kind(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Kind(), nil
 		},
 		nil,
-		ec.marshalN__TypeKind2string,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalN__TypeKind2string(ctx, selections, v)
+		},
 		true,
 		true,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type __TypeKind does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type __TypeKind does not have child fields"))
 }
 
 func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -11328,28 +9848,22 @@ func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.Coll
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_name,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_name(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Name(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Type_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -11357,28 +9871,22 @@ func (ec *executionContext) ___Type_description(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_description,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_description(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Description(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -11386,28 +9894,22 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_specifiedByURL,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_specifiedByURL(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.SpecifiedByURL(), nil
 		},
 		nil,
-		ec.marshalOString2ᚖstring,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -11415,18 +9917,21 @@ func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_fields,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_fields(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return obj.Fields(fc.Args["includeDeprecated"].(bool)), nil
 		},
 		nil,
-		ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Field) graphql.Marshaler {
+			return ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_fields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -11434,21 +9939,7 @@ func (ec *executionContext) fieldContext___Type_fields(ctx context.Context, fiel
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___Field_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Field_description(ctx, field)
-			case "args":
-				return ec.fieldContext___Field_args(ctx, field)
-			case "type":
-				return ec.fieldContext___Field_type(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___Field_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___Field_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Field", field.Name)
+			return ec.childFields___Field(ctx, field)
 		},
 	}
 	defer func() {
@@ -11470,17 +9961,20 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_interfaces,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_interfaces(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.Interfaces(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_interfaces(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -11488,31 +9982,7 @@ func (ec *executionContext) fieldContext___Type_interfaces(_ context.Context, fi
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11523,17 +9993,20 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_possibleTypes,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_possibleTypes(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.PossibleTypes(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_possibleTypes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -11541,31 +10014,7 @@ func (ec *executionContext) fieldContext___Type_possibleTypes(_ context.Context,
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11576,18 +10025,21 @@ func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphq
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_enumValues,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_enumValues(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return obj.EnumValues(fc.Args["includeDeprecated"].(bool)), nil
 		},
 		nil,
-		ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
+			return ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_enumValues(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -11595,17 +10047,7 @@ func (ec *executionContext) fieldContext___Type_enumValues(ctx context.Context, 
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___EnumValue_name(ctx, field)
-			case "description":
-				return ec.fieldContext___EnumValue_description(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___EnumValue_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___EnumValue_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __EnumValue", field.Name)
+			return ec.childFields___EnumValue(ctx, field)
 		},
 	}
 	defer func() {
@@ -11627,17 +10069,20 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_inputFields,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_inputFields(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.InputFields(), nil
 		},
 		nil,
-		ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ,
+		func(ctx context.Context, selections ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+			return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_inputFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -11645,21 +10090,7 @@ func (ec *executionContext) fieldContext___Type_inputFields(_ context.Context, f
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext___InputValue_name(ctx, field)
-			case "description":
-				return ec.fieldContext___InputValue_description(ctx, field)
-			case "type":
-				return ec.fieldContext___InputValue_type(ctx, field)
-			case "defaultValue":
-				return ec.fieldContext___InputValue_defaultValue(ctx, field)
-			case "isDeprecated":
-				return ec.fieldContext___InputValue_isDeprecated(ctx, field)
-			case "deprecationReason":
-				return ec.fieldContext___InputValue_deprecationReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __InputValue", field.Name)
+			return ec.childFields___InputValue(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11670,17 +10101,20 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_ofType,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_ofType(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.OfType(), nil
 		},
 		nil,
-		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		func(ctx context.Context, selections ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
+			return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
@@ -11688,31 +10122,7 @@ func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field 
 		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "kind":
-				return ec.fieldContext___Type_kind(ctx, field)
-			case "name":
-				return ec.fieldContext___Type_name(ctx, field)
-			case "description":
-				return ec.fieldContext___Type_description(ctx, field)
-			case "specifiedByURL":
-				return ec.fieldContext___Type_specifiedByURL(ctx, field)
-			case "fields":
-				return ec.fieldContext___Type_fields(ctx, field)
-			case "interfaces":
-				return ec.fieldContext___Type_interfaces(ctx, field)
-			case "possibleTypes":
-				return ec.fieldContext___Type_possibleTypes(ctx, field)
-			case "enumValues":
-				return ec.fieldContext___Type_enumValues(ctx, field)
-			case "inputFields":
-				return ec.fieldContext___Type_inputFields(ctx, field)
-			case "ofType":
-				return ec.fieldContext___Type_ofType(ctx, field)
-			case "isOneOf":
-				return ec.fieldContext___Type_isOneOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type __Type", field.Name)
+			return ec.childFields___Type(ctx, field)
 		},
 	}
 	return fc, nil
@@ -11723,28 +10133,22 @@ func (ec *executionContext) ___Type_isOneOf(ctx context.Context, field graphql.C
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext___Type_isOneOf,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext___Type_isOneOf(ctx, field)
+		},
 		func(ctx context.Context) (any, error) {
 			return obj.IsOneOf(), nil
 		},
 		nil,
-		ec.marshalOBoolean2bool,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalOBoolean2bool(ctx, selections, v)
+		},
 		true,
 		false,
 	)
 }
-
 func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "__Type",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
+	return graphql.NewScalarFieldContext("__Type", field, true, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 // endregion **************************** field.gotpl *****************************
@@ -12943,7 +11347,7 @@ func (ec *executionContext) _AvailableBackend(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13257,7 +11661,7 @@ func (ec *executionContext) _Backend(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13301,7 +11705,7 @@ func (ec *executionContext) _BackendChangedEvent(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13342,7 +11746,7 @@ func (ec *executionContext) _CreateBackendPayload(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13380,7 +11784,7 @@ func (ec *executionContext) _CreatePeerPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13418,7 +11822,7 @@ func (ec *executionContext) _CreateServerPayload(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13459,7 +11863,7 @@ func (ec *executionContext) _CreateUserPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13500,7 +11904,7 @@ func (ec *executionContext) _DeleteBackendPayload(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13538,7 +11942,7 @@ func (ec *executionContext) _DeletePeerPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13576,7 +11980,7 @@ func (ec *executionContext) _DeleteServerPayload(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13614,7 +12018,7 @@ func (ec *executionContext) _DeleteUserPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13663,7 +12067,7 @@ func (ec *executionContext) _ForeignInterface(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13728,7 +12132,7 @@ func (ec *executionContext) _ForeignPeer(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13833,7 +12237,7 @@ func (ec *executionContext) _ForeignServer(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13879,7 +12283,7 @@ func (ec *executionContext) _GenerateWireguardKeyPayload(ctx context.Context, se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -13917,7 +12321,7 @@ func (ec *executionContext) _ImportForeignServerPayload(ctx context.Context, sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -14075,7 +12479,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -14361,7 +12765,7 @@ func (ec *executionContext) _Peer(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -14405,7 +12809,7 @@ func (ec *executionContext) _PeerChangedEvent(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -14459,7 +12863,7 @@ func (ec *executionContext) _PeerHook(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -14512,7 +12916,7 @@ func (ec *executionContext) _PeerStats(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -14757,7 +13161,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15021,7 +13425,7 @@ func (ec *executionContext) _Server(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15065,7 +13469,7 @@ func (ec *executionContext) _ServerChangedEvent(ctx context.Context, sel ast.Sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15124,7 +13528,7 @@ func (ec *executionContext) _ServerHook(ctx context.Context, sel ast.SelectionSe
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15168,7 +13572,7 @@ func (ec *executionContext) _ServerInterfaceStats(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15219,7 +13623,7 @@ func (ec *executionContext) _SignInPayload(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15260,7 +13664,7 @@ func (ec *executionContext) _StartServerPayload(ctx context.Context, sel ast.Sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15298,7 +13702,7 @@ func (ec *executionContext) _StopServerPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15367,7 +13771,7 @@ func (ec *executionContext) _UpdateBackendPayload(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15405,7 +13809,7 @@ func (ec *executionContext) _UpdatePeerPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15443,7 +13847,7 @@ func (ec *executionContext) _UpdateServerPayload(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15484,7 +13888,7 @@ func (ec *executionContext) _UpdateUserPayload(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15604,7 +14008,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15648,7 +14052,7 @@ func (ec *executionContext) _UserChangedEvent(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15704,7 +14108,7 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15752,7 +14156,7 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15810,7 +14214,7 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15865,7 +14269,7 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15920,7 +14324,7 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{
@@ -15979,7 +14383,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
 
 	for label, dfs := range deferred {
 		ec.ProcessDeferredGroup(graphql.DeferredGroup{

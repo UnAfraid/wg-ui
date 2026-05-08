@@ -43,7 +43,7 @@
     "cmdk": "1.1.1",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
-    "graphql": "^16.13.2",
+    "graphql": "^16.14.0",
     "graphql-ws": "^5.16.2",
     "input-otp": "1.4.1",
     "lucide-react": "^0.544.0",
@@ -51,10 +51,10 @@
     "react": "19.2.3",
     "react-day-picker": "8.10.1",
     "react-dom": "19.2.3",
-    "react-hook-form": "^7.72.1",
-    "react-qr-code": "^2.0.18",
+    "react-hook-form": "^7.75.0",
+    "react-qr-code": "^2.0.21",
     "react-resizable-panels": "^2.1.9",
-    "react-router-dom": "^7.14.1",
+    "react-router-dom": "^7.15.0",
     "recharts": "2.15.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.1",
@@ -63,15 +63,15 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^22.19.17",
+    "@types/node": "^22.19.18",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "^4.5.2",
+    "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.5.0",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.14",
     "tailwindcss": "^3.4.19",
     "typescript": "5.7.3",
-    "vite": "^6.3.5"
+    "vite": "^6.4.2"
   },
   "pnpm": {
     "overrides": {
